@@ -1,7 +1,7 @@
 # Diez : Architecture
 
 > Document de référence. Il intègre les correctifs des quatre audits (`audit-ux.md`, `audit-robustesse.md`, `audit-accessibilite.md`, `audit-contenu.md`), qui ne servent plus que de trace du raisonnement.
-> Le jeu implémenté est décrit dans `docs/modele-de-jeu.md` : une variante coopérative à narrateur, pas les règles de TTMC.
+> Le jeu implémenté est décrit dans `docs/modele-de-jeu.md` : une variante coopérative à narrateur, pas les règles de « Tu Te Mets Combien ? ».
 > Aucun code écrit à ce stade.
 
 ## 1. Les quatre principes
@@ -77,8 +77,16 @@ diez/
 │
 ├── public/                       # manifest PWA, icônes
 ├── .github/workflows/deploy.yml  # build et publication sur Pages
-└── docs/
+├── docs/
+│
+├── README.md                     # point d'entrée, ordre de lecture, non-affiliation
+├── CLAUDE.md                     # conventions de travail, voyagent avec le dépôt
+├── .gitattributes                # normalisation LF, voir §9
+├── .editorconfig                 # UTF-8 et LF côté éditeur
+└── .gitignore
 ```
+
+Les fichiers marqués `REPORTÉE` ou situés sous `src/`, `tools/`, `public/` et `.github/` n'existent pas encore : l'arborescence décrit la cible. Tout ce qui est à la racine, plus `content/` et `docs/`, existe.
 
 **Règle de dépendance, à sens unique et non négociable :**
 
@@ -364,6 +372,20 @@ Le contenu généré ne pose aucun problème, il est original. Le point d'attent
 Le troisième point est le vrai. Un dépôt public est permanent et indexé : une vanne écrite un soir de 2026 reste lisible en 2031, par l'intéressé, ou par quelqu'un qui cherche son prénom. Le critère d'écriture est donc « est-ce que je lui montrerais ? », pas « est-ce que ça fait rire ce soir ? ».
 
 Le validateur assiste cette relecture sans prétendre l'automatiser (voir §8).
+
+### Conventions Git appliquées
+
+Trois réglages posés au moment du commit initial, chacun corrigeant un défaut de la configuration par défaut sous Windows.
+
+**Branche `main`, pas `master`.** Le `master` proposé venait du fichier de configuration **système** de Git for Windows, pas d'un choix. La branche a été renommée pour s'accorder avec la publication décrite ci-dessus et avec les conventions GitHub.
+
+**`.gitattributes` avec `* text=auto eol=lf`, dès le commit initial.** C'est le pendant Git du `.editorconfig`, et il est indispensable : `core.autocrlf` vaut `true` dans la configuration système de Git for Windows, ce qui reconvertirait la copie de travail en CRLF à chaque checkout, exactement contre le `end_of_line = lf` déclaré côté éditeur. Sur un corpus JSON chargé d'accents, ce genre de conversion silencieuse est précisément le mode de défaillance qu'on ne veut pas.
+
+Le fichier **devait** figurer dans le commit initial : ajouté ensuite, il aurait produit un commit de conversion touchant tous les fichiers d'un coup.
+
+**Auteur des commits : l'adresse de substitution GitHub**, `ID+pseudo@users.noreply.github.com`, réglée en portée locale au dépôt. Le dépôt étant public, l'adresse personnelle serait autrement gravée dans l'historique, dans les miroirs et dans les moteurs de recherche, de façon permanente. La substitution ne coûte rien : GitHub rattache quand même les commits au compte, donc le graphe de contributions reste correct.
+
+Le réglage durable correspondant est côté GitHub, dans les paramètres *Emails* : **« Block command line pushes that expose my email »** transforme un oubli silencieux en échec de push.
 
 ---
 

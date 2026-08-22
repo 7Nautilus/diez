@@ -46,6 +46,13 @@ Le corpus est **différé**, il fera l'objet d'un chantier distinct. Ne pas lanc
 
 Toute modification de `content/` doit rester conforme à `content/schema/lot.schema.json`. Le paquet `maison` a une règle éditoriale propre, rappelée dans `content/cartes/maison/README.md` : le dépôt est public.
 
+## Dépôt
+
+Public, sur GitHub Pages. Deux réglages à ne jamais défaire, détaillés dans `docs/architecture.md` §9 :
+
+- **`.gitattributes` avec `* text=auto eol=lf`.** Sans lui, `core.autocrlf` (à `true` dans la configuration système de Git for Windows) reconvertit toute la copie de travail en CRLF à chaque checkout, contre le `.editorconfig`. Le retirer, ou l'avoir laissé tomber puis le remettre, produit un commit de conversion sur tous les fichiers.
+- **L'auteur des commits est l'adresse de substitution GitHub**, réglée en portée locale dans `.git/config`. Le dépôt étant public, une adresse personnelle y serait gravée définitivement. Si un `git log` montre autre chose, la configuration locale a été perdue : la reposer avant de commiter.
+
 ## Vérifications avant de livrer un fichier
 
 ```bash
