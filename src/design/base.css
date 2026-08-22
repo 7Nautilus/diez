@@ -28,7 +28,7 @@ html {
 body {
   background: var(--ground);
   color: var(--text-primary);
-  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  font-family: var(--police-sans);
   /* Sur macOS le texte rend plus gras que prevu, ce qui epaissit les graisses
      legeres. Une seule fois, sur la racine. */
   -webkit-font-smoothing: antialiased;
@@ -45,7 +45,7 @@ body {
 }
 
 .mot {
-  font-family: "Doto", "Space Mono", monospace;
+  font-family: var(--police-display);
   font-size: var(--txt-display-xl);
   font-weight: 700;
   line-height: 1;

@@ -35,9 +35,9 @@
   border: 1px solid transparent;
   /* Pilule. Le rayon depasse largement la moitie de la hauteur pour qu'il
      reste une pilule quelle que soit la longueur du libelle. */
-  border-radius: 999px;
+  border-radius: var(--rayon-pilule);
   background: none;
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-label);
   /* Les capitales perdent leur air : l'interlettrage positif le rend. Valeur
      de tokens-et-composants.md, Bouton. */
@@ -81,10 +81,10 @@
   /* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose a
      chaque tap est un parasite ; au clavier, son absence rend l'ecran
      inutilisable. Contour de 2px, tokens-et-composants.md, Bouton. */
-  outline: 2px solid var(--text-display);
+  outline: var(--focus-contour);
   /* Le decalage est ce qui rend le contour visible sur la variante primaire,
      dont le fond est deja --text-display : sans lui, les deux se confondent. */
-  outline-offset: var(--esp-2xs);
+  outline-offset: var(--focus-ecart);
 }
 
 .bouton:disabled {

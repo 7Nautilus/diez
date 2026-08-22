@@ -17,7 +17,7 @@
 .etiquette {
   /* Les libelles sont toujours Space Mono. C'est la voix "panneau
      d'instruments" du jeu (design-system.md section 3). */
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
 }
 
 /* Les deux fonctions en capitales partagent leur interlettrage, ecrit une

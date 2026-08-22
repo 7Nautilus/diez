@@ -30,7 +30,7 @@
   background: none;
   /* Un chiffre est de la donnee, donc Space Mono (design-system.md
      section 3). Meme pile que le Bouton. */
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-display-md);
   line-height: 1;
   color: var(--text-display);
@@ -45,10 +45,10 @@
    inutilisable. Contour de 2px, tokens-et-composants.md, Bouton. */
 .cran:focus-visible,
 .liste:focus-visible {
-  outline: 2px solid var(--text-display);
+  outline: var(--focus-contour);
   /* Le decalage est ce qui rend le contour visible sur un cran a forte
      opacite, dont le remplissage est deja --text-display. */
-  outline-offset: var(--esp-2xs);
+  outline-offset: var(--focus-ecart);
 }
 
 /*
@@ -109,7 +109,7 @@
   /* Bloc technique, rayon 4px (design-system.md section 4, La grille). Le
      systeme n'admet que la pilule pour un bouton ou 4 a 8px pour une piece
      technique ; ces blocs sont des pieces techniques. */
-  border-radius: 4px;
+  border-radius: var(--rayon-technique);
 }
 
 /*

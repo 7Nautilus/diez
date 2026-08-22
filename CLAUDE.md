@@ -49,7 +49,19 @@ Outillage : Biome seul. La règle de dépendance est protégée par le lint, pas
 
 ## Architecture
 
-Règle de dépendance à sens unique : `screens` vers `design`, et rien d'autre. **`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`.** Une seule violation et le principe P2 est mort. À vérifier en revue.
+Règle de dépendance à sens unique : **une couche descend, elle ne remonte jamais.**
+
+```
+app      →  screens · design · domain · storage
+screens  →  design · domain
+design   →  rien du projet
+domain   →  rien
+storage  →  rien
+```
+
+**`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`.** Une seule violation et le principe P2 est mort. Ce n'est plus à vérifier en revue : le lint refuse chaque remontée, et `tools/garde-p2.test.ts` fait échouer la suite si la règle cesse de mordre.
+
+`app/` est délibérément sans restriction : c'est la couche de composition, celle qui câble le stockage au domaine et aux écrans. Rien ne l'importe en retour, et le lint le garantit.
 
 Règle d'état : **à chaque phase, l'état contient exactement ce qui peut être montré, et rien de plus.** En phase QUESTION, la réponse ne doit pas être dans l'état, parce que le narrateur lit à voix haute en fixant l'écran.
 

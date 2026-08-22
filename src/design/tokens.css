@@ -32,6 +32,25 @@
   --blanc: #ffffff;
   --rouge: #d71921;
 
+  /* Les trois piles, ecrites ICI et nulle part ailleurs. Elles l'etaient dans
+     neuf declarations reparties sur huit modules, ce qui est exactement ce que
+     la regle de derivation interdit : une chaine de repli modifiee a un seul
+     endroit produit deux typographies differentes sans que rien ne le signale.
+     Les replis nommes ne sont pas charges par le projet ; ils servent au cas ou
+     la police locale existe deja sur l'appareil, ou ils rendent mieux que la
+     famille generique. */
+  --police-display: "Doto", "Space Mono", monospace;
+  --police-sans: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  --police-mono: "Space Mono", "JetBrains Mono", monospace;
+
+  /* Les trois rayons que le systeme admet, et aucun autre : la pilule pour un
+     controle, le rayon technique pour une piece de mecanique, et le haut de la
+     Feuille. Le systeme ne va jamais au-dela de 16px (design-system.md
+     section 8, et la skill nothing-design). */
+  --rayon-pilule: 999px;
+  --rayon-technique: 4px;
+  --rayon-feuille: 16px;
+
   /* Espacement, base 8. */
   --esp-2xs: 2px;
   --esp-xs: 4px;
@@ -146,6 +165,14 @@
      tactile n'est garantie que par le remplissage (design-system.md section 9,
      Cibles tactiles). */
   --cible-min: 44px;
+
+  /* Le contour de focus est une decision de SYSTEME, pas de composant : il
+     etait recopie a l'identique dans cinq modules, et un contour qui varie
+     d'un controle a l'autre se lit comme un defaut plutot que comme un etat.
+     Sur :focus-visible et jamais sur :focus, l'ecart valant l'epaisseur pour
+     que le contour ne colle pas a la bordure. */
+  --focus-contour: 2px solid var(--text-display);
+  --focus-ecart: var(--esp-2xs);
 }
 
 /* La bascule manuelle gagne dans les deux sens, y compris contre le systeme. */

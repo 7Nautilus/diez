@@ -91,14 +91,20 @@ Les fichiers marqués `REPORTÉE` ou situés sous `src/`, `tools/`, `public/` et
 **Règle de dépendance, à sens unique et non négociable :**
 
 ```
-screens  →  design  →  (rien)
-   ↓
-domain   →  (rien)
-   ↓
-storage  →  (rien)
+app      →  screens · design · domain · storage
+screens  →  design · domain
+design   →  rien du projet
+domain   →  rien
+storage  →  rien
 ```
 
-`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`. Une seule ligne violant cette règle et P2 est mort. C'est le point à surveiller en revue.
+*Corrigé en phase 3.* Le schéma précédent empilait les couches verticalement, ce qui se lisait `domain` vers `storage` et contredisait donc la phrase suivante. Il disait aussi que `screens` ne descendait que vers `design`, ce qui rendait la phase 4 impossible : un écran doit atteindre `reduire`.
+
+`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`. Une seule ligne violant cette règle et P2 est mort.
+
+**Ce n'est plus un point à surveiller en revue.** Chaque remontée est refusée par une règle de lint, éprouvée dans les deux sens : ce qui doit passer passe, ce qui doit être refusé l'est. Et `tools/garde-p2.test.ts` fait échouer la suite si la règle du domaine cesse de mordre, parce qu'elle n'était qu'une chaîne de caractères qu'une faute d'une lettre désarmait en silence.
+
+`app/` n'a délibérément aucune restriction : c'est la couche de composition. La contrainte porte sur l'autre sens, et elle est tenue : aucune couche inférieure ne peut importer `app/`.
 
 ---
 

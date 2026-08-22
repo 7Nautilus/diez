@@ -26,7 +26,7 @@
   gap: var(--esp-xs);
   color: var(--text-primary);
   /* Les libelles sont toujours Space Mono (design-system.md section 3). */
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-caption);
   /* Interlettrage des libelles qui se lisent sans se toucher, aligne sur celui
      de l'Etiquette : un statut n'est pas un controle, il n'a pas de raison de

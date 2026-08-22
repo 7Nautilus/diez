@@ -30,7 +30,7 @@
      contour de l'option cochee deborderait sur la bordure du groupe. */
   padding: var(--esp-xs);
   border: 1px solid var(--border-visible);
-  border-radius: 999px;
+  border-radius: var(--rayon-pilule);
 }
 
 .option {
@@ -52,10 +52,10 @@
   padding: 0 var(--esp-md);
   /* Pilule dans une pilule : c'est ce qui fait lire l'option cochee comme un
      pave deplace le long du groupe. */
-  border-radius: 999px;
+  border-radius: var(--rayon-pilule);
   color: var(--text-secondary);
   /* Les libelles sont toujours Space Mono (design-system.md section 3). */
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-label);
   /* Interlettrage des libelles de controle, aligne sur celui du Bouton
      (tokens-et-composants.md, Bouton). */
@@ -121,6 +121,6 @@
  * c'est le seul cas qui compte vraiment.
  */
 .option:has(.controle:focus-visible) {
-  outline: 2px solid var(--text-display);
-  outline-offset: var(--esp-2xs);
+  outline: var(--focus-contour);
+  outline-offset: var(--focus-ecart);
 }

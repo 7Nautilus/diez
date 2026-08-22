@@ -46,6 +46,20 @@ Pas de `@ts-ignore`. Si le typage gêne, c'est le modèle qui est faux.
 
 Elle est protégée par une **règle de lint** : l'outil refuse l'import au moment où il est écrit, dans l'éditeur, qui est le seul moment où la correction coûte zéro.
 
+La règle vaut pour les cinq couches, pas seulement pour le domaine, et elle a été **éprouvée dans les deux sens** avant la phase 4. Sans les contrôles positifs, une règle qui refuse tout aurait satisfait la moitié droite du tableau :
+
+| Doit passer | | Doit être refusé | |
+|---|---|---|---|
+| `app` vers `screens` | ok | `screens` vers `app` | refusé |
+| `app` vers `design` | ok | `screens` vers `storage` | refusé |
+| `app` vers `domain` | ok | `design` vers `app` | refusé |
+| `app` vers `storage` | ok | `design` vers `screens` | refusé |
+| `screens` vers `design` | ok | `domain` vers `app` | refusé |
+| `screens` vers `domain` | ok | `storage` vers `app` | refusé |
+| | | `storage` vers `domain` | refusé |
+
+Piège rencontré en menant ce contrôle, et qui vaut pour tout sondage de lint : une sonde qui ne lit que le code de sortie confond « refusé par la règle visée » et « refusé pour une autre raison ». La première version de ce tableau annonçait treize refus, y compris pour les six lignes de gauche, parce que les fichiers de sonde étaient mal formatés. **Chercher le nom de la règle dans la sortie, jamais le code de sortie seul.**
+
 Corollaire déjà établi dans `spec-fondations.md` : ce dont le domaine a besoin lui est **injecté**, jamais importé. Le corpus, l'horloge, l'aléatoire. Trois paramètres, et toute la logique devient testable sans DOM, sans attente réelle et sans hasard.
 
 ## 4. Fichiers et exports

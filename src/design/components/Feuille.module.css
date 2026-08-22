@@ -13,12 +13,8 @@
 .voile {
   /* Rayon haut, hauteur maximale, epaisseur de la poignee : les trois valeurs
      de docs/tokens-et-composants.md, section Feuille. */
-  --feuille-rayon: 16px;
   --feuille-hauteur-max: 86dvh;
   --feuille-poignee-e: 2px;
-  /* Contour de focus, aligne sur les etats du Bouton
-     (docs/tokens-et-composants.md, section Bouton, `:focus-visible`). */
-  --feuille-contour: 2px;
   /* Courbe du systeme, docs/design-system.md section 7. Elle accompagne
      `--duree-courte` : fondu d'opacite seul, aucun glissement, aucun ressort. */
 
@@ -47,7 +43,7 @@
      "pour faire panneau" est un anti-pattern nomme du projet
      (docs/design-system.md section 8). */
   border-top: 1px solid var(--border-visible);
-  border-radius: var(--feuille-rayon) var(--feuille-rayon) 0 0;
+  border-radius: var(--rayon-feuille) var(--rayon-feuille) 0 0;
 }
 
 .poignee {
@@ -68,7 +64,7 @@
 }
 
 .titre {
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-label);
   font-weight: 400;
   /* Interlettrage positif, sans quoi des capitales monospace se referment.
@@ -89,7 +85,7 @@
   padding-inline: var(--esp-sm);
   border: none;
   background: none;
-  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-family: var(--police-mono);
   font-size: var(--txt-label);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -100,8 +96,8 @@
 /* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose sur
    `:focus` reste affiche apres le tap et passe pour un defaut. */
 .fermer:focus-visible {
-  outline: var(--feuille-contour) solid var(--text-display);
-  outline-offset: var(--feuille-contour);
+  outline: var(--focus-contour);
+  outline-offset: var(--focus-ecart);
 }
 
 .contenu {
