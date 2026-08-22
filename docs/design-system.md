@@ -160,6 +160,38 @@ Le dernier palier est un avertissement, pas une cible : un thème qui y tombe do
 
 ### NIVEAU
 
+*Deux sélecteurs coexistent. La **molette** est le défaut à éprouver, la **grille** est conservée et reste commutable. Le choix se tranchera en soirée, pas par argument : les deux raisonnements sont bons et pointent en sens inverse.*
+
+| | Molette (défaut) | Grille (conservée) |
+|---|---|---|
+| Geste | défiler, puis valider | taper |
+| Engagement | **séparé de la désignation** | immédiat |
+| Mistap | sans conséquence | irréversible |
+| Rampe visible | 5 crans à la fois | les 10 d'un coup |
+| Vitesse à cible connue | plus lente | directe |
+
+**Ce que la molette gagne.** Faire défiler ne commet rien ; seul `VOIR LA QUESTION` engage. Le risque de mistap **disparaît** au lieu d'être atténué par la taille des cibles, ce qui est la seule compensation dont disposait la grille puisqu'il n'y a pas de retour depuis QUESTION.
+
+**Ce qu'elle perd.** La grille montre les dix crans d'un coup, donc la progression de 0,45 à 1,00 se lit comme un objet. La molette n'en montre que cinq : on sent l'intensité monter en défilant, mais l'échelle entière n'est jamais visible. Un niveau déjà joué y interrompt aussi la lecture, là où la grille le met de côté sans casser la montée.
+
+**À observer pendant la recette de jeu :** combien de fois le narrateur se trompe de cran avec chacun, et s'il ralentit avec la molette. Si personne ne se trompe avec la grille, sa simplicité gagne. Si les erreurs arrivent, la molette les rend gratuites.
+
+#### La molette
+
+| Paramètre | Valeur |
+|---|---|
+| Hauteur d'un cran | 56px |
+| Fenêtre visible | 280px, soit 5 crans |
+| Bande de lecture | fixe, centrée, filets `--border-visible` et deux repères `--text-secondary` |
+| Ancrage | en bas, comme la grille |
+| Validation | `VOIR LA QUESTION`, bouton primaire distinct |
+
+L'opacité s'applique ici **au texte**, le chiffre n'ayant pas de bloc derrière lui : c'est le modèle que l'audit avait calculé, sans le piège de contraste de la grille. Vérifié, 3,31 en clair et 4,41 en sombre au niveau 1.
+
+Un niveau déjà joué s'affiche en point médian. Si la bande tombe dessus, le bouton se désactive **en disant pourquoi** (`NIVEAU 7 DÉJÀ JOUÉ`). Pas de saut automatique : une molette qui esquive des crans toute seule est incompréhensible.
+
+#### La grille
+
 | Couche | Contenu | Traitement |
 |---|---|---|
 | Primaire | La grille de **1 à 10** | Space Mono, `--display-md`, blocs techniques (rayon 4px) |
@@ -256,6 +288,18 @@ Actions : `CARTE SUIVANTE` (primaire) et `SIGNALER` (ghost). *Correctif d'audit 
 **Concrètement : l'action primaire passe avant le ghost**, contre l'ordre habituel. *Correctif de prototype.* Placés dans l'ordre naturel, `SIGNALER` puis `CARTE SUIVANTE`, les deux boutons sont chacun le dernier enfant ancré en bas de leur écran : mesuré, ils tombaient à **1 px l'un de l'autre**. La règle ci-dessus était donc écrite et violée en même temps. En inversant l'ordre, l'écart passe à 83 px.
 
 C'est le genre de contrainte qui ne se vérifie pas en relisant : il faut mesurer les deux écrans successifs.
+
+**Le contrôle se fait sur toute la chaîne, pas écran par écran.** *Correctif de prototype.* Tous les écrans ancrent leur dernier bouton au même endroit, donc les superpositions sont la règle et non l'exception. Ce qui compte n'est pas qu'il y ait superposition, c'est qu'un second tap **détruise de l'information**.
+
+| Transition | Écart | Verdict |
+|---|---|---|
+| REPOS `PIOCHER` vers THÈME `ANNONCER` | 33px | décalés |
+| THÈME `ANNONCER` vers NIVEAU `RETOUR` | **0px** | superposés, mais la boucle revient à THÈME sans perte |
+| NIVEAU `VOIR LA QUESTION` vers QUESTION `RÉVÉLER` | 64px | décalés, sinon la réponse serait révélée |
+| QUESTION `RÉVÉLER` vers RÉPONSE `CARTE SUIVANTE` | 64px | décalés, sinon la réponse serait sautée |
+| RÉPONSE `CARTE SUIVANTE` vers THÈME `ANNONCER` | 64px | décalés |
+
+**Et le verrou protège la phase, pas seulement les transitions.** Cette même mesure a montré que `SIGNALER` occupe exactement la position de `RÉVÉLER` de l'écran précédent : un double tap signalait la question par accident. Ce bouton n'étant pas une transition, il échappait au verrou de 400 ms. Toute action utilisateur, transition ou non, passe désormais par le même contrôle de délai.
 
 **La rupture :** la réponse en taille display. `YAMOUSSOUKRO` en 48px n'a besoin d'aucun décor.
 
