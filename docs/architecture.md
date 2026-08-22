@@ -283,7 +283,7 @@ content/cartes/**.json
 | **`q` de 140 caractères maximum** | garantit le vide de sécurité de 96px avant `RÉVÉLER` |
 | `theme` de 40 caractères maximum | tient à l'écran en taille display |
 | pas de thème dupliqué | évite les cartes jumelles |
-| build de production : au moins 20 cartes valides | interdit de déployer une app vide |
+| build : au moins 5 cartes valides | interdit de déployer une app vide |
 
 Deux de ces contrôles méritent d'être compris plutôt que subis.
 

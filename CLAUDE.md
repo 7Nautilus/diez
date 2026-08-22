@@ -30,6 +30,19 @@ Trois règles qu'on casse facilement sans y penser :
 - un niveau déjà consommé change de **forme**, pas d'opacité, sinon il devient indiscernable d'un niveau facile ;
 - le rouge `#D71921` est réservé au signalement et aux erreurs. Rien d'autre.
 
+## Code
+
+**`docs/conventions-code.md` fait foi** dès qu'il s'agit d'écrire du code. Le principe qui gouverne tout le reste : ce qu'une machine peut vérifier, une machine le vérifie.
+
+Quatre règles qu'on enfreint sans y penser :
+
+- **toute valeur mesurée cite sa source.** `0,45`, `8px`, `400ms`, `64px`, `96px` protègent chacun quelque chose. Un nombre nu au point d'usage sera « simplifié » un jour par quelqu'un qui ignore ce qu'il tient ;
+- **un commentaire dit pourquoi, jamais quoi** ;
+- **aucune couleur littérale hors de `tokens.css`**, sinon le double mode casse dans l'un des deux sans que rien ne le signale ;
+- **exports nommés uniquement**, un `default` se renomme au point d'import et ruine le lexique.
+
+Outillage : Biome seul. La règle de dépendance est protégée par le lint, pas par la relecture. La CI bloque le déploiement si les tests ou la validation du corpus échouent.
+
 ## Architecture
 
 Règle de dépendance à sens unique : `screens` vers `design`, et rien d'autre. **`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`.** Une seule violation et le principe P2 est mort. À vérifier en revue.

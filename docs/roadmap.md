@@ -31,6 +31,8 @@ La recette d'acceptation de la V1 est exécutable **avant** la V1. C'est le poin
 
 ### Phase 0 : le test papier
 
+> **Passée.** Le modèle du narrateur a été joué et tient. L'hypothèse centrale du projet n'en est plus une, et tout ce qui suit cesse d'être un pari. C'était la seule phase capable d'invalider l'ensemble.
+
 **Coût :** une soirée, zéro ligne de code.
 **Objet :** valider le modèle du narrateur avant d'investir dans son implémentation.
 
@@ -97,6 +99,12 @@ Rejouer `recette.md` en entier, technique et jeu. C'est le moment où « conclua
 **Critère de sortie :** le chantier contenu peut être lancé selon `docs/generation-contenu.md`.
 
 ---
+
+## Périmètre resserré : preuve de concept
+
+*Décision postérieure à la phase 0.* La cible immédiate est une **preuve de concept**, pas une V1 complète. Le corpus reste aux **dix cartes pilotes**, calibrage défectueux compris : elles suffisent à éprouver l'application, et la phase 0 a déjà validé ce qu'elles avaient à valider.
+
+Conséquence sur le pipeline : le seuil de build descend à cinq cartes, et le chantier contenu s'éloigne d'autant. Le circuit de validation `valide: false` reste en place, il ne coûte rien tant qu'il n'y a que dix cartes à relire.
 
 ## Ce que cette roadmap n'inclut pas
 
