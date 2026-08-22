@@ -248,7 +248,7 @@ Le vide reste, mais au-dessus de la grille et non en dessous, ce qui est aussi p
 |---|---|---|
 | Primaire | L'énoncé | Space Grotesk 400, `--heading` |
 | Secondaire | | |
-| Tertiaire | `NIVEAU 07 · VERROUILLÉ` | label d'état, haut |
+| Tertiaire | `NIVEAU 07` | métadonnée, haut |
 
 Action : `RÉVÉLER LA RÉPONSE`, bouton secondaire, bas.
 
@@ -257,7 +257,9 @@ Action : `RÉVÉLER LA RÉPONSE`, bouton secondaire, bas.
 - interlignage de 1,5 au minimum, contre 1,2 pour un texte simplement lu ;
 - longueur de ligne plafonnée autour de 45 caractères, au-delà de quoi l'œil ne retrouve plus le début de la ligne suivante.
 
-Le mot `VERROUILLÉ` fait à lui seul tout le travail d'explication : le geste de retour est absorbé sans effet, et aucun mécanisme de feedback n'est construit pour le signaler. **L'état est lisible, il n'a donc pas besoin d'être notifié.**
+**Le verrou n'est plus annoncé.** *Décision validée.* Le label portait `VERROUILLÉ` ; il a été retiré pour la même raison que la consigne de l'accueil, épurer l'écran. Le geste de retour reste absorbé sans effet, désormais en silence.
+
+C'est tenable parce que le sélecteur par défaut est la molette, qui sépare la désignation de l'engagement : le narrateur n'a plus de raison de vouloir revenir en arrière, puisqu'il n'a rien pu valider par accident. Le verrou couvre encore un cas résiduel, il n'a simplement plus à s'expliquer.
 
 **La rupture :** un vide de `--revelation-vide` entre l'énoncé et le bouton de révélation. Partout ailleurs l'app est dense ; ici l'espace est un dispositif de sécurité, on ne révèle pas la réponse par un pouce mal placé. La contrainte fonctionnelle *est* le geste de design.
 
@@ -281,13 +283,33 @@ Actions : `CARTE SUIVANTE` (primaire) et `SIGNALER` (ghost). *Correctif d'audit 
 | 13 à 30 | `--display-md` |
 | plus de 30 | `--heading` |
 
-**`CARTE SUIVANTE` n'occupe pas la position de `RÉVÉLER LA RÉPONSE`.** *Correctif d'audit.* Deux boutons successifs au même endroit transforment un double tap en réponse jamais lue. Le décalage de position double le verrouillage d'entrée `VERROU_MS` décrit dans `architecture.md` §10 : une protection dans le domaine, une dans la mise en page.
+## La règle des deux emplacements
 
-**Concrètement : l'action primaire passe avant le ghost**, contre l'ordre habituel. *Correctif de prototype.* Placés dans l'ordre naturel, `SIGNALER` puis `CARTE SUIVANTE`, les deux boutons sont chacun le dernier enfant ancré en bas de leur écran : mesuré, ils tombaient à **1 px l'un de l'autre**. La règle ci-dessus était donc écrite et violée en même temps. En inversant l'ordre, l'écart passe à 83 px.
+*Elle vaut pour tout le parcours et mérite d'être posée avant les écrans, parce qu'elle explique un arrangement qui a l'air arbitraire et ne l'est pas.*
 
-C'est le genre de contrainte qui ne se vérifie pas en relisant : il faut mesurer les deux écrans successifs.
+**L'action d'avancement occupe toujours l'emplacement que l'écran précédent n'utilisait pas.** Deux emplacements seulement : le dernier rang de la pile basse, et celui juste au-dessus.
 
-**Le contrôle se fait sur toute la chaîne, pas écran par écran.** *Correctif de prototype.* Tous les écrans ancrent leur dernier bouton au même endroit, donc les superpositions sont la règle et non l'exception. Ce qui compte n'est pas qu'il y ait superposition, c'est qu'un second tap **détruise de l'information**.
+| Écran | Action d'avancement | Emplacement |
+|---|---|---|
+| REPOS | `PIOCHER` | au-dessus, le compteur occupe le dernier rang |
+| THÈME | `ANNONCER LES CHIFFRES` | dernier rang |
+| NIVEAU | `VOIR LA QUESTION` | au-dessus, `RETOUR AU THÈME` occupe le dernier rang |
+| QUESTION | `RÉVÉLER LA RÉPONSE` | dernier rang |
+| RÉPONSE | `CARTE SUIVANTE` | au-dessus, `SIGNALER` occupe le dernier rang |
+
+### Pourquoi pas une position fixe
+
+C'est l'intuition naturelle, et la mesure de la chaîne complète la contredit. Si l'avancement occupait toujours le dernier rang, un tap resté sur place enchaînerait de façon destructrice **à trois transitions sur quatre** : validation d'un niveau par défaut que personne n'a annoncé, révélation d'une réponse avant que la question ait été entendue, ou saut pur et simple de la réponse.
+
+`VERROU_MS` couvre le double tap rapide, mais pas le cas réel : le narrateur tape, ne voit pas que l'écran a changé parce qu'il regardait la table, et retape sept cents millisecondes plus tard.
+
+### Pourquoi l'alternance ne coûte rien
+
+Un narrateur enchaîne le même cycle de cinq écrans **une vingtaine de fois dans la soirée**. Ce qu'il mémorise n'est pas une position absolue mais une séquence. La règle « toujours au même endroit » sert les interfaces où l'on arrive sur les écrans dans un ordre imprévisible ; ici l'ordre est invariable, et l'alternance s'apprend en trois tours exactement comme une position fixe.
+
+### Le contrôle se fait sur la chaîne, pas écran par écran
+
+Tous les écrans ancrent leur dernier rang à la même hauteur, donc les superpositions sont la règle et non l'exception. Ce qui compte n'est pas qu'il y en ait, c'est qu'un second tap **détruise de l'information**.
 
 | Transition | Écart | Verdict |
 |---|---|---|
@@ -297,7 +319,9 @@ C'est le genre de contrainte qui ne se vérifie pas en relisant : il faut mesure
 | QUESTION `RÉVÉLER` vers RÉPONSE `CARTE SUIVANTE` | 64 px mesurés | décalés, sinon la réponse serait sautée |
 | RÉPONSE `CARTE SUIVANTE` vers THÈME `ANNONCER` | 64 px mesurés | décalés |
 
-**Et le verrou protège la phase, pas seulement les transitions.** Cette même mesure a montré que `SIGNALER` occupe exactement la position de `RÉVÉLER` de l'écran précédent : un double tap signalait la question par accident. Ce bouton n'étant pas une transition, il échappait à `VERROU_MS`. Toute action utilisateur, transition ou non, passe désormais par le même contrôle de délai.
+**Et `VERROU_MS` protège la phase, pas seulement les transitions.** `SIGNALER` occupant le dernier rang de l'écran RÉPONSE, il tombe à la position qu'occupait `RÉVÉLER` : un double tap signalait la question par accident. Ce bouton n'étant pas une transition, il échappait au verrou. Toute action utilisateur, transition ou non, passe désormais par le même contrôle de délai.
+
+C'est la contrepartie assumée de la règle des deux emplacements : elle garantit que l'avancement ne se superpose jamais, pas que rien ne se superpose.
 
 **La rupture :** la réponse en taille display. `YAMOUSSOUKRO` en `--txt-display-lg` n'a besoin d'aucun décor.
 

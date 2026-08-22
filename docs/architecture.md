@@ -180,7 +180,7 @@ Chaque transition reçoit un argument `maintenant: number`. Le réducteur **reje
 
 **Gestion du bouton « retour » du téléphone.** Point de fiabilité souvent raté : en mode `standalone`, le geste de retour ferme l'app. Il faut le brancher sur la machine à états via l'History API (un `history.pushState` par phase) pour que « retour » signifie *étape précédente* et jamais *quitter la partie*.
 
-En phase QUESTION, le geste est **absorbé sans effet**, et l'écran porte le label `NIVEAU 07 · VERROUILLÉ`. L'état est lisible, donc il n'a pas besoin d'être notifié.
+En phase QUESTION, le geste est **absorbé sans effet**, et en silence : le label `VERROUILLÉ` qui l'annonçait a été retiré (`design-system.md` §4). Avec la molette comme sélecteur par défaut, le narrateur n'a plus de raison de vouloir revenir en arrière, puisqu'il n'a rien pu valider par accident.
 
 ### Discussion : le verrou, rejoué sous le modèle du narrateur
 
