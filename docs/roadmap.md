@@ -110,8 +110,14 @@ Les **icônes et le manifest PWA** relèvent de la phase 1 pour le strict minimu
 
 **L'hypothèse centrale**, celle que la phase 0 teste : le modèle du narrateur produit une soirée que le groupe a envie de recommencer. Tout le reste en dépend.
 
-**Question ouverte, à trancher :** Victor possède-t-il la boîte du commerce ? La réponse change la proposition de valeur. S'il la possède, Diez entre en concurrence avec un produit qui fonctionne déjà et dont le contenu est calibré par des professionnels ; l'application doit alors apporter autre chose, et ce quelque chose est probablement le paquet `maison` et le renouvellement infini du corpus. S'il ne la possède pas, Diez est simplement le seul moyen de jouer, et la barre est bien plus basse.
+**Question tranchée :** le groupe ne possède pas la boîte du commerce. Trois conséquences.
 
-Cette question n'a jamais été posée pendant toute la conception. Elle n'invalide rien, mais elle devrait orienter les arbitrages ultérieurs.
+D'abord, **Diez n'a pas de concurrent direct** sur cette table. Ses concurrents réels sont les autres jeux de soirée du groupe et l'option de ne rien jouer. La barre à franchir est donc « meilleur qu'une conversation qui s'essouffle », pas « meilleur qu'un jeu édité ».
+
+Ensuite, **personne dans le groupe n'a de souvenir du jeu original**. Le test papier de la phase 0 s'en trouve nettement plus fiable : les joueurs jugeront le modèle du narrateur pour ce qu'il est, sans le comparer à une expérience de référence. C'est un avantage méthodologique rare pour un test à cinq personnes.
+
+Enfin, ça **relativise la dette de calibrage** du lot pilote. Une carte plate est un défaut réel, mais elle n'est comparée à rien. La priorité reste au modèle, pas au contenu, ce que la roadmap acte déjà.
+
+Cette question n'avait jamais été posée pendant toute la conception, et c'est le genre d'oubli qu'un cadrage stratégique existe pour rattraper.
 
 **Risque assumé :** la phase 0 est la moins amusante et la plus facile à sauter. Elle exige d'organiser une soirée pour tester une hypothèse, quand construire est immédiatement gratifiant. C'est précisément pour ça qu'elle est écrite en tête de cette roadmap plutôt que suggérée en passant.

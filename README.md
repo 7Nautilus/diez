@@ -25,6 +25,7 @@ Les documents se lisent dans cet ordre.
 | [docs/design-system.md](docs/design-system.md) | **Document de référence.** Le système de design appliqué, écran par écran. |
 | [docs/recette.md](docs/recette.md) | Ce qu'on vérifie avant de déclarer la V1 réussie. |
 | [docs/roadmap.md](docs/roadmap.md) | Les sept phases, construites à rebours depuis la recette. |
+| [docs/spec-fondations.md](docs/spec-fondations.md) | Les phases 1 et 2 spécifiées, prêtes à implémenter. |
 | [docs/generation-contenu.md](docs/generation-contenu.md) | Le cahier des charges du futur chantier contenu. |
 
 Les quatre fichiers `docs/audit-*.md` sont la **trace du raisonnement**, plus une source. Leurs conclusions ont été rapatriées dans les deux documents de référence, et l'annexe de traçabilité de `architecture.md` indique où chacune a atterri. Leurs corps sont datés et n'ont pas été réécrits après le renommage du projet ni le changement de modèle de jeu : ils décrivent l'état des choses au moment de l'audit.
