@@ -1,0 +1,36 @@
+# Dependances
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# Genere par le pipeline de contenu, jamais commite
+src/data/cartes.gen.json
+
+# Tests
+coverage/
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Systeme
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editeurs
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Journaux
+*.log
+npm-debug.log*

@@ -1,0 +1,89 @@
+{
+  "$schema": "../../schema/lot.schema.json",
+  "lot": "fixtures-001",
+  "statut": "fixture",
+  "note": "Cas de test, jamais du contenu. Deux cartes plutot que six : avec une pioche aleatoire, six cartes eparses ne permettent pas d'atteindre a coup sur le cas qu'on veut eprouver. Une carte dense dont chaque niveau teste une limite differente se parcourt d'un bout a l'autre. Exclues des builds de production par leur paquet.",
+  "cartes": [
+    {
+      "id": "_fixture-limites-001",
+      "theme": "FIXTURE : toutes les limites de longueur",
+      "paquet": "_fixtures",
+      "domaine": "_test",
+      "source": "manuel",
+      "valide": true,
+      "questions": [
+        {
+          "niveau": 1,
+          "q": "Combien y a-t-il de planètes dans le système solaire ?",
+          "r": "8"
+        },
+        {
+          "niveau": 2,
+          "q": "Quelle ville a remplacé Abidjan comme capitale ivoirienne ?",
+          "r": "Yamoussoukro, capitale politique de la Côte d'Ivoire en 1983"
+        },
+        {
+          "niveau": 3,
+          "q": "Dans le système de classification des nuages établi au début du dix-neuvième siècle, quel terme désigne les nuages les plus élevés du ciel ?",
+          "r": "Les cirrus"
+        },
+        {
+          "niveau": 4,
+          "q": "Quel est le plus haut sommet d'Afrique ?",
+          "r": "Le Kilimandjaro",
+          "note": "Le Kilimandjaro culmine à 5 895 mètres et se situe en Tanzanie. Il s'agit d'un volcan endormi, et non d'un sommet de chaîne, ce qui en fait le plus haut isolé."
+        },
+        {
+          "niveau": 5,
+          "q": "Combien de kilomètres compte une année-lumière ?",
+          "r": "9 460 730 472 580 800 km"
+        },
+        {
+          "niveau": 6,
+          "q": "Quelle région française entoure Paris ?",
+          "r": "L'Île-de-France"
+        },
+        {
+          "niveau": 7,
+          "q": "Quel est le mot le plus long du français courant ?",
+          "r": "Anticonstitutionnellement"
+        },
+        {
+          "niveau": 8,
+          "q": "Quel chef gaulois s'est rendu à César à Alésia ?",
+          "r": "Vercingétorix"
+        },
+        {
+          "niveau": 9,
+          "q": "Quelle victoire de Napoléon a eu lieu le 2 décembre 1805 ?",
+          "r": "La bataille d'Austerlitz, 1805"
+        },
+        {
+          "niveau": 10,
+          "q": "Quel luthier italien a donné son nom à des violons célèbres ?",
+          "r": "Stradivarius"
+        }
+      ]
+    },
+    {
+      "id": "_fixture-minimal-001",
+      "theme": "FIXTURE",
+      "paquet": "_fixtures",
+      "domaine": "_test",
+      "source": "manuel",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Combien font deux plus deux ?", "r": "4" },
+        { "niveau": 2, "q": "De quelle couleur est le ciel ?", "r": "Bleu" },
+        { "niveau": 3, "q": "Quel animal aboie ?", "r": "Le chien" },
+        { "niveau": 4, "q": "Combien de jours compte avril ?", "r": "30" },
+        { "niveau": 5, "q": "Quelle est la capitale de la France ?", "r": "Paris" },
+        { "niveau": 6, "q": "Quel métal est liquide ?", "r": "Le mercure" },
+        { "niveau": 7, "q": "Combien de côtés a un hexagone ?", "r": "6" },
+        { "niveau": 8, "q": "Quel est le symbole du fer ?", "r": "Fe" },
+        { "niveau": 9, "q": "Combien de cordes a un violon ?", "r": "4" },
+        { "niveau": 10, "q": "Quel est le plus petit nombre premier ?", "r": "2" }
+      ]
+    }
+  ]
+}

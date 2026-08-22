@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ropat.github.io/diez/schema/lot.schema.json",
+  "title": "Lot de cartes Diez",
+  "description": "Un fichier de contenu Diez. Contient les metadonnees du lot et ses cartes. Voir docs/architecture.md section 4 et 8.",
+  "type": "object",
+  "required": ["lot", "cartes"],
+  "additionalProperties": false,
+
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Chemin relatif vers ce schema, pour la validation a la saisie dans l'editeur."
+    },
+    "lot": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Identifiant du lot, en kebab-case sans accent."
+    },
+    "statut": {
+      "enum": ["pilote", "production", "fixture"],
+      "default": "production",
+      "description": "pilote : sert au developpement, calibrage non garanti. fixture : cas de test, jamais du contenu."
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Reserve editoriale sur le lot. Sans effet sur le build."
+    },
+    "cartes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/carte" }
+    }
+  },
+
+  "$defs": {
+    "niveau": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+
+    "question": {
+      "type": "object",
+      "required": ["niveau", "q", "r"],
+      "additionalProperties": false,
+      "properties": {
+        "niveau": { "$ref": "#/$defs/niveau" },
+        "q": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "description": "Enonce. Le plafond de 140 garantit le vide de securite de 96px avant REVELER (design-system section 4)."
+        },
+        "r": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Reponse. Le plafond de 60 rend structurellement impossible la reponse a debat."
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Precision d'arbitrage, affichee sous la reponse. Coupe court aux contestations legitimes."
+        }
+      }
+    },
+
+    "carte": {
+      "type": "object",
+      "required": ["id", "theme", "paquet", "domaine", "questions", "source", "valide"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^_?[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Stable et jamais recycle. L'historique des parties le reference : renumeroter casserait l'anti-repetition sur les telephones."
+        },
+        "theme": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Doit tenir a l'ecran en taille display. Au-dela de 32 caracteres il tombe au dernier palier typographique, ce qui est un avertissement et non une cible."
+        },
+        "paquet": {
+          "enum": ["general", "maison", "_fixtures"]
+        },
+        "domaine": {
+          "enum": [
+            "histoire-geo",
+            "sciences",
+            "cinema-series",
+            "musique",
+            "sport",
+            "jeux-video-internet",
+            "langue-litterature",
+            "vie-quotidienne",
+            "arts-mythologie",
+            "marques-business",
+            "insolite",
+            "_test"
+          ]
+        },
+        "source": {
+          "enum": ["genere", "manuel"]
+        },
+        "valide": {
+          "type": "boolean",
+          "description": "Relu par un humain. Les cartes a false sont exclues par le compilateur et ne peuvent donc pas atteindre une soiree."
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/question" },
+          "description": "Exactement dix questions, un niveau de 1 a 10 chacun, sans doublon ni manque. La contrainte est verifiee par les dix blocs contains ci-dessous, donc directement dans l'editeur.",
+          "allOf": [
+            { "contains": { "properties": { "niveau": { "const": 1 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 2 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 3 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 4 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 5 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 6 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 7 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 8 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 9 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 },
+            { "contains": { "properties": { "niveau": { "const": 10 } }, "required": ["niveau"] }, "minContains": 1, "maxContains": 1 }
+          ]
+        }
+      }
+    }
+  }
+}

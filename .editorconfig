@@ -1,0 +1,24 @@
+# Diez : reglages d'editeur partages.
+# L'encodage et les fins de ligne ne sont pas cosmetiques ici : le projet est
+# developpe sous Windows et le contenu est charge d'accents. Un fichier JSON
+# qui bascule en CP1252 corrompt un lot entier sans erreur visible.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Le markdown peut porter des retours a la ligne significatifs en fin de ligne.
+trim_trailing_whitespace = false
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

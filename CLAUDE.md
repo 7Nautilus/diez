@@ -1,0 +1,53 @@
+# Diez : consignes de travail
+
+Jeu de questions coopératif à narrateur unique, usage privé, sans vocation commerciale. Lire `README.md` puis `docs/modele-de-jeu.md` avant toute intervention.
+
+**Les deux documents de référence sont `docs/architecture.md` et `docs/design-system.md`.** Les `docs/audit-*.md` sont une trace historique, pas une source : leurs conclusions ont déjà été rapatriées dans les deux premiers.
+
+## Écriture
+
+**Ne jamais utiliser de cadratin** (le tiret long, U+2014) dans quoi que ce soit : réponses, documentation, commentaires, contenu de fichiers. Remplacer par deux-points, virgule, parenthèses ou point-virgule. Contrôle avant livraison : `rg -c '\x{2014}' fichier` doit renvoyer 0.
+
+Tout est rédigé en français, y compris la documentation technique.
+
+## Nommage
+
+L'échafaudage technique est en **anglais** (`domain/`, `screens/`, `storage/`, `tools/`, `useReducer`, `dispatch`). Le vocabulaire du jeu est en **français** (`Carte`, `Niveau`, `Paquet`, `Theme`, `Narrateur`, `piocher()`, `reveler()`).
+
+**Aucun accent ni cédille dans un identifiant** : `ResumeCarte`, `Reponse`, `Theme`. Les accents ne vivent que dans les chaînes affichées et les fichiers de contenu.
+
+Termes **interdits**, ils ont déjà un équivalent français retenu : `card`, `deck`, `level`, `theme` (comme type), `draw`, `reveal`.
+
+## Design
+
+**Charger la skill `nothing-design` avant toute production visuelle.** Elle fait foi pour les tokens ; `docs/design-system.md` dit seulement comment elle s'applique ici.
+
+Ne jamais proposer Tailwind : le système est un jeu de variables CSS, et le double mode clair/sombre obligerait à réencoder les tokens quatre fois.
+
+Trois règles qu'on casse facilement sans y penser :
+
+- la rampe de difficulté du sélecteur s'encode en **opacité**, jamais en couleur, et ne descend **jamais sous 0,45** (seuil de contraste, le mode clair étant le plus contraignant) ;
+- un niveau déjà consommé change de **forme**, pas d'opacité, sinon il devient indiscernable d'un niveau facile ;
+- le rouge `#D71921` est réservé au signalement et aux erreurs. Rien d'autre.
+
+## Architecture
+
+Règle de dépendance à sens unique : `screens` vers `design`, et rien d'autre. **`domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`.** Une seule violation et le principe P2 est mort. À vérifier en revue.
+
+Règle d'état : **à chaque phase, l'état contient exactement ce qui peut être montré, et rien de plus.** En phase QUESTION, la réponse ne doit pas être dans l'état, parce que le narrateur lit à voix haute en fixant l'écran.
+
+## Non-objectifs
+
+Ne pas introduire sans demande explicite : comptes, backend, base de données, plateau, pions, score même coopératif, notion de joueur (nombre, noms, ordre), **outil de calcul de moyenne** (elle est explicitement approximative, c'est un jugement rendu à l'oreille), synchronisation multi-appareils, analytics, internationalisation.
+
+## Contenu
+
+Le corpus est **différé**, il fera l'objet d'un chantier distinct. Ne pas lancer de production de masse sans appliquer `docs/generation-contenu.md`.
+
+Toute modification de `content/` doit rester conforme à `content/schema/lot.schema.json`. Le paquet `maison` a une règle éditoriale propre, rappelée dans `content/cartes/maison/README.md` : le dépôt est public.
+
+## Vérifications avant de livrer un fichier
+
+```bash
+rg -c '\x{2014}' fichier
+```

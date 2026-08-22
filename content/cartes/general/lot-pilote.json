@@ -1,0 +1,208 @@
+{
+  "$schema": "../../schema/lot.schema.json",
+  "lot": "pilote-001",
+  "statut": "pilote",
+  "note": "Lot de developpement. Trois corrections d'audit appliquees : reformulation du volcan martien, note sur Astana, note sur la devise olympique. La dette de calibrage reste ouverte : audit-contenu.md etablit que six cartes sur dix ont une rampe plate dans leur moitie basse. Elle ne se corrige pas en reordonnant, seulement en ecrivant de nouvelles questions, ce qui releve du chantier contenu.",
+  "cartes": [
+    {
+      "id": "capitales-monde-001",
+      "theme": "Les capitales du monde",
+      "paquet": "general",
+      "domaine": "histoire-geo",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Quelle est la capitale de l'Italie ?", "r": "Rome" },
+        { "niveau": 2, "q": "Quelle est la capitale du Japon ?", "r": "Tokyo" },
+        { "niveau": 3, "q": "Quelle est la capitale du Portugal ?", "r": "Lisbonne" },
+        { "niveau": 4, "q": "Quelle est la capitale du Brésil ?", "r": "Brasília" },
+        { "niveau": 5, "q": "Quelle est la capitale de la Turquie ?", "r": "Ankara" },
+        { "niveau": 6, "q": "Quelle est la capitale de l'Australie ?", "r": "Canberra" },
+        { "niveau": 7, "q": "Quelle est la capitale du Maroc ?", "r": "Rabat" },
+        { "niveau": 8, "q": "Quelle est la capitale du Kazakhstan ?", "r": "Astana", "note": "Rebaptisée Noursoultan de 2019 à 2022, puis redevenue Astana." },
+        { "niveau": 9, "q": "Quelle est la capitale de la Birmanie ?", "r": "Naypyidaw" },
+        { "niveau": 10, "q": "Quelle est la capitale politique de la Côte d'Ivoire ?", "r": "Yamoussoukro", "note": "Abidjan est la capitale économique." }
+      ]
+    },
+    {
+      "id": "corps-humain-001",
+      "theme": "Le corps humain",
+      "paquet": "general",
+      "domaine": "sciences",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Quel organe pompe le sang dans tout le corps ?", "r": "Le cœur" },
+        { "niveau": 2, "q": "Combien de dents possède un adulte, dents de sagesse comprises ?", "r": "32" },
+        { "niveau": 3, "q": "Quel est le plus grand organe du corps humain ?", "r": "La peau" },
+        { "niveau": 4, "q": "Comment s'appelle la partie colorée de l'œil ?", "r": "L'iris" },
+        { "niveau": 5, "q": "Comment s'appelle l'os de la cuisse ?", "r": "Le fémur" },
+        { "niveau": 6, "q": "Combien d'os compte le squelette d'un adulte ?", "r": "206" },
+        { "niveau": 7, "q": "Quel organe produit l'insuline ?", "r": "Le pancréas" },
+        { "niveau": 8, "q": "Quel est le plus petit os du corps humain ?", "r": "L'étrier", "note": "Situé dans l'oreille moyenne." },
+        { "niveau": 9, "q": "Comment s'appelle le liquide transparent qui remplit l'avant de l'œil ?", "r": "L'humeur aqueuse" },
+        { "niveau": 10, "q": "Combien de paires de nerfs crâniens l'être humain possède-t-il ?", "r": "12" }
+      ]
+    },
+    {
+      "id": "harry-potter-001",
+      "theme": "L'univers Harry Potter",
+      "paquet": "general",
+      "domaine": "cinema-series",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Comment s'appelle l'école de sorcellerie ?", "r": "Poudlard" },
+        { "niveau": 2, "q": "De quel quai part le Poudlard Express à King's Cross ?", "r": "Le quai 9 ¾" },
+        { "niveau": 3, "q": "Comment s'appelle la chouette de Harry ?", "r": "Hedwige" },
+        { "niveau": 4, "q": "Quel poste Harry occupe-t-il dans l'équipe de Quidditch ?", "r": "Attrapeur" },
+        { "niveau": 5, "q": "Quel animal est l'emblème de la maison Poufsouffle ?", "r": "Le blaireau" },
+        { "niveau": 6, "q": "Comment s'appelle le serpent de Voldemort ?", "r": "Nagini" },
+        { "niveau": 7, "q": "Quel est le vrai nom de Voldemort en version française ?", "r": "Tom Elvis Jedusor" },
+        { "niveau": 8, "q": "Comment s'appelle la chatte du concierge Rusard ?", "r": "Miss Teigne" },
+        { "niveau": 9, "q": "En quelle année Harry entre-t-il à Poudlard ?", "r": "1991", "note": "Selon la chronologie des livres." },
+        { "niveau": 10, "q": "Quel est le numéro du coffre de Harry à Gringotts ?", "r": "Le 687" }
+      ]
+    },
+    {
+      "id": "jeux-olympiques-001",
+      "theme": "Les Jeux olympiques",
+      "paquet": "general",
+      "domaine": "sport",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Tous les combien de temps ont lieu les JO d'été ?", "r": "Tous les 4 ans" },
+        { "niveau": 2, "q": "Combien d'anneaux compte le drapeau olympique ?", "r": "5" },
+        { "niveau": 3, "q": "Quelle ville a accueilli les JO d'été de 2024 ?", "r": "Paris" },
+        { "niveau": 4, "q": "Dans quel pays sont nés les Jeux olympiques antiques ?", "r": "En Grèce, à Olympie" },
+        { "niveau": 5, "q": "Quelle ville a accueilli les premiers JO modernes, en 1896 ?", "r": "Athènes" },
+        { "niveau": 6, "q": "Quelle est la devise olympique, en français ?", "r": "Plus vite, plus haut, plus fort", "note": "Depuis 2021 la devise officielle ajoute « ensemble ». Les deux réponses valent." },
+        { "niveau": 7, "q": "Qui est l'athlète le plus médaillé de l'histoire des JO ?", "r": "Michael Phelps" },
+        { "niveau": 8, "q": "Quel sport, retiré du programme après 2008, est revenu aux JO de Tokyo ?", "r": "Le baseball et le softball" },
+        { "niveau": 9, "q": "En quelle année les femmes ont-elles participé aux JO pour la première fois ?", "r": "1900" },
+        { "niveau": 10, "q": "Quelle ville a accueilli les JO d'été de 1952 ?", "r": "Helsinki" }
+      ]
+    },
+    {
+      "id": "systeme-solaire-001",
+      "theme": "Le système solaire",
+      "paquet": "general",
+      "domaine": "sciences",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Autour de quel astre la Terre tourne-t-elle ?", "r": "Le Soleil" },
+        { "niveau": 2, "q": "Quelle est la plus grosse planète du système solaire ?", "r": "Jupiter" },
+        { "niveau": 3, "q": "Quelle planète est surnommée « la planète rouge » ?", "r": "Mars" },
+        { "niveau": 4, "q": "Combien y a-t-il de planètes dans le système solaire ?", "r": "8" },
+        { "niveau": 5, "q": "Quelle planète est la plus proche du Soleil ?", "r": "Mercure" },
+        { "niveau": 6, "q": "En quelle année Pluton a-t-elle perdu son statut de planète ?", "r": "2006" },
+        { "niveau": 7, "q": "Quel est le plus gros satellite naturel du système solaire ?", "r": "Ganymède", "note": "Une lune de Jupiter." },
+        { "niveau": 8, "q": "Quelle planète tourne « couchée », avec un axe incliné à près de 98° ?", "r": "Uranus" },
+        { "niveau": 9, "q": "Comment s'appelle la ceinture d'astéroïdes située au-delà de Neptune ?", "r": "La ceinture de Kuiper" },
+        { "niveau": 10, "q": "Quel est le plus grand volcan du système solaire ?", "r": "Olympus Mons, sur Mars" }
+      ]
+    },
+    {
+      "id": "expressions-francaises-001",
+      "theme": "Les expressions françaises",
+      "paquet": "general",
+      "domaine": "langue-litterature",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Complétez : « Il pleut des… »", "r": "Cordes" },
+        { "niveau": 2, "q": "Que veut dire « poser un lapin » à quelqu'un ?", "r": "Ne pas venir au rendez-vous" },
+        { "niveau": 3, "q": "Que veut dire « tomber dans les pommes » ?", "r": "S'évanouir" },
+        { "niveau": 4, "q": "Que veut dire « avoir le cafard » ?", "r": "Être déprimé" },
+        { "niveau": 5, "q": "Que veut dire « rester de marbre » ?", "r": "Ne montrer aucune émotion" },
+        { "niveau": 6, "q": "Que veut dire « faire chou blanc » ?", "r": "Échouer, n'obtenir aucun résultat" },
+        { "niveau": 7, "q": "Que veut dire « courir sur le haricot » à quelqu'un ?", "r": "L'agacer, l'énerver" },
+        { "niveau": 8, "q": "De quelle langue vient le mot « seum », et que signifiait-il ?", "r": "De l'arabe semm : venin, poison" },
+        { "niveau": 9, "q": "Que veut dire « tailler une bavette » ?", "r": "Discuter, bavarder" },
+        { "niveau": 10, "q": "Que veut dire « faire florès » ?", "r": "Connaître un franc succès" }
+      ]
+    },
+    {
+      "id": "rap-francais-001",
+      "theme": "Le rap français",
+      "paquet": "general",
+      "domaine": "musique",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Quel rappeur normand a écrit « Basique » ?", "r": "Orelsan" },
+        { "niveau": 2, "q": "Comment s'appelle le duo formé par les frères Ademo et N.O.S ?", "r": "PNL" },
+        { "niveau": 3, "q": "De quelle ville est originaire le groupe IAM ?", "r": "Marseille" },
+        { "niveau": 4, "q": "Quel rappeur a sorti l'album « QALF » ?", "r": "Damso" },
+        { "niveau": 5, "q": "Quel est le vrai prénom de Booba ?", "r": "Élie" },
+        { "niveau": 6, "q": "Quel est le titre du premier album solo de Nekfeu ?", "r": "Feu" },
+        { "niveau": 7, "q": "Comment s'appelle le label fondé par Booba ?", "r": "92i" },
+        { "niveau": 8, "q": "Dans quel groupe Booba rappait-il avec Ali avant sa carrière solo ?", "r": "Lunatic" },
+        { "niveau": 9, "q": "En quelle année est sorti « L'École du micro d'argent » d'IAM ?", "r": "1997" },
+        { "niveau": 10, "q": "Quel est le titre du premier album de NTM ?", "r": "Authentik" }
+      ]
+    },
+    {
+      "id": "mythologie-grecque-001",
+      "theme": "La mythologie grecque",
+      "paquet": "general",
+      "domaine": "arts-mythologie",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "Qui est le roi des dieux de l'Olympe ?", "r": "Zeus" },
+        { "niveau": 2, "q": "Quel monstre a des serpents à la place des cheveux ?", "r": "Méduse" },
+        { "niveau": 3, "q": "Quel héros a tué le Minotaure ?", "r": "Thésée" },
+        { "niveau": 4, "q": "Quel est le point faible d'Achille ?", "r": "Son talon" },
+        { "niveau": 5, "q": "Comment s'appelle le chien à trois têtes qui garde les Enfers ?", "r": "Cerbère" },
+        { "niveau": 6, "q": "Combien de travaux Hercule a-t-il accomplis ?", "r": "12" },
+        { "niveau": 7, "q": "Qui a volé le feu aux dieux pour le donner aux hommes ?", "r": "Prométhée" },
+        { "niveau": 8, "q": "Comment s'appelle le passeur qui fait traverser le fleuve des morts ?", "r": "Charon" },
+        { "niveau": 9, "q": "Comment s'appellent les trois Moires ?", "r": "Clotho, Lachésis et Atropos", "note": "Les Parques chez les Romains." },
+        { "niveau": 10, "q": "Qui est la mère d'Apollon et d'Artémis ?", "r": "Létô", "note": "Latone chez les Romains." }
+      ]
+    },
+    {
+      "id": "seconde-guerre-mondiale-001",
+      "theme": "La Seconde Guerre mondiale",
+      "paquet": "general",
+      "domaine": "histoire-geo",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "En quelle année s'est terminée la Seconde Guerre mondiale ?", "r": "1945" },
+        { "niveau": 2, "q": "Qui dirigeait l'Allemagne nazie ?", "r": "Adolf Hitler" },
+        { "niveau": 3, "q": "Quel pays est envahi le 1er septembre 1939, déclenchant la guerre ?", "r": "La Pologne" },
+        { "niveau": 4, "q": "Qui était le chef de la France libre ?", "r": "Charles de Gaulle" },
+        { "niveau": 5, "q": "Sur quelle ville la première bombe atomique a-t-elle été larguée ?", "r": "Hiroshima" },
+        { "niveau": 6, "q": "Comment s'appelle la machine de chiffrement allemande cassée par les Alliés ?", "r": "Enigma" },
+        { "niveau": 7, "q": "Quelle bataille de 1942-1943 marque le tournant du front de l'Est ?", "r": "Stalingrad" },
+        { "niveau": 8, "q": "Quel était le nom de code de l'invasion de l'URSS par l'Allemagne ?", "r": "L'opération Barbarossa" },
+        { "niveau": 9, "q": "Quel était le nom de code du débarquement de Normandie ?", "r": "L'opération Overlord" },
+        { "niveau": 10, "q": "À quelle date le Japon a-t-il signé sa capitulation ?", "r": "Le 2 septembre 1945", "note": "L'annonce de la capitulation datait du 15 août." }
+      ]
+    },
+    {
+      "id": "mcdonalds-001",
+      "theme": "McDonald's",
+      "paquet": "general",
+      "domaine": "vie-quotidienne",
+      "source": "genere",
+      "valide": true,
+      "questions": [
+        { "niveau": 1, "q": "De quelle couleur est le « M » de McDonald's ?", "r": "Jaune" },
+        { "niveau": 2, "q": "Comment s'appelle le clown mascotte de la marque ?", "r": "Ronald McDonald" },
+        { "niveau": 3, "q": "Comment s'appelle le menu enfant ?", "r": "Le Happy Meal" },
+        { "niveau": 4, "q": "Quel burger est composé de deux steaks et trois pains ?", "r": "Le Big Mac" },
+        { "niveau": 5, "q": "Comment s'appelle le sandwich au poisson de McDonald's ?", "r": "Le Filet-O-Fish" },
+        { "niveau": 6, "q": "Comment s'appelle le muffin œuf-bacon servi au petit-déjeuner ?", "r": "L'Egg McMuffin" },
+        { "niveau": 7, "q": "Comment s'appelle le personnage violet et poilu de la marque ?", "r": "Grimace" },
+        { "niveau": 8, "q": "Quel indice économique compare le prix du Big Mac entre les pays ?", "r": "L'indice Big Mac", "note": "Publié par The Economist." },
+        { "niveau": 9, "q": "Quel homme d'affaires a racheté McDonald's à ses fondateurs ?", "r": "Ray Kroc" },
+        { "niveau": 10, "q": "Quels sont les prénoms des deux frères fondateurs ?", "r": "Richard et Maurice" }
+      ]
+    }
+  ]
+}

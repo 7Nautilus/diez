@@ -1,0 +1,22 @@
+# Diez : normalisation des fins de ligne.
+#
+# Ce fichier est le pendant Git de .editorconfig, et il est necessaire :
+# core.autocrlf vaut true dans la configuration systeme de Git for Windows,
+# ce qui convertirait la copie de travail en CRLF a chaque checkout, en
+# contradiction avec end_of_line = lf declare dans .editorconfig.
+#
+# Il doit figurer dans le commit initial. Ajoute plus tard, il produirait
+# un commit de conversion massive touchant tous les fichiers.
+
+* text=auto eol=lf
+
+# Binaires : aucune conversion.
+*.woff2 binary
+*.woff  binary
+*.ttf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
