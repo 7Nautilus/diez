@@ -1,0 +1,80 @@
+# Diez : construction et publication sur GitHub Pages.
+#
+# Le workflow BLOQUE la publication si un controle echoue. C'est le
+# comportement voulu, y compris le soir ou il derange : une barriere qu'on
+# contourne le jour ou elle compte ne sert a rien. Voir docs/conventions-code.md
+# section 10.
+#
+# Reglage a ne pas defaire, cote depot : Settings > Pages > Source doit valoir
+# "GitHub Actions", et non une branche. Sans lui, le job de publication echoue.
+
+name: Deploiement
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une publication en cours n'est jamais annulee : l'interrompre laisserait le
+# site dans un etat intermediaire. Les executions suivantes attendent.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Aligne sur la version de developpement, pour qu'un echec de CI
+          # soit reproductible en local.
+          node-version: "24"
+          cache: npm
+
+      - name: Installer
+        run: npm ci
+
+      # ORDRE IMPOSE : corpus, lint, tests, build, publication. Le controle le
+      # plus rapide en premier, pour echouer tot.
+
+      # 1. Validation du corpus contre content/schema/lot.schema.json.
+      #    ETAPE MANQUANTE : tools/valider.ts n'existe pas encore, il arrive
+      #    avec le chantier de contenu. Ne pas supprimer ce bloc : son absence
+      #    est une dette, pas un choix.
+      # - name: Valider le corpus
+      #   run: npm run valider
+
+      - name: Lint et format
+        run: npm run lint
+
+      # 3. ETAPE MANQUANTE : aucun test n'existe encore, le domaine arrive en
+      #    phase 2. Meme remarque que ci-dessus.
+      # - name: Tests
+      #   run: npm test
+
+      - name: Construire
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

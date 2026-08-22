@@ -1,0 +1,76 @@
+/*
+ * Diez : les variables du systeme.
+ *
+ * SOURCE UNIQUE. Aucune valeur litterale ne s'ecrit ailleurs que dans ce
+ * fichier. Les noms et les valeurs viennent de docs/tokens-et-composants.md,
+ * qui fait foi ; ce fichier ne fait que les rendre executables.
+ *
+ * Phase 1 : les collections Primitives et Semantique. La collection
+ * Composant arrive avec les ecrans, en phase 3.
+ */
+
+:root {
+  /* Les trois etats du mode tiennent ici et dans les deux regles suivantes.
+     `light-dark()` resout chaque variable a partir du color-scheme calcule,
+     donc aucune valeur n'est ecrite deux fois et il n'existe aucun bloc
+     conditionnel ou en oublier une. */
+  color-scheme: light dark;
+
+  /* --- Collection 1 : Primitives. Aucune signification attachee. --- */
+  --noir: #000000;
+  --gris-950: #111111;
+  --gris-900: #1a1a1a;
+  --gris-850: #222222;
+  --gris-800: #333333;
+  --gris-500: #666666;
+  --gris-400: #999999;
+  --gris-200: #cccccc;
+  --gris-100: #e8e8e8;
+  --gris-050: #f5f5f5;
+  --blanc: #ffffff;
+  --rouge: #d71921;
+
+  /* Espacement, base 8. */
+  --esp-2xs: 2px;
+  --esp-xs: 4px;
+  --esp-sm: 8px;
+  --esp-md: 16px;
+  --esp-lg: 24px;
+  --esp-xl: 32px;
+  --esp-2xl: 48px;
+  --esp-3xl: 64px;
+  --esp-4xl: 96px;
+
+  /* Typographie, en rem pour suivre le reglage de taille de texte du
+     telephone, qui est le premier que touche une personne qui voit mal. */
+  --txt-display-xl: 4.5rem;
+  --txt-display-lg: 3rem;
+  --txt-display-md: 2.25rem;
+  --txt-heading: 1.5rem;
+  --txt-body: 1rem;
+  --txt-body-sm: 0.875rem;
+  --txt-caption: 0.75rem;
+  --txt-label: 0.6875rem;
+
+  --duree-courte: 200ms;
+
+  /* --- Collection 2 : Semantique, avec modes. --- */
+  --ground: light-dark(var(--gris-050), var(--noir));
+  --surface: light-dark(var(--blanc), var(--gris-950));
+  --surface-haute: light-dark(var(--gris-050), var(--gris-900));
+  --border: light-dark(var(--gris-100), var(--gris-850));
+  --border-visible: light-dark(var(--gris-200), var(--gris-800));
+  --text-disabled: light-dark(var(--gris-400), var(--gris-500));
+  --text-secondary: light-dark(var(--gris-500), var(--gris-400));
+  --text-primary: light-dark(var(--gris-900), var(--gris-100));
+  --text-display: light-dark(var(--noir), var(--blanc));
+  --accent: var(--rouge);
+}
+
+/* La bascule manuelle gagne dans les deux sens, y compris contre le systeme. */
+:root[data-mode="sombre"] {
+  color-scheme: only dark;
+}
+:root[data-mode="clair"] {
+  color-scheme: only light;
+}

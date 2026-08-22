@@ -1,0 +1,96 @@
+/*
+ * Diez : les polices, servies en local.
+ *
+ * Elles ne sont pas chargees depuis Google Fonts, pour deux raisons dont
+ * aucune ne concerne le hors-ligne. D'abord le flash de substitution :
+ * l'ecran THEME n'affiche qu'un mot en grand sur un fond vide, un FOUT y est
+ * spectaculaire. Ensuite l'origine unique : servies avec le reste du bundle,
+ * elles n'exigent ni DNS ni TLS vers un tiers.
+ *
+ * Sous-ensemble latin uniquement, il couvre les accents francais. C'est lui
+ * que decrit l'`unicode-range` repete a l'identique sur chaque bloc : la
+ * regle @font-face n'a aucun moyen de factoriser un descripteur, cette
+ * repetition est une contrainte du format et non un oubli.
+ *
+ * Fichiers recuperes une fois depuis Google Fonts, puis versionnes.
+ * Voir docs/design-system.md section 1.
+ */
+
+@font-face {
+  font-family: "Doto";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/doto-700.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
+ * Les trois graisses de Space Grotesk pointent volontairement vers UN SEUL
+ * fichier : c'est une police variable, dont la presence d'un axe a ete
+ * verifiee dans la table `fvar` du woff2. Le descripteur `font-weight` d'une
+ * regle @font-face fixe la valeur de l'axe, donc trois declarations sur le
+ * meme fichier donnent trois graisses reellement distinctes.
+ *
+ * Ne pas retablir un fichier par graisse : les trois telecharges chez Google
+ * etaient identiques octet pour octet, et versionner trois fois 22 Ko de
+ * contenu strictement egal etait la duplication que ce depot proscrit.
+ */
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("./fonts/space-grotesk.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/space-grotesk.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/space-grotesk.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Space Mono est statique : ses deux graisses sont deux fichiers distincts,
+   verifie de la meme facon, aucune table de variation. */
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/space-mono-400.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/space-mono-700.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

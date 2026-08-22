@@ -25,6 +25,10 @@ Réglages qui comptent, le reste étant laissé aux valeurs par défaut de Biome
 | Imports restreints depuis `domain/` | erreur | voir §3 |
 | Indentation, fins de ligne | 2 espaces, LF | accordés avec `.editorconfig` |
 
+**Le formateur ne touche pas `content/`.** C'est de la donnée, validée par `content/schema/lot.schema.json` et non par Biome. L'exclusion n'est pas un confort : le formateur faisait éclater les dix lignes parallèles du schéma, une par niveau, dont l'alignement est précisément ce qui rend un niveau manquant visible d'un coup d'oeil. Un gain de mise en forme contre une perte de relecture.
+
+**Une exception, dans `tools/` seulement.** `tools/icones.py` est écrit en Python et non en Node. Aucune bibliothèque d'image n'est installée côté Node alors que Pillow l'est, et le script **ne fait pas partie du build** : il s'exécute une fois à la main, ses sorties sont versionnées dans `public/`. Il n'ajoute donc aucune dépendance au projet. L'exception s'arrête là : rien de ce qui tourne en CI ou dans le navigateur n'est écrit dans un autre langage que TypeScript.
+
 ## 2. TypeScript
 
 `strict: true` et **`noUncheckedIndexedAccess: true`**.
@@ -44,6 +48,14 @@ Corollaire déjà établi dans `spec-fondations.md` : ce dont le domaine a besoi
 ## 4. Fichiers et exports
 
 **Exports nommés uniquement, jamais de `default`.** Un export par défaut se renomme librement au point d'import, ce qui ruine en une ligne la discipline de nommage qu'on a mise en place. Un `Paquet` doit s'appeler `Paquet` partout.
+
+La règle porte sur le code, pas sur les fichiers de configuration à la racine : `vite.config.ts` exporte par défaut parce que Vite ne lit rien d'autre. Le contrôle mécanique cible donc `src/` seulement, ce qui est exactement le périmètre où la règle a un sens :
+
+```bash
+rg -n 'export default' src
+```
+
+Doit ne rien renvoyer.
 
 Pas de fichiers baril (`index.ts` qui réexporte). Ils masquent les dépendances réelles, et c'est justement ce qu'on veut voir.
 
@@ -111,6 +123,8 @@ Doit ne rien renvoyer.
 
 Modules CSS, pas de styles en ligne sauf pour une valeur calculée à l'exécution, comme l'opacité d'un cran de la rampe.
 
+**`!important` est interdit, avec une exception nommée.** Biome le refuse par la règle `noImportantStyles`. La seule dérogation du dépôt est `[hidden] { display: none !important }` dans `base.css` : la déclaration du navigateur a une spécificité nulle, donc n'importe quelle règle d'auteur posant un `display` la écrase en silence et l'élément reste affiché. C'est un bug que la maquette a réellement produit. La dérogation est écrite au point d'usage par un commentaire `biome-ignore` portant sa raison ; toute autre occurrence doit être refusée en revue.
+
 ## 9. Tests
 
 **Vitest, sur `domain/` et `tools/` uniquement.** C'est là qu'est la logique. Tester les écrans coûterait plus qu'il ne rapporte pour un usage privé, et le prototype a montré que les défauts d'interface se trouvent en mesurant le rendu, pas en simulant des clics.
@@ -148,3 +162,4 @@ Ce dépôt s'est constitué en consignant les raisons dans ses commits, et c'est
 - un import dans `domain/` qui sort de `domain/`
 - Tailwind, sous quelque forme que ce soit
 - un cadratin, y compris dans un commentaire
+- `!important`, hors la dérogation nommée de `base.css` (voir §8)

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      `width=device-width` : sans lui, le telephone rend la page dans une
+      fenetre virtuelle de 980 px puis la reduit, et toute l'interface parait
+      minuscule. `viewport-fit=cover` : sans lui, env(safe-area-inset-*) vaut
+      toujours zero et la gestion de l'encoche est un decor sans effet.
+      Voir docs/design-system.md section 3.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!--
+      Le manifest n'accepte qu'une couleur de theme, ces deux balises la
+      corrigent au chargement selon le mode. Ce sont les seules valeurs
+      litterales hors de tokens.css : une balise meta ne lit pas une variable.
+    -->
+    <meta name="theme-color" content="#F5F5F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Jeu de questions coopératif" />
+    <!-- iOS ignore les icones du manifest pour l'ecran d'accueil. -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icone.svg" />
+    <title>Diez</title>
+  </head>
+  <body>
+    <div id="racine"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

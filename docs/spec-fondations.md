@@ -137,6 +137,16 @@ L'icône `any` garde la cellule de 58 px, sans quoi le glyphe n'occuperait que 6
 
 Le 192 × 192 se dérive du 512 `any` par mise à l'échelle, les proportions étant identiques.
 
+### L'icône iOS, ajoutée en phase 1
+
+**Lacune de cette spécification, trouvée en l'implémentant :** elle prévoyait les trois icônes du manifest et rien d'autre. Or **iOS ignore les icônes du manifest** pour l'écran d'accueil. Sans `apple-touch-icon`, un iPhone y place une capture de la page, c'est-à-dire un rectangle presque vide. Le narrateur pouvant avoir un iPhone, l'icône devient illisible sur l'appareil qui compte le plus.
+
+S'ajoute donc `apple-touch-icon.png`, **180 × 180**, dérivée du 512 `any` par mise à l'échelle comme le 192. Elle est déclarée dans `index.html` par `<link rel="apple-touch-icon">`, la seule voie qu'iOS lise. Aucune géométrie nouvelle : mêmes proportions, même correction optique.
+
+Un quatrième point de recette en découle :
+
+- [ ] sur iPhone, l'icône de l'écran d'accueil est bien le `d` matriciel, et non une capture de la page.
+
 ### Ce qui reste à produire
 
 Les fichiers relèvent de la phase 1. La géométrie ci-dessus suffit à les générer mécaniquement, sans arbitrage supplémentaire, à trois conditions de recette :

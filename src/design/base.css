@@ -1,0 +1,54 @@
+/*
+ * Diez : socle minimal de la phase 1.
+ *
+ * Aucune valeur litterale ici : tout passe par les tokens. Le systeme de
+ * design complet, avec ses composants et leurs variantes, arrive en phase 3.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* `[hidden]{display:none}` vient de la feuille du navigateur avec une
+   specificite nulle : toute regle d'auteur declarant un `display` l'ecrase en
+   silence, et l'element reste affiche. Voir docs/design-system.md section 8. */
+[hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: c'est le !important qui rend l'attribut fiable ; le retirer reintroduit le bug */
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--text-primary);
+  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  /* Sur macOS le texte rend plus gras que prevu, ce qui epaissit les graisses
+     legeres. Une seule fois, sur la racine. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top)) var(--esp-lg)
+    calc(var(--esp-lg) + env(safe-area-inset-bottom)) var(--esp-lg);
+}
+
+.mot {
+  font-family: "Doto", "Space Mono", monospace;
+  font-size: var(--txt-display-xl);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--text-display);
+}

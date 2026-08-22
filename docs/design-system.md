@@ -19,7 +19,19 @@ Deux raisons, aucune ne concerne le hors-ligne :
 1. **Le flash de substitution.** L'écran THÈME n'affiche qu'un thème, en grand, sur un fond vide. Un FOUT y est spectaculairement visible, là où il passerait inaperçu dans une interface dense.
 2. **Une origine unique.** Servies depuis GitHub Pages avec le reste du bundle, elles n'exigent ni résolution DNS ni négociation TLS vers un tiers.
 
-Graisses à embarquer, au strict nécessaire : Doto (1 fichier variable), Space Grotesk 300/400/500, Space Mono 400/700. Sous-ensemble `latin` uniquement, il couvre les accents français. Budget attendu : environ 200 Ko.
+Graisses à embarquer, au strict nécessaire : Doto 700, Space Grotesk 300/400/500, Space Mono 400/700. Sous-ensemble `latin` uniquement, il couvre les accents français.
+
+**Quatre fichiers, pas six**, et le budget mesuré à la phase 1 est de **58,1 Ko** (59 460 octets), non les 200 Ko estimés au départ :
+
+| Famille | Fichiers | Poids | Nature |
+|---|---|---|---|
+| Doto 700 | 1 | 3 928 o | statique (aucune table `fvar`) |
+| Space Grotesk 300/400/500 | **1** | 22 288 o | **variable**, un axe de graisse |
+| Space Mono 400/700 | 2 | 33 244 o | statiques |
+
+Les trois graisses de Space Grotesk sont servies par un seul fichier : les trois téléchargés chez Google étaient identiques octet pour octet, parce que c'est une police variable dont le descripteur `font-weight` de chaque `@font-face` fixe la valeur de l'axe. Vérifié par mesure et non par lecture : la table `fvar` est présente dans le `.woff2`, et à 120 px, la graisse 500 couvre 52,4 % d'encre de plus que la 300. Space Mono, à chasse fixe, ne peut pas se vérifier à la largeur, qui est identique par construction : sa graisse 700 couvre 43,9 % d'encre de plus que la 400.
+
+Doto pèse moins que la limite d'incorporation de Vite (4 096 octets), il est donc inséré en base64 dans la feuille de style plutôt que servi à part. C'est la police du wordmark, celle dont le chargement est le plus pressé : une requête de moins.
 
 ---
 
