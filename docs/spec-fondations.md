@@ -82,9 +82,49 @@ Ce second réglage n'est pas de la coquetterie sur ce projet précis. Le domaine
 
 Le point 5 n'est pas une exigence du projet, le hors-ligne ayant été rétrogradé. Il sert de contrôle que le précache fonctionne, ce qui est le signe que le service worker n'est pas fantôme.
 
-## Questions en attente
+## Les icônes
 
-**Design.** Le contenu des icônes n'est pas décidé. Le wordmark `DIEZ` en Doto reste lisible à 192 px, mais l'icône `maskable` impose une zone de sécurité circulaire qui rognerait les extrémités d'un mot de quatre lettres. Une seule lettre, ou le wordmark très resserré, sont les deux pistes. À trancher avant la phase 1, c'est un choix visuel et non technique.
+*Décision validée : la lettre `D` seule.* Elle règle le problème du masque, où quatre lettres se faisaient rogner par la zone de sécurité circulaire.
+
+Elle en règle un second, moins évident : **l'icône n'a plus besoin de la police.** Un `D` matriciel se dessine en cercles explicites, ce qui supprime toute dépendance au rendu de Doto, tout risque de substitution silencieuse, et donne le contrôle exact de la géométrie. Le motif dot-matrix reste cité, sans que rien ne dépende d'un fichier de police.
+
+### Le motif
+
+Matrice de 5 colonnes sur 7 rangées, le `D` de fonte matricielle classique, 18 points allumés sur 35 :
+
+```
+● ● ● ● ○
+● ○ ○ ○ ●
+● ○ ○ ○ ●
+● ○ ○ ○ ●
+● ○ ○ ○ ●
+● ○ ○ ○ ●
+● ● ● ● ○
+```
+
+### Géométrie
+
+Fond `#000000` à fond perdu, points `#FFFFFF`, points centrés dans leur cellule.
+
+| | `purpose: any` | `purpose: maskable` |
+|---|---|---|
+| Toile | 512 × 512 | 512 × 512 |
+| Cellule | 58 px | 46 px |
+| Diamètre du point | 44 px | 35 px |
+| Grille obtenue | 290 × 406 | 230 × 322 |
+| Décalage (x, y) | 111, 53 | 141, 95 |
+
+**D'où viennent ces deux jeux de valeurs.** La zone de sécurité d'une icône `maskable` est un cercle de 80 % du côté, soit un rayon de 204,8 px sur une toile de 512. Le coin de la grille se trouve à `cellule × √18,5`, soit `4,301 × cellule`. Il faut donc une cellule inférieure à 47,6 px : 46 laisse une marge confortable à 197,8 px du centre.
+
+À 58 px de cellule, ce coin serait à 249 px et **dépasserait la zone de sécurité** : un masque circulaire mangerait les points d'angle du `D`. D'où le second jeu, plus resserré, réservé au masque.
+
+L'icône `any` garde la cellule de 58 px, sans quoi le glyphe n'occuperait que 63 % de la hauteur et paraîtrait timide sur une toile jamais rognée.
+
+Le 192 × 192 se dérive du 512 `any` par mise à l'échelle, les proportions étant identiques.
+
+### Ce qui reste à produire
+
+Les fichiers eux-mêmes relèvent de la phase 1. La géométrie ci-dessus est suffisante pour les générer mécaniquement, sans arbitrage supplémentaire.
 
 ---
 
