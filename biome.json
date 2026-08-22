@@ -131,16 +131,8 @@
               "options": {
                 "patterns": [
                   {
-                    "group": [
-                      "**",
-                      "!./*",
-                      "!../design/**",
-                      "!react",
-                      "!react-dom",
-                      "!react/**",
-                      "!react-dom/**"
-                    ],
-                    "message": "design/ ne depend de rien du projet : c'est le bas de la chaine (architecture.md section 3)."
+                    "group": ["**/screens/**", "**/domain/**", "**/storage/**", "**/app/**"],
+                    "message": "design/ est le bas de la chaine de dependance : il ne remonte jamais vers screens/, domain/, storage/ ni app/ (architecture.md section 3). Une liste d'interdictions et non d'autorisations, parce que design/ importe legitimement React et ses propres sous-dossiers."
                   }
                 ]
               }
