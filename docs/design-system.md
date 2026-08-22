@@ -87,9 +87,19 @@ Le système reste intact, il gagne une règle de granularité.
 
 **Une réponse numérique se compose en Space Mono, une réponse textuelle en Space Grotesk.** « 206 » et « 1997 » sont de la donnée, « Yamoussoukro » est du texte. Le système traite les chiffres comme un objet visuel à part entière, autant s'en servir.
 
-### Zones sûres
+### Zones sûres, et la balise sans laquelle elles ne servent à rien
 
 *Correctif d'audit.* Les ancrages en bord bas tombent sur l'indicateur d'accueil iOS et sur la barre de gestes Android ; les ancrages hauts croisent l'encoche. Tous les bords utilisent `env(safe-area-inset-*)`.
+
+*Correctif de prototype.* Deux attributs conditionnent tout le reste, et leur absence ne produit aucune erreur :
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+```
+
+Sans `width=device-width`, le téléphone rend la page dans une fenêtre virtuelle de **980 px** puis la réduit : toute l'interface apparaît minuscule. Mesuré sur le prototype, la fenêtre faisait bien 980 px.
+
+Sans `viewport-fit=cover`, `env(safe-area-inset-*)` vaut **toujours zéro**, donc toute la gestion des zones sûres ci-dessus est un décor sans effet.
 
 ---
 
@@ -116,7 +126,13 @@ Quatre correctifs d'audit atterrissent sur cet écran :
 - **Réinitialiser l'historique est accessible ici**, pas seulement depuis l'écran d'épuisement. Le motif « on joue avec un autre groupe » n'a rien à voir avec « le stock est vide ».
 - **`COPIER LES SIGNALEMENTS`** en tertiaire, visible uniquement s'il en existe.
 
-**La ligne d'apprentissage.** Une seule, permanente, en label d'instruction : `LIS LE THÈME · CHACUN ANNONCE SON CHIFFRE · TU FAIS LA MOYENNE`. Le modèle du narrateur a énormément simplifié ce problème : **une seule personne a besoin de connaître les règles, et c'est celle qui tient l'appareil.** Pas de tour d'introduction, pas de modale, pas de bouton d'aide.
+**Aucune consigne sur l'accueil.** *Décision validée, contre une recommandation d'audit.* Une ligne d'instruction permanente y figurait, en réponse au P1 « aucun apprentissage ». Elle a été retirée pour épurer l'écran.
+
+Le P1 repose donc désormais **entièrement sur le menu**, dont la première section s'appelle « Les règles ». C'est tenable parce que l'accueil ne porte que deux contrôles, `PIOCHER` et le burger : quelqu'un de bloqué n'a qu'un seul endroit où aller, et la découvrabilité est meilleure sur un écran nu que sur un écran chargé.
+
+C'est un arbitrage assumé, pas un oubli. Si un narrateur bloque pendant la recette de jeu, c'est le premier endroit à regarder.
+
+**Le menu n'existe que sur l'accueil.** Pendant un tour, rien ne doit concurrencer l'écran : c'est la même règle que « à chaque phase, exactement ce qui peut être montré ». Il prend la forme d'une feuille du bas plutôt que d'un panneau latéral, parce qu'elle arrive dans l'arc du pouce.
 
 ### THÈME
 
@@ -160,6 +176,23 @@ Le dernier palier est un avertissement, pas une cible : un thème qui y tombe do
 
 Le coût est réel : la rampe va de 45 % à 100 % au lieu de « presque effacé » à 100 %. Elle reste parfaitement lisible comme progression, elle est moins spectaculaire. C'est le prix d'un niveau 1 choisissable par quelqu'un qui voit mal, dans un salon sombre.
 
+**L'opacité s'applique au remplissage, jamais à l'élément.** *Correctif de prototype, et c'est le plus important de la série.*
+
+L'audit avait calculé le seuil de 0,45 en modélisant la rampe comme du **texte sur un fond**. Le sélecteur affiche en réalité des **blocs remplis contenant un chiffre inversé**. En atténuant l'élément entier, le chiffre s'estompe avec son bloc : les deux convergent vers le fond et l'écart entre eux s'effondre.
+
+| Niveau 1 | Bloc contre fond | Chiffre contre bloc |
+|---|---|---|
+| `opacity` sur l'élément, clair | 3,30 conforme | **1,83 échec** |
+| `opacity` sur l'élément, sombre | 4,43 conforme | **2,22 échec** |
+| Opacité sur le remplissage, clair | 3,31 conforme | **3,31 conforme** |
+| Opacité sur le remplissage, sombre | 4,41 conforme | **4,41 conforme** |
+
+Les chiffres 1, 2 et 3 étaient difficilement lisibles. En n'atténuant que le fond du bloc, le chiffre reste opaque et les deux rapports deviennent identiques, ce qui est logique puisque le chiffre est exactement la couleur du fond.
+
+Le seuil de 0,45 tient, c'est le modèle de calcul qui était faux.
+
+Implémentation : `color-mix(in srgb, var(--text-display) calc(var(--op) * 100%), transparent)` sur le fond, jamais `opacity` sur le bloc.
+
 **Les niveaux déjà consommés changent de forme, pas d'opacité.** *Correctif d'audit.* L'opacité encode déjà la difficulté ; le système encode aussi l'état désactivé en opacité. Le canal est saturé, un niveau 2 disponible et un niveau 9 brûlé se ressembleraient. Le système recommande « opacité, puis motif » : un niveau consommé **perd son remplissage, ne garde que sa bordure, et son chiffre est remplacé par un point médian**. Deux informations, deux canaux, aucune couleur introduite.
 
 L'état vient du champ `consommes` porté par la phase NIVEAU (`architecture.md` §5). C'est le cas normal dès la deuxième soirée, pas un cas limite.
@@ -171,8 +204,13 @@ L'état vient du champ `consommes` porté par la phase NIVEAU (`architecture.md`
 | Hauteur des blocs | 64px | bien au-delà du minimum de 44px |
 | Disposition | grille 2 colonnes | demi-largeur par bloc |
 | **Espacement entre blocs** | **8px minimum** | WCAG 2.2, et convergence de deux audits |
+| **Ancrage vertical** | **en bas** | correctif de prototype, voir ci-dessous |
 
 L'espacement est le paramètre à ne pas sacrifier. Dix blocs jointifs produisent exactement le type de cible où le pouce dérape d'une case.
+
+**La grille est ancrée en bas, pas en haut.** *Correctif de prototype.* Ancrée en haut, elle finissait à **52 % de la hauteur d'écran**, avec **315 px de vide en dessous**. C'est le seul écran à visée précise et sans retour possible, et il plaçait ses cibles hors de l'arc naturel du pouce. Ancrée en bas, la grille occupe 45 % à 88 % de la hauteur. Aucune autre valeur ne change.
+
+Le vide reste, mais au-dessus de la grille et non en dessous, ce qui est aussi plus cohérent avec le reste du système : l'espace y sert toujours à isoler, jamais à combler.
 
 ### QUESTION
 
@@ -214,6 +252,10 @@ Actions : `CARTE SUIVANTE` (primaire) et `SIGNALER` (ghost). *Correctif d'audit 
 | plus de 30 | `--heading` |
 
 **`CARTE SUIVANTE` n'occupe pas la position de `RÉVÉLER LA RÉPONSE`.** *Correctif d'audit.* Deux boutons successifs au même endroit transforment un double tap en réponse jamais lue. Le décalage de position double le verrouillage d'entrée de 400 ms décrit dans `architecture.md` §10 : une protection dans le domaine, une dans la mise en page.
+
+**Concrètement : l'action primaire passe avant le ghost**, contre l'ordre habituel. *Correctif de prototype.* Placés dans l'ordre naturel, `SIGNALER` puis `CARTE SUIVANTE`, les deux boutons sont chacun le dernier enfant ancré en bas de leur écran : mesuré, ils tombaient à **1 px l'un de l'autre**. La règle ci-dessus était donc écrite et violée en même temps. En inversant l'ordre, l'écart passe à 83 px.
+
+C'est le genre de contrainte qui ne se vérifie pas en relisant : il faut mesurer les deux écrans successifs.
 
 **La rupture :** la réponse en taille display. `YAMOUSSOUKRO` en 48px n'a besoin d'aucun décor.
 
@@ -269,6 +311,8 @@ Ceux qui ont une chance réelle d'apparaître ici :
 
 - une échelle de couleur du vert au rouge sur les niveaux, **le piège numéro un** ;
 - une rampe d'opacité ramenée sous 0,45 parce que « c'est plus joli » ;
+- `opacity` posée sur un bloc de niveau plutôt que sur son remplissage, ce qui efface le chiffre en même temps que le bloc ;
+- un `display` d'auteur sur un élément piloté par l'attribut `hidden` : `[hidden]{display:none}` vient de la feuille du navigateur avec une spécificité nulle et se fait écraser en silence, l'élément restant affiché en permanence. Poser `[hidden]{display:none!important}` une fois pour tout le document ;
 - l'état consommé encodé en opacité, ce qui le rendrait indiscernable de la difficulté ;
 - un mode clair traité comme un dérivé du sombre, avec des gris simplement inversés ;
 - un token de couleur défini uniquement dans un bloc `@media` ;

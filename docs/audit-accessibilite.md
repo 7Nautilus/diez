@@ -7,6 +7,8 @@
 
 ## P0 : la rampe d'opacité descend sous le seuil de contraste
 
+> **Correction du 2026-08-22, postérieure à cet audit.** Le calcul ci-dessous modélise la rampe comme du *texte sur un fond*. Le sélecteur affiche en réalité des *blocs remplis contenant un chiffre inversé*, et le prototype a montré qu'atténuer l'élément entier fait chuter le contraste du chiffre contre son bloc à 1,83:1. Le seuil de 0,45 reste juste ; il doit s'appliquer au **remplissage seul**. Voir `design-system.md` §4. Le raisonnement ci-dessous est conservé tel qu'il a été mené.
+
 Le design décrit le bloc « 1 » comme « presque effacé ». C'est la rupture de motif de l'écran NIVEAU, et c'est sa plus belle idée. Elle n'est pas viable telle quelle.
 
 Les chiffres sont en `--display-md` (36px), donc en « grand texte » au sens WCAG : le seuil applicable est de **3:1**. Le bloc étant aussi une cible tactile, sa bordure relève de WCAG 1.4.11 et tombe sous le même seuil.
