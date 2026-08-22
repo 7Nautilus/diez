@@ -39,13 +39,17 @@ Graisses à embarquer, au strict nécessaire : Doto (1 fichier variable), Space 
 
 ### Stratégie de tokens
 
-Trois blocs, dans cet ordre :
+Une variable, deux valeurs de mode, résolues par **`light-dark()`**. Les trois états tiennent alors en trois lignes, et **aucune valeur n'est écrite deux fois** :
 
-1. `:root` : la palette **claire** complète. Aucun token n'est défini uniquement dans un bloc conditionnel.
-2. `@media (prefers-color-scheme: dark) { :root:not([data-mode="clair"]) { … } }` : la palette sombre pour `AUTO`.
-3. `:root[data-mode="sombre"] { … }` : la palette sombre forcée.
+```css
+:root                      { color-scheme: light dark }
+:root[data-mode="sombre"]  { color-scheme: only dark }
+:root[data-mode="clair"]   { color-scheme: only light }
+```
 
-Ce triptyque est ce qui fait que la bascule manuelle gagne **dans les deux sens**, y compris quand elle contredit le système. Un token défini seulement sous une media query est un bug qui n'apparaîtra que sur le téléphone d'un ami.
+C'est le gain de DRY le plus important du système. La solution précédente répétait la palette sombre dans trois blocs, ce qui rendait possible le pire bug de cette famille : un token défini seulement sous une media query, invisible en développement et cassé sur le téléphone d'un ami. Avec `light-dark()` ce bug n'a plus de forme.
+
+Les valeurs elles-mêmes vivent dans `tokens-et-composants.md`, seule source. Ce document n'en cite que les noms.
 
 ### Ce qui traverse sans retouche, et ce qui ne traverse pas
 
@@ -73,11 +77,7 @@ Budget imposé par le système : **2 familles, 3 tailles, 2 graisses maximum par
 
 *Correctif d'audit.* Le label `--label` était défini à 11px, Space Mono, capitales, interlettrage 0,08em. C'est juste pour de la métadonnée et mauvais pour une instruction : les capitales suppriment la silhouette du mot, sur laquelle l'œil s'appuie pour lire vite, et l'effet se cumule à 11px en monospace.
 
-| Fonction | Traitement |
-|---|---|
-| Métadonnée (`CARTE 042`, `NIVEAU 07`) | 11px, capitales, `--text-secondary` |
-| État (`VERROUILLÉ`, `[ SIGNALÉE ]`) | 12px, capitales, `--text-primary` |
-| **Instruction** | **13px minimum, sans capitales**, `--text-primary` |
+Le composant `Etiquette` gagne donc un axe de variante, `data-fonction`, dont les trois valeurs sont définies dans `tokens-et-composants.md`. La règle qui compte : **une instruction se compose en casse normale**, parce qu'elle est le seul label qu'on lit vraiment.
 
 Le système reste intact, il gagne une règle de granularité.
 
@@ -172,7 +172,7 @@ Le dernier palier est un avertissement, pas une cible : un thème qui y tombe do
 
 **Ce que la molette gagne.** Faire défiler ne commet rien ; seul `VOIR LA QUESTION` engage. Le risque de mistap **disparaît** au lieu d'être atténué par la taille des cibles, ce qui est la seule compensation dont disposait la grille puisqu'il n'y a pas de retour depuis QUESTION.
 
-**Ce qu'elle perd.** La grille montre les dix crans d'un coup, donc la progression de 0,45 à 1,00 se lit comme un objet. La molette n'en montre que cinq : on sent l'intensité monter en défilant, mais l'échelle entière n'est jamais visible. Un niveau déjà joué y interrompt aussi la lecture, là où la grille le met de côté sans casser la montée.
+**Ce qu'elle perd.** La grille montre les dix crans d'un coup, donc la progression de `--rampe-min` à `--rampe-max` se lit comme un objet. La molette n'en montre que cinq : on sent l'intensité monter en défilant, mais l'échelle entière n'est jamais visible. Un niveau déjà joué y interrompt aussi la lecture, là où la grille le met de côté sans casser la montée.
 
 **À observer pendant la recette de jeu :** combien de fois le narrateur se trompe de cran avec chacun, et s'il ralentit avec la molette. Si personne ne se trompe avec la grille, sa simplicité gagne. Si les erreurs arrivent, la molette les rend gratuites.
 
@@ -200,17 +200,15 @@ Un niveau déjà joué s'affiche en point médian. Si la bande tombe dessus, le 
 
 **La rupture :** la rampe d'opacité. Le 1 s'efface, le 10 s'impose, progression régulière entre les deux. La difficulté devient *physique* : on voit la montée avant de la choisir. On encode par **opacité, jamais par couleur** ; un dégradé vert vers rouge serait exactement l'anti-pattern, et illisible pour les 8 % d'hommes atteints de déficience de la vision des couleurs.
 
-**La rampe part de 0,45.** *Correctif d'audit.* Les chiffres sont en grand texte, donc soumis au seuil de 3:1, et les blocs étant des cibles tactiles leur bordure l'est aussi. L'opacité minimale pour tenir 3:1 est de 0,35 sur noir et **0,42 sur `#F5F5F5`**. C'est le mode clair qui contraint, ce qui est contre-intuitif : on imagine le fond blanc plus permissif, c'est l'inverse.
+**Le plancher de la rampe, `--rampe-min`.** *Correctif d'audit.* Les chiffres sont en grand texte, donc soumis au seuil de 3:1, et les blocs étant des cibles tactiles leur bordure l'est aussi. L'opacité minimale pour tenir 3:1 est de 0,35 sur noir et **0,42 sur `#F5F5F5`**. C'est le mode clair qui contraint, ce qui est contre-intuitif : on imagine le fond blanc plus permissif, c'est l'inverse.
 
-| Niveau | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Opacité | 0,45 | 0,51 | 0,57 | 0,63 | 0,69 | 0,76 | 0,82 | 0,88 | 0,94 | 1,00 |
+La rampe est **une interpolation, pas une table** : voir `tokens-et-composants.md`, où la formule vit seule. Dix valeurs recopiées se désynchronisent le jour où le seuil bouge.
 
 Le coût est réel : la rampe va de 45 % à 100 % au lieu de « presque effacé » à 100 %. Elle reste parfaitement lisible comme progression, elle est moins spectaculaire. C'est le prix d'un niveau 1 choisissable par quelqu'un qui voit mal, dans un salon sombre.
 
 **L'opacité s'applique au remplissage, jamais à l'élément.** *Correctif de prototype, et c'est le plus important de la série.*
 
-L'audit avait calculé le seuil de 0,45 en modélisant la rampe comme du **texte sur un fond**. Le sélecteur affiche en réalité des **blocs remplis contenant un chiffre inversé**. En atténuant l'élément entier, le chiffre s'estompe avec son bloc : les deux convergent vers le fond et l'écart entre eux s'effondre.
+L'audit avait calculé le seuil en modélisant la rampe comme du **texte sur un fond**. Le sélecteur affiche en réalité des **blocs remplis contenant un chiffre inversé**. En atténuant l'élément entier, le chiffre s'estompe avec son bloc : les deux convergent vers le fond et l'écart entre eux s'effondre.
 
 | Niveau 1 | Bloc contre fond | Chiffre contre bloc |
 |---|---|---|
@@ -221,7 +219,7 @@ L'audit avait calculé le seuil de 0,45 en modélisant la rampe comme du **texte
 
 Les chiffres 1, 2 et 3 étaient difficilement lisibles. En n'atténuant que le fond du bloc, le chiffre reste opaque et les deux rapports deviennent identiques, ce qui est logique puisque le chiffre est exactement la couleur du fond.
 
-Le seuil de 0,45 tient, c'est le modèle de calcul qui était faux.
+Le seuil tient, c'est le modèle de calcul qui était faux.
 
 Implémentation : `color-mix(in srgb, var(--text-display) calc(var(--op) * 100%), transparent)` sur le fond, jamais `opacity` sur le bloc.
 
@@ -233,9 +231,9 @@ L'état vient du champ `consommes` porté par la phase NIVEAU (`architecture.md`
 
 | Paramètre | Valeur | Origine |
 |---|---|---|
-| Hauteur des blocs | 64px | bien au-delà du minimum de 44px |
+| Hauteur des blocs | `--niveau-bloc-h` | bien au-delà du minimum tactile |
 | Disposition | grille 2 colonnes | demi-largeur par bloc |
-| **Espacement entre blocs** | **8px minimum** | WCAG 2.2, et convergence de deux audits |
+| **Espacement entre blocs** | **`--niveau-bloc-ecart`** | WCAG 2.2, et convergence de deux audits |
 | **Ancrage vertical** | **en bas** | correctif de prototype, voir ci-dessous |
 
 L'espacement est le paramètre à ne pas sacrifier. Dix blocs jointifs produisent exactement le type de cible où le pouce dérape d'une case.
@@ -261,7 +259,7 @@ Action : `RÉVÉLER LA RÉPONSE`, bouton secondaire, bas.
 
 Le mot `VERROUILLÉ` fait à lui seul tout le travail d'explication : le geste de retour est absorbé sans effet, et aucun mécanisme de feedback n'est construit pour le signaler. **L'état est lisible, il n'a donc pas besoin d'être notifié.**
 
-**La rupture :** un vide de 96px (`--space-4xl`) entre l'énoncé et le bouton de révélation. Partout ailleurs l'app est dense ; ici l'espace est un dispositif de sécurité, on ne révèle pas la réponse par un pouce mal placé. La contrainte fonctionnelle *est* le geste de design.
+**La rupture :** un vide de `--revelation-vide` entre l'énoncé et le bouton de révélation. Partout ailleurs l'app est dense ; ici l'espace est un dispositif de sécurité, on ne révèle pas la réponse par un pouce mal placé. La contrainte fonctionnelle *est* le geste de design.
 
 Ce vide est **incompressible** : si l'énoncé est long, c'est lui qui défile, jamais le vide qui se réduit. Le plafond de 140 caractères sur `q` (`architecture.md` §8) existe pour que ce cas reste théorique.
 
@@ -283,7 +281,7 @@ Actions : `CARTE SUIVANTE` (primaire) et `SIGNALER` (ghost). *Correctif d'audit 
 | 13 à 30 | `--display-md` |
 | plus de 30 | `--heading` |
 
-**`CARTE SUIVANTE` n'occupe pas la position de `RÉVÉLER LA RÉPONSE`.** *Correctif d'audit.* Deux boutons successifs au même endroit transforment un double tap en réponse jamais lue. Le décalage de position double le verrouillage d'entrée de 400 ms décrit dans `architecture.md` §10 : une protection dans le domaine, une dans la mise en page.
+**`CARTE SUIVANTE` n'occupe pas la position de `RÉVÉLER LA RÉPONSE`.** *Correctif d'audit.* Deux boutons successifs au même endroit transforment un double tap en réponse jamais lue. Le décalage de position double le verrouillage d'entrée `VERROU_MS` décrit dans `architecture.md` §10 : une protection dans le domaine, une dans la mise en page.
 
 **Concrètement : l'action primaire passe avant le ghost**, contre l'ordre habituel. *Correctif de prototype.* Placés dans l'ordre naturel, `SIGNALER` puis `CARTE SUIVANTE`, les deux boutons sont chacun le dernier enfant ancré en bas de leur écran : mesuré, ils tombaient à **1 px l'un de l'autre**. La règle ci-dessus était donc écrite et violée en même temps. En inversant l'ordre, l'écart passe à 83 px.
 
@@ -295,13 +293,13 @@ C'est le genre de contrainte qui ne se vérifie pas en relisant : il faut mesure
 |---|---|---|
 | REPOS `PIOCHER` vers THÈME `ANNONCER` | 33px | décalés |
 | THÈME `ANNONCER` vers NIVEAU `RETOUR` | **0px** | superposés, mais la boucle revient à THÈME sans perte |
-| NIVEAU `VOIR LA QUESTION` vers QUESTION `RÉVÉLER` | 64px | décalés, sinon la réponse serait révélée |
-| QUESTION `RÉVÉLER` vers RÉPONSE `CARTE SUIVANTE` | 64px | décalés, sinon la réponse serait sautée |
-| RÉPONSE `CARTE SUIVANTE` vers THÈME `ANNONCER` | 64px | décalés |
+| NIVEAU `VOIR LA QUESTION` vers QUESTION `RÉVÉLER` | 64 px mesurés | décalés, sinon la réponse serait révélée |
+| QUESTION `RÉVÉLER` vers RÉPONSE `CARTE SUIVANTE` | 64 px mesurés | décalés, sinon la réponse serait sautée |
+| RÉPONSE `CARTE SUIVANTE` vers THÈME `ANNONCER` | 64 px mesurés | décalés |
 
-**Et le verrou protège la phase, pas seulement les transitions.** Cette même mesure a montré que `SIGNALER` occupe exactement la position de `RÉVÉLER` de l'écran précédent : un double tap signalait la question par accident. Ce bouton n'étant pas une transition, il échappait au verrou de 400 ms. Toute action utilisateur, transition ou non, passe désormais par le même contrôle de délai.
+**Et le verrou protège la phase, pas seulement les transitions.** Cette même mesure a montré que `SIGNALER` occupe exactement la position de `RÉVÉLER` de l'écran précédent : un double tap signalait la question par accident. Ce bouton n'étant pas une transition, il échappait à `VERROU_MS`. Toute action utilisateur, transition ou non, passe désormais par le même contrôle de délai.
 
-**La rupture :** la réponse en taille display. `YAMOUSSOUKRO` en 48px n'a besoin d'aucun décor.
+**La rupture :** la réponse en taille display. `YAMOUSSOUKRO` en `--txt-display-lg` n'a besoin d'aucun décor.
 
 ---
 
@@ -328,12 +326,12 @@ Le statut `[ SIGNALÉE ]` est du texte normal et échoue donc en mode sombre. Co
 
 | Composant | Réf. système | Usage |
 |---|---|---|
-| `Bouton` (primaire, secondaire, ghost) | Composants §2 | pill, Space Mono capitales 13px, hauteur de 44px minimum |
+| `Bouton` | axe `data-variante`, voir `tokens-et-composants.md` | pill, Space Mono capitales |
 | `Etiquette` | Tokens §1 | les trois variantes par fonction (§3) |
 | `Chip` | Composants §7 | sélection des paquets ; actif : bordure `--text-display` |
 | `SelecteurMode` | Composants §8 | segmenté 3 positions `AUTO / SOMBRE / CLAIR`, accueil, tertiaire |
 | `SelecteurNiveau` | spécifique | grille de 1 à 10, rampe d'opacité, niveaux consommés en bordure seule |
-| `EtatVide` | Composants §15 | pioche épuisée : titre `--text-secondary`, une phrase, 96px de marge, aucun dessin |
+| `EtatVide` | Composants §15 | pioche épuisée : titre `--text-secondary`, une phrase, marge de `--esp-4xl`, aucun dessin |
 | `Statut` | Composants §14 | `[ SIGNALÉE ]` en ligne. **Jamais de toast.** |
 | `Confirmation` | Composants §14 | seul usage : réinitialiser l'historique |
 
@@ -354,7 +352,7 @@ Le statut `[ SIGNALÉE ]` est du texte normal et échoue donc en mode sombre. Co
 Ceux qui ont une chance réelle d'apparaître ici :
 
 - une échelle de couleur du vert au rouge sur les niveaux, **le piège numéro un** ;
-- une rampe d'opacité ramenée sous 0,45 parce que « c'est plus joli » ;
+- une rampe d'opacité ramenée sous `--rampe-min` parce que « c'est plus joli » ;
 - `opacity` posée sur un bloc de niveau plutôt que sur son remplissage, ce qui efface le chiffre en même temps que le bloc ;
 - un `display` d'auteur sur un élément piloté par l'attribut `hidden` : `[hidden]{display:none}` vient de la feuille du navigateur avec une spécificité nulle et se fait écraser en silence, l'élément restant affiché en permanence. Poser `[hidden]{display:none!important}` une fois pour tout le document ;
 - l'état consommé encodé en opacité, ce qui le rendrait indiscernable de la difficulté ;
@@ -377,6 +375,6 @@ Les correctifs de contraste et de typographie sont intégrés dans les sections 
 
 **Structure sémantique.** Un `h1` par écran, portant le contenu primaire : le thème, puis l'énoncé, puis la réponse. Gratuit, et ça donne une structure navigable.
 
-**Cibles tactiles.** 64px sur le sélecteur, 44px minimum partout ailleurs, 8px d'espacement entre cibles adjacentes. Le bouton ghost `SIGNALER` n'ayant pas de bordure, sa zone tactile doit être garantie par le remplissage.
+**Cibles tactiles.** `--niveau-bloc-h` sur le sélecteur, `--cible-min` partout ailleurs, `--niveau-bloc-ecart` entre cibles adjacentes. Le bouton ghost `SIGNALER` n'ayant pas de bordure, sa zone tactile doit être garantie par le remplissage.
 
 Rappel de ce qui est déjà acquis et qu'il ne faut pas casser : aucune information portée par la couleur seule, aucun clignotement, aucune lecture automatique, aucune limite de temps. Et le modèle du narrateur rend le jeu **plus oral que la boîte du commerce**, donc jouable par une personne aveugle en tant que participante.

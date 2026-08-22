@@ -171,7 +171,7 @@ Trois champs méritent une explication.
 | REPONSE | `suivante()` | THEME (nouvelle carte) |
 | REPONSE | `terminer()` | REPOS |
 
-Chaque transition reçoit un argument `maintenant: number`. Le réducteur **rejette toute action arrivant moins de 400 ms après l'entrée dans la phase courante** (§10). L'horloge étant un paramètre et non une lecture globale, la règle reste testable sans DOM et sans attente réelle, ce qui préserve P2.
+Chaque transition reçoit un argument `maintenant: number`. Le réducteur **rejette toute action arrivant moins de `VERROU_MS` après l'entrée dans la phase courante** (§10). L'horloge étant un paramètre et non une lecture globale, la règle reste testable sans DOM et sans attente réelle, ce qui préserve P2.
 
 **Transitions volontairement absentes :**
 
@@ -190,7 +190,9 @@ Autoriser le retour en brûlant le niveau consulté aurait rendu la coquille ré
 
 **Le verrou a été maintenu.** Sa justification n'est plus l'engagement du joueur mais la simplicité du modèle : aucune transition supplémentaire, aucun état intermédiaire, aucune règle à expliquer. Un narrateur qui se trompe de touche annonce son erreur à la table et lit la mauvaise question. Dans une variante coopérative sans score, ça ne coûte rien et ça produit un moment de soirée plutôt qu'un contretemps.
 
-**Conséquence à ne pas négliger.** Le verrou étant conservé, la prévention du mistap repose entièrement sur l'ergonomie du sélecteur. Deux audits indépendants avaient convergé sur le même correctif, `evaluate` par le risque et `include` par la norme WCAG 2.2 : **8px d'espacement minimum entre les blocs de niveau**, en plus de leurs 64px de hauteur. Ce n'est plus une recommandation de confort, c'est le seul garde-fou restant.
+**Conséquence à ne pas négliger.** Le verrou étant conservé, la prévention du mistap repose entièrement sur l'ergonomie du sélecteur. Deux audits indépendants avaient convergé sur le même correctif, `evaluate` par le risque et `include` par la norme WCAG 2.2 : **`--niveau-bloc-ecart` entre les blocs de niveau**, en plus de `--niveau-bloc-h`. Ce n'est plus une recommandation de confort, c'est le seul garde-fou restant.
+
+*Ce raisonnement portait sur la grille. La molette étant devenue le sélecteur par défaut (`design-system.md` §4), elle sépare la désignation de l'engagement et fait disparaître ce risque plutôt que de l'atténuer. L'espacement reste normatif pour la grille, qui est conservée.*
 
 ---
 
@@ -280,7 +282,7 @@ content/cartes/**.json
 | `id` unique sur tout le corpus | l'historique en dépend |
 | `q` et `r` non vides | évidence |
 | **`r` de 60 caractères maximum** | force la règle « réponse courte et indiscutable » |
-| **`q` de 140 caractères maximum** | garantit le vide de sécurité de 96px avant `RÉVÉLER` |
+| **`q` de 140 caractères maximum** | garantit `--revelation-vide` avant `RÉVÉLER` |
 | `theme` de 40 caractères maximum | tient à l'écran en taille display |
 | pas de thème dupliqué | évite les cartes jumelles |
 | build : au moins 5 cartes valides | interdit de déployer une app vide |
@@ -289,7 +291,7 @@ Deux de ces contrôles méritent d'être compris plutôt que subis.
 
 **La contrainte sur `r`** rend structurellement impossible la réponse à débat, qui est le seul défaut vraiment grave dans ce jeu.
 
-**La contrainte sur `q`** protège un geste de design. Le vide de 96px avant le bouton de révélation est un dispositif de sécurité contre le tap parasite ; sans plafond sur la longueur de l'énoncé, ce vide disparaît exactement quand la question est longue, donc quand le narrateur lit lentement, donc quand le risque est maximal. Le garde-fou s'effaçait précisément dans le cas qu'il devait couvrir.
+**La contrainte sur `q`** protège un geste de design. Le vide `--revelation-vide` avant le bouton de révélation est un dispositif de sécurité contre le tap parasite ; sans plafond sur la longueur de l'énoncé, ce vide disparaît exactement quand la question est longue, donc quand le narrateur lit lentement, donc quand le risque est maximal. Le garde-fou s'effaçait précisément dans le cas qu'il devait couvrir.
 
 ### Le contenu est différé, le pipeline ne l'est pas
 
@@ -313,7 +315,7 @@ C'est le principe P1 qui rend ce report gratuit : le corpus n'ayant jamais été
 |---|---|---|
 | 1 | réponse d'un seul caractère, qui flotte dans le vide | 1 |
 | 2 | réponse à la limite haute | 60 |
-| 3 | question à la limite haute, contre le vide de sécurité de 96px | 140 |
+| 3 | question à la limite haute, contre `--revelation-vide` | 140 |
 | 4 | `note` d'arbitrage à la limite haute | 159 |
 | 5 | nombre long en Space Mono à taille display | 24 |
 | 6 | accents, apostrophes et traits d'union | 15 |
@@ -393,11 +395,11 @@ Le réglage durable correspondant est côté GitHub, dans les paramètres *Email
 
 Cinq comportements sans lesquels l'app fonctionne en démonstration et échoue en soirée. Tous viennent des audits.
 
-### Verrouillage d'entrée de 400 ms
+### Verrouillage d'entrée, `VERROU_MS`
 
 **Le problème.** `RÉVÉLER LA RÉPONSE` est en bas de l'écran QUESTION, `SUIVANTE` est en bas de l'écran REPONSE, et la transition dure 200 ms. Un double tap, par impatience ou par tremblement, révèle puis enchaîne : la réponse s'affiche 200 ms et la carte est perdue. Sous le modèle du narrateur c'est pire, puisque personne d'autre n'a l'écran sous les yeux.
 
-**Le correctif.** Le réducteur rejette toute action arrivant moins de 400 ms après l'entrée dans la phase (§5). Invisible, uniforme, testable, et cohérent avec le rythme « percussif » revendiqué par le système de design. Il est doublé côté design par un décalage de position entre les deux boutons.
+**Le correctif.** Le réducteur rejette toute action arrivant moins de `VERROU_MS` après l'entrée dans la phase (§5). Invisible, uniforme, testable, et cohérent avec le rythme « percussif » revendiqué par le système de design. Il est doublé côté design par un décalage de position entre les deux boutons.
 
 ### Maintien de l'écran allumé
 

@@ -20,7 +20,11 @@ Termes **interdits**, ils ont déjà un équivalent français retenu : `card`, `
 
 ## Design
 
-**Charger la skill `nothing-design` avant toute production visuelle.** Elle fait foi pour les tokens ; `docs/design-system.md` dit seulement comment elle s'applique ici.
+**Charger la skill `nothing-design` avant toute production visuelle.**
+
+Deux documents, deux rôles, jamais les deux à la fois : **`docs/tokens-et-composants.md` dit *quoi*** (la source unique de toute valeur, les variables, les composants et leurs axes de variante), **`docs/design-system.md` dit *pourquoi***.
+
+**Une valeur ne s'écrit littéralement que là où elle est définie, ou là où on montre sa dérivation. Partout ailleurs, par son nom.** C'est ce qui garde le dossier DRY, et c'est vérifiable.
 
 Ne jamais proposer Tailwind : le système est un jeu de variables CSS, et le double mode clair/sombre obligerait à réencoder les tokens quatre fois.
 

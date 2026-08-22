@@ -22,7 +22,8 @@ Les documents se lisent dans cet ordre.
 |---|---|
 | [docs/modele-de-jeu.md](docs/modele-de-jeu.md) | Les règles. À lire en premier, tout en découle. |
 | [docs/architecture.md](docs/architecture.md) | **Document de référence.** Principes, modèle de données, machine à états, pipeline, déploiement. |
-| [docs/design-system.md](docs/design-system.md) | **Document de référence.** Le système de design appliqué, écran par écran. |
+| [docs/design-system.md](docs/design-system.md) | **Document de référence.** Le système de design appliqué, écran par écran. Il dit *pourquoi*. |
+| [docs/tokens-et-composants.md](docs/tokens-et-composants.md) | **La source unique des valeurs.** Variables, composants et variantes. Il dit *quoi*. |
 | [docs/recette.md](docs/recette.md) | Ce qu'on vérifie avant de déclarer la V1 réussie. |
 | [docs/roadmap.md](docs/roadmap.md) | Les sept phases, construites à rebours depuis la recette. |
 | [docs/spec-fondations.md](docs/spec-fondations.md) | Les phases 1 et 2 spécifiées, prêtes à implémenter. |
