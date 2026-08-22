@@ -46,6 +46,10 @@ Le seul biais à surveiller : le papier laisse voir la carte entière, donc les 
 
 ### Phase 1 : le tuyau de déploiement, à vide
 
+> **Construite et en ligne** sur https://7nautilus.github.io/diez/. Le pipeline publie sur push, le service worker s'enregistre en portée `/diez/` et contrôle la page, les six graisses se chargent depuis l'origine. Le piège s'est produit exactement où la phase l'attendait : la Source de GitHub Pages doit valoir « GitHub Actions » et non une branche, faute de quoi le dépôt brut est publié et l'écran reste blanc. Découvert sur une page qui affiche un mot.
+>
+> Restent trois contrôles qui demandent le téléphone : installation sans barre d'URL, icône d'écran d'accueil sur iPhone, ouverture en mode avion.
+
 **Objet :** faire échouer tôt ce qui casse habituellement tard.
 
 Vite, TypeScript strict, `vite-plugin-pwa`, un workflow GitHub Actions, et une page qui affiche `DIEZ`. Rien d'autre.
@@ -55,6 +59,10 @@ Cette phase est en deuxième position et non en dernière, contre l'ordre habitu
 **Critère de sortie :** l'application s'installe sur le téléphone depuis l'URL publique, s'ouvre sans barre d'URL, et une modification poussée sur `main` se retrouve en ligne sans intervention.
 
 ### Phase 2 : le domaine
+
+> **Passée.** 72 tests, la règle de dépendance éprouvée sur sept formes d'import, et deux défauts graves trouvés par mutation plutôt que par lecture : P3 ne tenait que par discipline, le typage structurel laissant passer une `Carte` entière là où un `ResumeCarte` est attendu ; et `NIVEAUX` pouvait perdre son dixième niveau en silence, `satisfies` ne vérifiant qu'un sens. Les deux sont refusés à la compilation.
+>
+> La phase a aussi révélé que plusieurs interdits écrits n'étaient refusés par rien. Ils le sont désormais, et chaque protection a été vérifiée en la faisant refuser quelque chose.
 
 **Objet :** la logique du jeu, seule, prouvée.
 
