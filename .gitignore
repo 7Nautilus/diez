@@ -34,3 +34,8 @@ desktop.ini
 # Journaux
 *.log
 npm-debug.log*
+
+# Caches d'outils locaux. Non ignores, ils entrent dans le depot et font
+# echouer `npm run lint` en CI, donc la publication, pour un fichier qui
+# n'appartient a personne.
+.impeccable/

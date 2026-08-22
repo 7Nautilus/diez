@@ -1,7 +1,7 @@
 # Diez : conventions de code
 
 > Les règles du code proprement dit. Ce qui relève du vocabulaire, du design ou du périmètre est ailleurs et n'est pas répété ici : voir `CLAUDE.md` pour les conventions de travail, `architecture.md` §2 pour le lexique, `design-system.md` pour le visuel.
-> Aucune ligne de code applicatif n'existe encore. Ces règles sont écrites avant, délibérément.
+> Ces règles ont été écrites avant la première ligne de code, délibérément. Les phases 1 et 2 les ont depuis éprouvées : ce qui suit porte les corrections que cette confrontation a rendues nécessaires.
 
 ## Le principe qui gouverne les autres
 
@@ -23,6 +23,9 @@ Réglages qui comptent, le reste étant laissé aux valeurs par défaut de Biome
 | `noNonNullAssertion` | erreur | `!` affirme sans preuve ; c'est le contraire de `noUncheckedIndexedAccess` |
 | `noUnusedVariables` | erreur | |
 | Imports restreints depuis `domain/` | erreur | voir §3 |
+| `noTsIgnore` | erreur | il n'est que `warning` dans le jeu recommandé, donc un `@ts-ignore` éteignait une vraie erreur de compilation sans que la CI bronche |
+| `noConsole` | erreur | §12 l'interdisait sans que rien ne le refuse |
+| `noDefaultExport`, sur `src/**` | erreur | §4 ; l'override cible `src/` pour laisser passer les configurations de la racine |
 | Indentation, fins de ligne | 2 espaces, LF | accordés avec `.editorconfig` |
 
 **Le formateur ne touche pas `content/`.** C'est de la donnée, validée par `content/schema/lot.schema.json` et non par Biome. L'exclusion n'est pas un confort : le formateur faisait éclater les dix lignes parallèles du schéma, une par niveau, dont l'alignement est précisément ce qui rend un niveau manquant visible d'un coup d'oeil. Un gain de mise en forme contre une perte de relecture.
@@ -121,9 +124,21 @@ rg -n '#[0-9a-fA-F]{3,8}\b' src --glob '!tokens.css'
 
 Doit ne rien renvoyer.
 
+**Ce contrôle, et deux autres, étaient écrits mais lancés par personne.** Le cadratin, la couleur littérale et les termes de vocabulaire interdits vivaient dans la documentation sous forme de commandes à taper : aucun script npm, aucune étape de CI, aucun hook ne les exécutait. Une règle que seule la relecture applique est une règle qui tiendra trois semaines, ce que dit déjà le principe en tête de ce document.
+
+`tools/verifier.mjs` les exécute, `npm run verifier` l'appelle, et la CI le place **avant le lint** parce qu'il n'a aucune dépendance et qu'il est donc le contrôle le plus rapide :
+
+```bash
+npm run verifier
+```
+
+Il est écrit en JavaScript et sans dépendance pour la même raison que `tools/icones.py` est en Python : il doit pouvoir tourner avant l'installation d'un outil et sans étape de compilation, sinon il ne garde pas la porte. Il s'exclut de ses propres contrôles, un détecteur contenant nécessairement les motifs qu'il cherche.
+
 Modules CSS, pas de styles en ligne sauf pour une valeur calculée à l'exécution, comme l'opacité d'un cran de la rampe.
 
 **`!important` est interdit, avec une exception nommée.** Biome le refuse par la règle `noImportantStyles`. La seule dérogation du dépôt est `[hidden] { display: none !important }` dans `base.css` : la déclaration du navigateur a une spécificité nulle, donc n'importe quelle règle d'auteur posant un `display` la écrase en silence et l'élément reste affiché. C'est un bug que la maquette a réellement produit. La dérogation est écrite au point d'usage par un commentaire `biome-ignore` portant sa raison ; toute autre occurrence doit être refusée en revue.
+
+**Le garde-fou de P2 est lui-meme teste.** `tools/garde-p2.test.ts` fait echouer la suite quand la regle de dependance cesse de refuser un import connu comme mauvais. Ce n'est pas de la coquetterie : le seul dispositif qui empeche P2 de mourir est une chaine de caracteres dans `biome.json`, et une faute d'une lettre la desarmait en laissant `biome ci`, `tsc` et tous les tests du domaine au vert. Le test vit dans `tools/` et non dans `src/domain/__tests__/` pour une raison qui prouve elle-meme que la regle mord : depuis le domaine, il ne pourrait pas importer `node:child_process`.
 
 ## 9. Tests
 
@@ -145,7 +160,7 @@ Le workflow **bloque le déploiement** si les tests ou la validation du corpus �
 
 Le coût est assumé : un soir où tu veux corriger vite, un test cassé t'empêchera de publier. C'est le comportement souhaité, sinon la barrière ne sert à rien le seul jour où elle compte.
 
-Ordre : validation du corpus, puis lint, puis tests, puis build, puis publication. Le contrôle le plus rapide en premier.
+Ordre : validation du corpus, puis les vérifications du dépôt (§8), puis lint, puis tests, puis build, puis publication. Le contrôle le plus rapide en premier.
 
 ## 11. Commits
 

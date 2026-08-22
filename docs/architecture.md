@@ -136,18 +136,30 @@ Trois points de conception qui comptent :
 ## 5. La machine à états du tour, cœur de fiabilité
 
 ```ts
-type ResumeCarte    = { id: CarteId; theme: string; paquet: PaquetId }
-type EnonceQuestion = { niveau: Niveau; q: string }
+type ResumeCarte = {
+  id: CarteId; theme: string; paquet: PaquetId
+  questions?: never; domaine?: never; source?: never; valide?: never
+}
+type EnonceQuestion = { niveau: Niveau; q: string; r?: never; note?: never }
 type Reponse        = { r: string; note?: string }
 
 type EtatTour =
   | { phase: "REPOS" }
   | { phase: "THEME";    carte: ResumeCarte; depuis: number }
-  | { phase: "NIVEAU";   carte: ResumeCarte; consommes: Niveau[]; depuis: number }
+  | { phase: "NIVEAU";   carte: ResumeCarte; consommes: readonly Niveau[]; depuis: number }
   | { phase: "QUESTION"; carte: ResumeCarte; enonce: EnonceQuestion; depuis: number }
   | { phase: "REPONSE";  carte: ResumeCarte; enonce: EnonceQuestion;
                          reponse: Reponse; depuis: number }
 ```
+
+**Les champs a `never` ne sont pas du bruit, ils font tenir P3.** Sans eux, l'invariant reposait sur la seule discipline de l'appelant, et la phase 2 l'a mesure : TypeScript etant structurel, une `Carte` satisfait `{ id, theme, paquet }` et une `Question` satisfait `{ niveau, q }`. Le controle des proprietes en trop ne s'applique qu'a un litteral, jamais a une variable, or c'est une variable que l'appelant ecrira :
+
+```ts
+const carte = piocher(...)                              // rend une Carte
+reduire(etat, { type: "piocher", carte }, maintenant)   // compilait
+```
+
+Cette ligne passait `tsc` sans un mot, et l'etat THEME emportait alors les dix reponses de la carte. Le compilateur refusait la forme que personne n'ecrit et acceptait celle que tout le monde ecrira. Avec les champs a `never`, les deux fuites sont refusees a la compilation : `Type 'Carte' is not assignable to type 'ResumeCarte'`. Ne pas les retirer en croyant nettoyer.
 
 Trois champs méritent une explication.
 
@@ -155,7 +167,7 @@ Trois champs méritent une explication.
 
 **La réponse n'apparaît qu'en phase REPONSE.** C'est P3 appliqué à la fin, et c'est la moitié la plus importante depuis le passage au modèle du narrateur. Il lit la question à voix haute, à toute la table, en fixant son écran. Si la réponse vivait dans le même état, elle serait à un nœud du DOM de l'endroit qu'il est en train de prononcer. Le risque n'est pas théorique : c'est exactement comme ça qu'on lit une réponse par accident. L'invariant qui protégeait le joueur de la question protège maintenant le narrateur de la réponse.
 
-**`consommes` porte les niveaux déjà brûlés de cette carte.** Une carte reste piochable tant qu'il lui reste des questions inédites (§6), donc elle revient avec des trous. Le sélecteur doit pouvoir les afficher, donc l'état doit les transporter. Sans ce champ, l'écran NIVEAU n'aurait aucun moyen de distinguer une carte neuve d'une carte entamée, ce qui est le cas normal dès la deuxième soirée.
+**`consommes` porte les niveaux déjà brûlés de cette carte.** Une carte reste piochable tant qu'il lui reste des questions inédites (§6), donc elle revient avec des trous. Le sélecteur doit pouvoir les afficher, donc l'état doit les transporter. Sans ce champ, l'écran NIVEAU n'aurait aucun moyen de distinguer une carte neuve d'une carte entamée, ce qui est le cas normal dès la deuxième soirée. Le champ est en **lecture seule**, comme tout ce que rend `niveauxConsommes` : voir §6.
 
 **`depuis` est l'horodatage de l'entrée dans la phase.** Il sert au verrouillage d'entrée décrit en §10.
 
@@ -172,6 +184,8 @@ Trois champs méritent une explication.
 | REPONSE | `terminer()` | REPOS |
 
 Chaque transition reçoit un argument `maintenant: number`. Le réducteur **rejette toute action arrivant moins de `VERROU_MS` après l'entrée dans la phase courante** (§10). L'horloge étant un paramètre et non une lecture globale, la règle reste testable sans DOM et sans attente réelle, ce qui préserve P2.
+
+Cette règle a **une exception, une seule, nommée en §10** : la garde de câblage s'exécute avant le verrou. Ne pas lire la règle générale sans elle.
 
 **Transitions volontairement absentes :**
 
@@ -201,10 +215,12 @@ Autoriser le retour en brûlant le niveau consulté aurait rendu la coquille ré
 L'historique ne stocke pas « carte vue ou pas vue » mais **quels niveaux ont été consommés sur quelle carte** :
 
 ```ts
-type Historique = Record<CarteId, Niveau[]>
+type Historique = Record<CarteId, readonly Niveau[]>
 ```
 
 Ça colle au jeu physique : une carte reste jouable tant qu'il lui reste des questions inédites.
+
+**Le `readonly` n'est pas une précaution de style.** Toutes les fonctions de la pioche sont pures et rendent de nouvelles valeurs : `Historique` n'est jamais muté. Sans `readonly`, cette promesse ne repose que sur la discipline de celui qui écrit, et un `push` sur la liste d'une carte la tient en échec sans rien signaler. Avec, le compilateur refuse le geste. C'est aussi ce qui fait que le type de `consommes` en §5 et le retour de `niveauxConsommes` s'accordent : sans lui, les deux ne se composent pas.
 
 Algorithme de pioche :
 1. filtrer sur les paquets actifs
@@ -236,7 +252,7 @@ Corollaire : le compteur de l'accueil affiche les **cartes restantes**, jamais l
 Tout accès à `localStorage` passe par `storage/`. Aucun composant n'y touche directement.
 
 ```
-diez:v1:historique      # Record<CarteId, Niveau[]>
+diez:v1:historique      # Historique, voir §6
 diez:v1:reglages        # paquets actifs, mode d'affichage (auto | sombre | clair)
 diez:v1:signalements    # questions signalées comme douteuses
 diez:v1:tour            # EtatTour en cours, plus son horodatage
@@ -400,6 +416,12 @@ Cinq comportements sans lesquels l'app fonctionne en démonstration et échoue e
 **Le problème.** `RÉVÉLER LA RÉPONSE` est en bas de l'écran QUESTION, `SUIVANTE` est en bas de l'écran REPONSE, et la transition dure 200 ms. Un double tap, par impatience ou par tremblement, révèle puis enchaîne : la réponse s'affiche 200 ms et la carte est perdue. Sous le modèle du narrateur c'est pire, puisque personne d'autre n'a l'écran sous les yeux.
 
 **Le correctif.** Le réducteur rejette toute action arrivant moins de `VERROU_MS` après l'entrée dans la phase (§5). Invisible, uniforme, testable, et cohérent avec le rythme « percussif » revendiqué par le système de design. Il est doublé côté design par un décalage de position entre les deux boutons.
+
+**L'exception, nommée : la garde de câblage s'exécute avant le verrou.** *Point non tranché jusqu'ici, arbitré ici.* Le réducteur pose une garde unique qui lève, `enonce.niveau === action.niveau` (`spec-fondations.md`, phase 2, décision 3). Elle est évaluée **avant** le contrôle de délai : un énoncé discordant lève donc même à l'intérieur de la fenêtre de `VERROU_MS`. C'est la seule dérogation à la règle de §5, qui autrement ne souffre aucune exception.
+
+Le verrou protège un humain d'un double tap ; la garde attrape une erreur de programmation qu'aucun joueur ne peut provoquer. Si le verrou passait d'abord, un énoncé discordant ne se signalerait qu'en dehors de la fenêtre, donc **par intermittence selon l'horodatage** : le pire mode de défaillance possible pour un défaut déterministe, et l'inverse exact de ce que demande `conventions-code.md` §7, qui veut un défaut de câblage bruyant.
+
+L'exception ne coûte rien à la règle générale. Dans un build correct la garde ne se déclenche jamais, donc la formulation de §5 tient pour **toute action réellement possible** ; la dérogation ne porte que sur un état qui ne devrait pas exister.
 
 ### Maintien de l'écran allumé
 

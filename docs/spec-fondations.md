@@ -195,16 +195,22 @@ Le problème : en phase QUESTION, l'état doit contenir l'énoncé mais pas la r
 
 ```ts
 type Action =
-  | { type: "piocher";  carte: ResumeCarte; consommes: Niveau[] }
-  | { type: "annoncer" }
+  | { type: "piocher";  carte: ResumeCarte }
+  | { type: "annoncer"; consommes: readonly Niveau[] }
   | { type: "retour" }
   | { type: "choisir";  niveau: Niveau; enonce: EnonceQuestion }
   | { type: "reveler";  reponse: Reponse }
-  | { type: "suivante"; carte: ResumeCarte; consommes: Niveau[] }
+  | { type: "suivante"; carte: ResumeCarte }
   | { type: "terminer" }
 ```
 
 Le réducteur ne voit jamais une carte complète. Il ne peut donc structurellement pas fuiter, quel que soit le bug commis plus tard dans les écrans.
+
+**Correction, apparue à l'implémentation.** *Une version précédente de ce bloc posait `consommes` sur `piocher` et sur `suivante` et laissait `annoncer` sans charge : elle était fausse.* La trace est nécessaire, sans quoi quelqu'un rétablira cette version en croyant corriger une dérive.
+
+Elle était fausse parce que `piocher` et `suivante` mènent toutes deux à THÈME, dont `architecture.md` §5 dit qu'il ne porte pas `consommes`. Le réducteur n'avait donc aucun endroit où le ranger, et NIVEAU, qui en a besoin pour afficher les niveaux déjà brûlés, ne pouvait pas l'obtenir. La seule autre issue aurait été d'ajouter `consommes` à l'état THÈME, ce qui viole P3 à la lettre : l'écran THÈME montre le thème, le paquet et le numéro de carte, rien sur les niveaux.
+
+**La charge voyage donc avec l'action qui *entre* dans la phase qui l'affiche**, exactement comme `enonce` avec `choisir` et `reponse` avec `reveler`. C'est la règle que cette section énonce elle-même ; elle était simplement mal appliquée.
 
 **Contrepartie assumée :** l'appelant pourrait passer un énoncé qui ne correspond pas au niveau choisi. Le réducteur pose donc une seule garde, `enonce.niveau === action.niveau`, et lève sinon. C'est une erreur de câblage, pas un état de jeu, et elle doit être bruyante.
 
@@ -267,7 +273,7 @@ La phase est finie quand ces cas passent. Ils sont tirés des décisions déjà 
 
 ## Questions en attente
 
-**Technique.** La forme exacte de `Historique` pour le stockage n'est pas figée. `Record<CarteId, Niveau[]>` est spécifié en `architecture.md` §6, mais la sérialisation, sa validation à la lecture et la migration `v1` restent à concevoir en phase 5. La phase 2 ne dépend pas de ce choix, elle manipule la structure en mémoire.
+**Technique.** La forme exacte de `Historique` pour le stockage n'est pas figée. `Record<CarteId, readonly Niveau[]>` est spécifié en `architecture.md` §6, mais la sérialisation, sa validation à la lecture et la migration `v1` restent à concevoir en phase 5. La phase 2 ne dépend pas de ce choix, elle manipule la structure en mémoire.
 
 ---
 

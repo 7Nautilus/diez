@@ -1,6 +1,13 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
-  "files": { "includes": ["**", "!dist", "!src/data", "!content"] },
+  "files": {
+    "includes": ["**", "!dist", "!src/data", "!content"]
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -12,9 +19,146 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "suspicious": { "noExplicitAny": "error" },
-      "style": { "noNonNullAssertion": "error" },
-      "correctness": { "noUnusedVariables": "error" }
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noTsIgnore": "error",
+        "noConsole": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error"
+      }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/domain/*"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**", "!./*"],
+                    "message": "domain/ n'importe rien hors de domain/. C'est le principe P2 et il meurt a la premiere violation, en silence (architecture.md section 3, conventions-code.md section 3). Ce dont le domaine a besoin lui est injecte en parametre : le corpus, l'horloge, l'aleatoire."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/domain/*/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**", "!./*", "!../*"],
+                    "message": "domain/ n'importe rien hors de domain/. C'est le principe P2 et il meurt a la premiere violation, en silence (architecture.md section 3, conventions-code.md section 3). Ce dont le domaine a besoin lui est injecte en parametre : le corpus, l'horloge, l'aleatoire."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**", "!./*"],
+                    "message": "storage/ n'importe rien hors de storage/. Regle de dependance a sens unique, architecture.md section 3."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "includes": ["src/storage/**"]
+    },
+    {
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**",
+                      "!./*",
+                      "!../design/**",
+                      "!../domain/**",
+                      "!react",
+                      "!react-dom",
+                      "!react/**",
+                      "!react-dom/**"
+                    ],
+                    "message": "screens/ ne descend que vers design/ et domain/. Regle de dependance a sens unique, architecture.md section 3."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "includes": ["src/screens/**"]
+    },
+    {
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**",
+                      "!./*",
+                      "!../design/**",
+                      "!react",
+                      "!react-dom",
+                      "!react/**",
+                      "!react-dom/**"
+                    ],
+                    "message": "design/ ne depend de rien du projet : c'est le bas de la chaine (architecture.md section 3)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "includes": ["src/design/**"]
+    },
+    {
+      "includes": ["src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "error"
+          }
+        }
+      }
+    }
+  ]
 }

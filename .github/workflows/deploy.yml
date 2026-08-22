@@ -52,13 +52,21 @@ jobs:
       # - name: Valider le corpus
       #   run: npm run valider
 
+      # Les controles que conventions-code.md et CLAUDE.md decrivaient sous
+      # forme de commandes a taper : cadratin, couleur litterale hors de
+      # tokens.css, terme de vocabulaire interdit. Ecrits mais lances par
+      # personne, ils ne protegeaient rien. Sans dependance, donc en premier.
+      - name: Verifications du depot
+        run: npm run verifier
+
       - name: Lint et format
         run: npm run lint
 
-      # 3. ETAPE MANQUANTE : aucun test n'existe encore, le domaine arrive en
-      #    phase 2. Meme remarque que ci-dessus.
-      # - name: Tests
-      #   run: npm test
+      # Sur src/domain/ et tools/ uniquement : c'est la qu'est la logique
+      # (conventions-code.md section 9). `vitest run`, jamais le mode veille,
+      # qui ne rendrait jamais la main au workflow.
+      - name: Tests
+        run: npm test
 
       - name: Construire
         run: npm run build
