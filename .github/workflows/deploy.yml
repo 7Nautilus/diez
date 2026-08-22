@@ -52,6 +52,20 @@ jobs:
       # - name: Valider le corpus
       #   run: npm run valider
 
+      # 2. Compilation du corpus. Ce n'est PAS le validateur ci-dessus : il ne
+      #    controle que les invariantes structurelles (identifiant present et
+      #    unique, dix questions, niveaux 1 a 10 couverts une fois chacun) et
+      #    laisse au schema les plafonds de longueur et les regles
+      #    editoriales. Voir l'en-tete de tools/compiler.ts.
+      #
+      #    L'etape est ici et pas seulement dans `npm run build`, qui l'appelle
+      #    aussi : src/data/cartes.gen.json n'est pas versionne, donc un corpus
+      #    casse ferait echouer la CI au tout dernier moment, apres le lint et
+      #    les tests, sur un message de module introuvable. Place en tete, il
+      #    echoue tot et sur sa vraie raison.
+      - name: Compiler le corpus
+        run: npm run compiler
+
       # Les controles que conventions-code.md et CLAUDE.md decrivaient sous
       # forme de commandes a taper : cadratin, couleur litterale hors de
       # tokens.css, terme de vocabulaire interdit. Ecrits mais lances par
@@ -62,8 +76,11 @@ jobs:
       - name: Lint et format
         run: npm run lint
 
-      # Sur src/domain/ et tools/ uniquement : c'est la qu'est la logique
-      # (conventions-code.md section 9). `vitest run`, jamais le mode veille,
+      # Sur src/domain/, src/app/ et tools/ uniquement : c'est la qu'est la
+      # logique (conventions-code.md section 9). `src/app/` a rejoint la liste
+      # en phase 4 pour un seul invariant, le moment ou un niveau est consomme,
+      # que ni le domaine ni les ecrans ne peuvent tenir ; le reducteur y est
+      # pur, aucun composant n'est monte. `vitest run`, jamais le mode veille,
       # qui ne rendrait jamais la main au workflow.
       - name: Tests
         run: npm test

@@ -86,8 +86,18 @@ export function reduire(etat: EtatTour, action: Action, maintenant: number): Eta
  * Le rejet rend l'etat tel quel, donc sans reinitialiser `depuis` : un
  * tremblement repete ne doit pas repousser indefiniment le moment ou l'ecran
  * redevient utilisable.
+ *
+ * EXPORTE, contre l'habitude de garder un detail d'implementation prive, et
+ * pour une raison qui n'est pas de confort. Le verrou protege LA PHASE et pas
+ * seulement les transitions : SIGNALER occupe sur l'ecran REPONSE la position
+ * qu'occupait REVELER sur l'ecran precedent, donc un tap reste sur place
+ * signalait la question par accident (design-system.md, Le controle se fait
+ * sur la chaine). Or SIGNALER n'est pas une transition, il n'a pas d'`Action`
+ * et ne peut pas passer par `reduire` : sans cet export, l'appelant devrait
+ * recrire `maintenant - depuis < VERROU_MS` de son cote, et la regle aurait
+ * deux ecritures qui divergeraient au premier reglage. Elle n'en a qu'une.
  */
-function verrouille(etat: EtatTour, maintenant: number): boolean {
+export function verrouille(etat: EtatTour, maintenant: number): boolean {
   // REPOS ne porte pas de `depuis` : aucune entree de phase a proteger, donc
   // la premiere pioche d'une soiree n'est jamais verrouillee.
   if (etat.phase === "REPOS") return false;

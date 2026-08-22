@@ -1,0 +1,240 @@
+/*
+ * Diez : l'ecran d'accueil, phase REPOS.
+ *
+ * Aucune valeur litterale de couleur, aucune regle conditionnelle au mode :
+ * chaque couleur passe par un token semantique que `light-dark()` resout dans
+ * tokens.css. Une regle qui aurait besoin de savoir dans quel mode elle
+ * tourne signalerait un token manquant, pas un bloc a ajouter
+ * (docs/design-system.md section 2).
+ *
+ * Cet ecran ne redecrit AUCUNE primitive : le Bouton, le Chip, l'Etiquette et
+ * le Segment portent leur propre forme, leurs propres cibles tactiles et
+ * leurs propres contours de focus. Ce module ne fait que les poser les uns
+ * par rapport aux autres, ce qui est le seul travail qui reste a un ecran.
+ */
+
+.ecran {
+  display: flex;
+  flex-direction: column;
+  /* `dvh` et non `vh` : sur un telephone, la barre d'adresse retractable
+     rendrait 100vh plus haut que la fenetre reellement visible, et le dernier
+     rang de la pile passerait sous le bord. */
+  min-height: 100dvh;
+  /* Les quatre bords passent par `env(safe-area-inset-*)` : les ancrages bas
+     tombent sur la barre de gestes Android et sur l'indicateur d'accueil iOS,
+     les ancrages hauts croisent l'encoche (design-system.md section 3, Zones
+     sures). Sans `viewport-fit=cover` dans la balise viewport, ces valeurs
+     valent toujours zero et toute cette gestion est un decor. */
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top))
+    calc(var(--esp-lg) + env(safe-area-inset-right))
+    calc(var(--esp-lg) + env(safe-area-inset-bottom))
+    calc(var(--esp-lg) + env(safe-area-inset-left));
+  gap: var(--esp-lg);
+}
+
+.barre {
+  flex: none;
+  display: flex;
+  /* Pour une prise a droite, le coin haut droit est plus atteignable que le
+     coin haut gauche, et il laisse le bord gauche libre pour le wordmark. */
+  justify-content: flex-end;
+}
+
+/*
+ * LA RUPTURE. Doto, --txt-display-xl, et nulle part ailleurs dans l'app.
+ */
+.wordmark {
+  flex: none;
+  font-family: var(--police-display);
+  font-size: var(--txt-display-xl);
+  /* La seule graisse de Doto embarquee (design-system.md section 1) : une
+     autre valeur ferait synthetiser la graisse par le navigateur. */
+  font-weight: 700;
+  line-height: 1;
+  /* Interlettrage POSITIF, a rebours du -0.03em que la skill nothing-design
+     donne au palier display : Doto est matriciel, et un interlettrage negatif
+     fait fusionner la derniere colonne de points d'une lettre avec la
+     premiere de la suivante. La valeur etait ecrite deux fois, ici et dans le
+     `.mot` de base.css ; ce dernier a ete retire en phase 4 avec la page
+     temoin qui l'utilisait, et cette regle est desormais la seule. */
+  letter-spacing: 0.02em;
+  /* Les capitales sont posees par le style et non ecrites dans le document,
+     comme sur la Feuille : une synthese vocale epelle volontiers un mot ecrit
+     tout en majuscules, et celui-ci est un nom. */
+  text-transform: uppercase;
+  color: var(--text-display);
+}
+
+/*
+ * Le `fieldset` du groupe de paquets. Il arrive avec deux comportements
+ * propres a l'element, qu'aucun reset global ne couvre : une bordure gravee
+ * dessinee par le navigateur, et une largeur minimale calee sur son contenu
+ * qui l'empeche de retrecir dans une colonne flex.
+ *
+ * AUCUN `display: flex` ici, volontairement : la disposition en boite flexible
+ * d'un `fieldset` a longtemps ete traitee a part par les moteurs, et c'est le
+ * seul element du document ou le risque existe. La rangee de pilules est donc
+ * un enfant ordinaire, ce qui ne coute rien.
+ */
+.paquets {
+  flex: none;
+  border: none;
+  min-inline-size: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  /* Ecart entre cibles adjacentes, exige par WCAG 2.2 et deja la valeur de
+     --niveau-bloc-ecart sur le selecteur (design-system.md section 9). */
+  gap: var(--esp-sm);
+  /* Serre : le libelle du groupe et ses options sont un seul objet (8px,
+     "ces elements vont ensemble"). */
+  margin-top: var(--esp-sm);
+}
+
+/*
+ * La pile tertiaire, poussee en bord bas par la marge automatique. Le vide
+ * qui s'ouvre au-dessus n'est pas du remplissage : c'est lui qui isole le
+ * wordmark, et l'espace sert toujours a isoler dans ce systeme, jamais a
+ * combler.
+ */
+.pile {
+  margin-top: auto;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--esp-md);
+}
+
+/* Le groupe est en `inline-flex` : sans cette regle il s'etirerait a la
+   largeur de la pile, et ses trois options grandiraient avec lui alors qu'un
+   selecteur de mode n'est pas une action. */
+.modes {
+  align-self: center;
+}
+
+/*
+ * Le bouton de copie et son retour, sur une seule rangee. Le Statut tient dans
+ * la hauteur du bouton, donc la rangee garde la meme hauteur qu'il soit la ou
+ * non : la pile etant ancree en bord bas, une rangee qui grandirait pousserait
+ * PIOCHER vers le haut a l'instant ou le narrateur vient de taper a cote.
+ */
+.rangCopie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* "Ces elements vont ensemble" : le retour qualifie le bouton, il n'est pas
+     un second controle. */
+  gap: var(--esp-sm);
+}
+
+/*
+ * La raison et le bouton qu'elle explique forment un seul objet, d'ou un
+ * ecart plus serre que le rythme de la pile. Les grouper sert aussi la regle
+ * des deux emplacements : la raison apparait AU-DESSUS de PIOCHER, donc son
+ * apparition ne deplace pas le bouton d'avancement.
+ */
+.avancement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-sm);
+}
+
+.raison {
+  /* L'instruction est le seul libelle qu'on lise vraiment (design-system.md
+     section 3) : elle se cale sur le bouton qu'elle explique plutot que sur
+     le centre, parce qu'une phrase se lit depuis son bord d'attaque. */
+  align-self: flex-start;
+}
+
+.piocher {
+  /* Bouton primaire pleine largeur (design-system.md section 4, ACCUEIL) : la
+     forme dit a elle seule qu'il n'y a rien d'autre a faire sur cet ecran. */
+  width: 100%;
+}
+
+.compteur {
+  /* Dernier rang de la pile, sous l'action : c'est l'arrangement que decrit
+     la regle des deux emplacements, et il n'est pas cosmetique. */
+  text-align: center;
+}
+
+/* --- Le menu, dans la Feuille du bas. --- */
+
+.menu {
+  /*
+   * L'interlignage du palier `body-sm`, celui que la skill nothing-design
+   * donne avec la taille dans son echelle typographique. tokens.css n'a
+   * retenu que les TAILLES de cette echelle, donc la valeur est nommee ici,
+   * une fois, au lieu d'etre recopiee sur chacune des regles qui en a besoin.
+   *
+   * Ce n'est deliberement PAS --prompteur-interligne, qui vaut le meme nombre
+   * aujourd'hui : ce token protege la lecture a voix haute de l'ecran
+   * QUESTION, et un reglage de prompteur ne doit pas deplacer le texte d'un
+   * menu qu'on lit en silence.
+   */
+  --menu-interligne: 1.5;
+
+  display: flex;
+  flex-direction: column;
+  /* Un cran de separation de section, franchement au-dessus du rythme
+     interieur des rubriques : c'est l'ecart qui dit "nouveau groupe". */
+  gap: var(--esp-xl);
+}
+
+.rubrique {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-sm);
+}
+
+.titreRubrique {
+  /* Un `h3` arrive en gras et a sa propre taille, dont l'Etiquette qu'il
+     porte n'herite que la graisse. Sans cette remise a 400, Space Mono rendrait
+     sa graisse 700 et le titre de rubrique cesserait de ressembler aux autres
+     metadonnees du systeme. */
+  font-weight: 400;
+}
+
+/*
+ * AUCUN `display: flex` sur la liste, et c'est la raison pour laquelle
+ * l'ecart entre items passe par une marge plutot que par `gap` : un `li`
+ * devenu enfant flexible perd son marqueur dans plusieurs moteurs, et les
+ * six rangs sont precisement ce qui fait de ces phrases une procedure.
+ */
+.regles {
+  /* base.css remet tous les remplissages a zero : sans celui-ci, les numeros
+     de la liste se dessineraient hors de la boite et seraient rognes. */
+  padding-inline-start: var(--esp-lg);
+  color: var(--text-primary);
+  font-size: var(--txt-body-sm);
+  line-height: var(--menu-interligne);
+}
+
+.regles li + li {
+  margin-top: var(--esp-sm);
+}
+
+.regles li::marker {
+  /* Un numero est de la donnee, et la donnee est en Space Mono
+     (design-system.md section 3). C'est aussi ce qui distingue le rang du
+     texte sans lui donner de poids. */
+  font-family: var(--police-mono);
+  color: var(--text-secondary);
+}
+
+.precision {
+  color: var(--text-secondary);
+  font-size: var(--txt-body-sm);
+  line-height: var(--menu-interligne);
+}
+
+.action {
+  /* Une action de menu ne prend pas toute la largeur : la pleine largeur est
+     reservee a l'action d'avancement de l'ecran, et deux boutons de meme
+     forme se liraient comme deux actions de meme rang. */
+  align-self: flex-start;
+  margin-top: var(--esp-sm);
+}

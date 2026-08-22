@@ -14,7 +14,12 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "resolveJsonModule": true,
+    // A `false` volontairement, et c'est ce qui rend src/data/cartes.gen.d.ts
+    // effectif : a `true`, TypeScript resout le corpus compile comme un
+    // module JSON, elargit ses chaines en `string`, et la declaration cesse
+    // d'etre lue sans que rien ne le signale. La raison complete est ecrite
+    // dans ce fichier de declaration.
+    "resolveJsonModule": false,
     "skipLibCheck": true,
     "noEmit": true
   },

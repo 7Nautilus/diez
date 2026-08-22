@@ -13,9 +13,9 @@ import styles from "./PlancheDeControle.module.css";
  * design-system.md section 2 : sans cette planche, "les deux modes a egalite"
  * redevient "un mode soigne et un mode approximatif" en trois semaines.
  *
- * ELLE NE PART JAMAIS EN PRODUCTION. Le montage est dans src/App.tsx, sous
- * `import.meta.env.DEV`, et il est temporaire : voir le commentaire qui l'y
- * accompagne.
+ * ELLE NE PART JAMAIS EN PRODUCTION. Elle a son propre point d'entree depuis
+ * la phase 4, planche.html a la racine, que le build ne connait pas : la
+ * raison complete est dans src/design/review/planche.tsx.
  *
  * LES DEUX MODES COTE A COTE, SANS DUPLIQUER UNE SEULE VALEUR. Chaque panneau
  * force son propre `color-scheme` dans le module CSS. `light-dark()` se resout

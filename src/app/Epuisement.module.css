@@ -1,0 +1,24 @@
+/*
+ * L'ecran d'impasse. Aucune couleur ici : l'EtatVide et le Bouton portent la
+ * leur, ce module ne fait que les poser l'un par rapport a l'autre.
+ */
+
+.ecran {
+  display: flex;
+  flex-direction: column;
+  /* Le bloc au centre, donc loin des deux emplacements du bas. Voir le
+     commentaire d'Epuisement.tsx : l'action est irreversible et le verrou
+     d'entree ne protege pas la phase REPOS. */
+  justify-content: center;
+  align-items: flex-start;
+  /* `dvh` et non `vh` : la barre d'adresse retractable rendrait 100vh plus
+     haut que la fenetre reellement visible. */
+  min-height: 100dvh;
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top))
+    calc(var(--esp-lg) + env(safe-area-inset-right))
+    calc(var(--esp-lg) + env(safe-area-inset-bottom))
+    calc(var(--esp-lg) + env(safe-area-inset-left));
+  /* "Nouveau groupe" : le texte annonce l'impasse, le bouton en sort. Les
+     coller ferait du bouton la fin de la phrase. */
+  gap: var(--esp-xl);
+}

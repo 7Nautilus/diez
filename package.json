@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Jeu de questions coopératif à narrateur unique",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "dev": "npm run compiler && vite",
+    "build": "npm run compiler && tsc --noEmit && vite build",
+    "compiler": "node tools/compiler.ts",
     "preview": "vite preview",
     "types": "tsc --noEmit",
     "test": "vitest run",

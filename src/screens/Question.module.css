@@ -1,0 +1,106 @@
+/*
+ * Diez : l'ecran QUESTION.
+ *
+ * Trois decisions portent tout ce fichier, et les trois se defont en croyant
+ * nettoyer.
+ *
+ * 1. LA HAUTEUR EST DEFINIE, ce n'est pas un minimum. C'est elle qui rend le
+ *    vide de revelation incompressible : sur un conteneur de hauteur
+ *    automatique, `flex-shrink` ne s'applique jamais, le conteneur grandit
+ *    avec l'enonce et c'est la PAGE entiere qui defile, emportant le bouton
+ *    hors du dernier rang.
+ * 2. LE VIDE EST UNE MARGE, jamais un espacement reparti. Une marge ne se
+ *    comprime pas ; un `gap` ou un `justify-content: space-between` se
+ *    seraient reduits des que l'enonce aurait pris de la place, c'est-a-dire
+ *    exactement dans le cas contre lequel le vide existe.
+ * 3. L'ENONCE EST LE SEUL ELEMENT QUI ABSORBE. Son `min-height: 0` est ce qui
+ *    le rend reellement compressible : sans lui, la taille minimale
+ *    automatique d'un element de flex vaut son contenu, et c'est le vide qui
+ *    aurait cede a sa place.
+ *
+ * Aucune regle conditionnelle au mode : la seule couleur du fichier est un
+ * token semantique que `light-dark()` resout dans tokens.css. Les deux modes
+ * sont a egalite.
+ */
+
+.ecran {
+  /* `dvh` et non `vh` : la barre d'outils d'Android se retire et revient
+     pendant la lecture, et `vh` fige la hauteur de la plus grande fenetre,
+     donc le bouton du dernier rang passerait sous le bord de l'ecran. */
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Les deux bords passent par `env(safe-area-inset-*)` : l'ancrage bas tombe
+     sinon sur la barre de gestes d'Android et l'ancrage haut croise l'encoche
+     (design-system.md section 3, Zones sures). */
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top)) var(--esp-lg)
+    calc(var(--esp-lg) + env(safe-area-inset-bottom)) var(--esp-lg);
+}
+
+.enonce {
+  /* Rupture de groupe entre la metadonnee de la zone haute et la couche
+     primaire, cran "un nouveau groupe commence" de l'echelle. */
+  margin-block-start: var(--esp-xl);
+  /* Le seul element qui grandit et le seul qui se comprime : c'est l'enonce
+     qui defile quand il est long, jamais le vide qui se reduit
+     (design-system.md section 4, QUESTION). Le plafond de 140 caracteres sur
+     `q` existe pour que ce defilement reste theorique, mais il cesse de
+     l'etre des que le telephone est regle en grande taille de texte. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Un mouvement du pouce sur l'enonce ne doit ni se propager a la page ni
+     declencher le tirer-pour-rafraichir : le narrateur lit, il ne navigue
+     pas. */
+  overscroll-behavior: contain;
+  /* Les deux regles de prompteur, citees par leur nom : cet ecran est dit et
+     non lu, le narrateur releve les yeux vers la table entre deux regards. La
+     justification complete des deux valeurs vit dans tokens.css. */
+  max-width: var(--prompteur-mesure);
+  line-height: var(--prompteur-interligne);
+  font-family: var(--police-sans);
+  font-size: var(--txt-heading);
+  /* La balise `h1` est choisie pour la structure, un titre par ecran portant
+     le contenu primaire (design-system.md section 9), et non pour son
+     apparence : sa taille et sa graisse par defaut sont donc reecrites, la
+     couche primaire de QUESTION etant Space Grotesk 400 en `--txt-heading`. */
+  font-weight: 400;
+  color: var(--text-display);
+  /* Un dernier mot seul sur sa ligne est un decrochage a la lecture a voix
+     haute, la ou il n'est qu'inelegant dans un texte qu'on lit des yeux. */
+  text-wrap: pretty;
+}
+
+/*
+ * L'enonce devient un conteneur de defilement des qu'il deborde, et le
+ * navigateur le rend alors focusable au clavier de lui-meme, n'ayant aucun
+ * enfant focusable. Aucun `tabindex` n'est pose ici, volontairement : ce
+ * serait un point d'arret permanent sur un element qui ne defile presque
+ * jamais, la ou le navigateur n'en cree un que lorsqu'il y a reellement
+ * quelque chose a faire defiler. Le contour reste necessaire pour que ce
+ * focus se voie, et sur `:focus-visible` seulement, jamais sur `:focus`.
+ */
+.enonce:focus-visible {
+  outline: var(--focus-contour);
+  outline-offset: var(--focus-ecart);
+}
+
+/*
+ * DERNIER RANG de la pile basse, le rang au-dessus restant vide : c'est la
+ * regle des deux emplacements (design-system.md, La regle des deux
+ * emplacements). NIVEAU place son action d'avancement au rang du dessus, si
+ * bien qu'un tap reste sur place d'un ecran a l'autre tombe 64px a cote au
+ * lieu de reveler la reponse a quelqu'un qui n'a pas encore entendu la
+ * question. Ne jamais "aligner" ce bouton sur celui de l'ecran precedent.
+ *
+ * Il s'etire sur toute la largeur par l'etirement par defaut du conteneur
+ * flex : une fois le vide franchi, le geste est decide, et la cible n'a plus
+ * aucune raison d'etre etroite.
+ */
+.action {
+  /* LE VIDE, et la rupture de motif de l'ecran. Une marge, donc
+     incompressible. Ce n'est pas de la respiration : partout ailleurs
+     l'application est dense, ici l'espace empeche de reveler la reponse d'un
+     pouce mal place (design-system.md section 4, QUESTION). */
+  margin-block-start: var(--revelation-vide);
+}

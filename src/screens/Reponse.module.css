@@ -1,0 +1,192 @@
+/*
+ * Diez : l'ecran REPONSE.
+ *
+ * Aucune regle conditionnelle au mode : chaque couleur passe par un token
+ * semantique que `light-dark()` resout dans tokens.css. Une regle qui aurait
+ * besoin de savoir dans quel mode elle tourne signalerait un token manquant,
+ * pas un bloc a ajouter (design-system.md section 2).
+ *
+ * Aucune transition non plus : le fondu entre phases appartient a la zone qui
+ * monte et demonte les ecrans, donc a app/ (design-system.md section 7).
+ * Ecrit ici, il se cumulerait au sien.
+ */
+
+.ecran {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Sans `env()`, l'ancrage bas tombe sur la barre de gestes Android et
+     l'ancrage haut croise l'encoche. La balise `viewport-fit=cover` d'index.html
+     est ce qui rend ces valeurs non nulles (design-system.md section 3). */
+  padding-block-start: calc(var(--esp-lg) + env(safe-area-inset-top));
+  padding-block-end: calc(var(--esp-lg) + env(safe-area-inset-bottom));
+  padding-inline: var(--esp-lg);
+}
+
+/* --- Couche tertiaire haute : la metadonnee et la sortie. --- */
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-md);
+}
+
+.terminer {
+  /* Le remplissage horizontal du Bouton rentre son libelle vers l'interieur :
+     sans ce retrait, TERMINER parait desaligne de la marge de l'ecran alors
+     que sa boite, elle, est juste. Le retrait aligne le TEXTE sur la marge et
+     laisse la zone tactile courir jusqu'au bord, ou elle devient plus facile a
+     atteindre au pouce. La valeur est celle du remplissage du Bouton, citee
+     par son nom. */
+  margin-inline-end: calc(-1 * var(--esp-lg));
+}
+
+/* --- Couches primaire et secondaire. --- */
+
+.corps {
+  /* Occupe tout le reste de la hauteur : c'est ce qui ancre la pile basse au
+     bas de l'ecran, a la meme hauteur que sur les quatre autres ecrans
+     (design-system.md, La regle des deux emplacements). */
+  flex: 1;
+  /* Un element de flex ne retrecit pas sous la taille de son contenu sans
+     cette ligne : `overflow` ne se declencherait jamais, et une reponse longue
+     pousserait la pile basse hors de l'ecran au lieu de defiler. */
+  min-block-size: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  /* Serre : la reponse et son rappel sont une seule information, l'ecart les
+     groupe (skill nothing-design, Spacing as Meaning). */
+  gap: var(--esp-md);
+  /* Nouveau contexte apres la ligne de metadonnee. --esp-4xl n'est pas repris
+     ici : c'est le vide de la revelation, un dispositif de securite propre a
+     l'ecran QUESTION (--revelation-vide), et le citer ailleurs lui oterait sa
+     singularite. */
+  padding-block-start: var(--esp-3xl);
+  /* Quand le corps defile, la derniere ligne ne doit pas venir toucher CARTE
+     SUIVANTE. */
+  padding-block-end: var(--esp-xl);
+}
+
+.reponse {
+  color: var(--text-display);
+  line-height: 1.15;
+  /* MESURE, et non precaution. YAMOUSSOUKRO, l'exemple meme du document, fait
+     douze caracteres, donc le premier palier : rendu en --txt-display-lg, il
+     demande 375px alors qu'un ecran de 320px n'en offre que 272 une fois les
+     marges posees. Sans cette regle, le mot sort de l'ecran. `break-word` et
+     non `anywhere`, qui ecraserait aussi la largeur min-content du bloc et
+     ferait maigrir toute la colonne. */
+  overflow-wrap: break-word;
+  /* La coupure ci-dessus tombe au milieu d'un mot, et cet ecran se DIT a voix
+     haute : sans cesure, YAMOUSSOUK et RO se lisent comme deux mots. Le trait
+     d'union signale la continuation. La langue vient du `lang="fr"`
+     d'index.html, sans lequel la cesure ne s'applique pas. */
+  hyphens: auto;
+}
+
+/*
+ * Premier axe : la forme de la reponse. 206 et 1997 sont de la donnee et se
+ * composent en Space Mono, Yamoussoukro est du texte et se compose en Space
+ * Grotesk (design-system.md section 3).
+ */
+
+.reponse[data-forme="numerique"] {
+  font-family: var(--police-mono);
+  /* Space Mono n'a que deux graisses, 400 et 700 : la legere n'existe pas. */
+  font-weight: 400;
+}
+
+.reponse[data-forme="texte"] {
+  font-family: var(--police-sans);
+  /* 300, la graisse legere. La graisse forte que le navigateur applique a un
+     `h1` epaissirait la display sans que rien ne l'ait demande : la hierarchie
+     se fait par la taille et par le vide, jamais par la graisse
+     (design-system.md sections 3 et 4). */
+  font-weight: 300;
+}
+
+/*
+ * Second axe : le palier de taille. Correctif d'audit, --txt-display-lg sur
+ * une reponse longue donne cinq lignes de display sur un ecran de 320px, ce
+ * n'est plus de la donnee mise en valeur, c'est un mur (design-system.md
+ * section 4, REPONSE). Les deux longueurs qui separent les paliers sont
+ * nommees dans Reponse.tsx, la ou elles sont mesurees.
+ */
+
+.reponse[data-palier="court"] {
+  font-size: var(--txt-display-lg);
+}
+
+.reponse[data-palier="moyen"] {
+  font-size: var(--txt-display-md);
+}
+
+.reponse[data-palier="long"] {
+  font-size: var(--txt-heading);
+}
+
+.secondaire {
+  display: flex;
+  flex-direction: column;
+  /* Plus serre que l'ecart qui separe la reponse de ce bloc : le rappel et la
+     precision sont deux elements d'un meme groupe, et l'emboitement des ecarts
+     est ce qui le dit. */
+  gap: var(--esp-sm);
+}
+
+.rappel,
+.note {
+  font-size: var(--txt-body-sm);
+  color: var(--text-secondary);
+  /* La reponse et sa precision se disent a voix haute comme l'enonce, et le
+     narrateur releve la tete vers la table entre deux regards : memes regles
+     de prompteur que l'ecran QUESTION, interligne et mesure plafonnee
+     (design-system.md section 4, Contrainte de lecture orale). */
+  line-height: var(--prompteur-interligne);
+  max-inline-size: var(--prompteur-mesure);
+}
+
+/* --- Couche tertiaire basse : les deux emplacements. --- */
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  /* CARTE SUIVANTE occupe le rang AU-DESSUS, SIGNALER le dernier rang. L'ecart
+     mesure entre REVELER, dernier rang de l'ecran QUESTION, et CARTE SUIVANTE
+     vaut 64px : c'est la hauteur d'un Bouton plus cet ecart (design-system.md,
+     Le controle se fait sur la chaine). Le reduire rapprocherait les deux
+     boutons de deux ecrans successifs, et une seconde frappe resterait sur
+     place pour sauter la reponse. */
+  gap: var(--esp-md);
+}
+
+.rangSignalement {
+  /* Une seule cellule et les deux enfants empiles dedans : c'est le Bouton qui
+     donne sa hauteur au rang, donc le rang ne peut pas se desynchroniser de
+     lui le jour ou la hauteur du Bouton bouge. Reserver cette hauteur a la
+     main obligerait a recopier l'expression de Bouton.module.css, et un rang
+     qui retrecirait au signalement ferait descendre CARTE SUIVANTE sous le
+     pouce. */
+  display: grid;
+  /* Le centrage est aussi ce qui garde SIGNALER a sa largeur naturelle, alors
+     que l'action primaire, elle, est etiree par le flex de la pile. Ce bouton
+     occupe le rang que REVELER occupait sur l'ecran precedent, et le verrou ne
+     couvre que la frappe rapide : chaque pixel de surface en trop est une
+     chance de plus qu'une frappe tardive le touche (design-system.md, Le
+     controle se fait sur la chaine). */
+  place-items: center;
+}
+
+.rangSignalement > * {
+  grid-area: 1 / 1;
+}
+
+.rangSignalement[data-signalee="true"] .signaler {
+  /* `visibility` plutot qu'un demontage : l'element garde sa boite, donc le
+     rang garde sa hauteur, et il sort en meme temps de l'arbre
+     d'accessibilite, du parcours au clavier et du test de pointage. Une fois
+     la question signalee, une frappe au meme endroit ne touche plus rien. */
+  visibility: hidden;
+}

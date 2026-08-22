@@ -1,0 +1,128 @@
+/*
+ * Diez : la phase THEME.
+ *
+ * Aucune valeur litterale de couleur, et aucune regle conditionnelle au mode :
+ * chaque teinte passe par un token semantique que `light-dark()` resout dans
+ * tokens.css. Une regle qui aurait besoin de savoir dans quel mode elle tourne
+ * signalerait un token manquant, pas un bloc a ajouter (design-system.md
+ * section 2).
+ */
+
+/*
+ * Trois rangees, et c'est la rangee du milieu qui fait la composition : elle
+ * est flexible et l'intitule s'y ancre EN HAUT, donc tout le reste de la
+ * hauteur tombe sous lui. Les deux tiers de vide ne sont pas une marge choisie,
+ * ils sont ce qui reste, et ils suivent donc la taille de l'ecran sans reglage
+ * (design-system.md section 4, THEME).
+ */
+.ecran {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /*
+   * `minmax(0, 1fr)` et non la colonne implicite, qui vaut `auto` et se dilate
+   * jusqu'au plus long mot insecable qu'elle contient. Mesure faite sur le
+   * dernier palier, avec un intitule de 44 caracteres sans espace : sans cette
+   * ligne le `h1` rendait 561px dans une fenetre de 375, la page se mettait a
+   * defiler en largeur et le viewport passait a 585px, donc TOUTE la
+   * composition retrecissait. Avec, le `h1` reste a 327px et le mot se coupe
+   * sur deux lignes. `overflow-wrap` ci-dessous ne suffit pas seul : il coupe
+   * la ligne mais n'entre pas dans le calcul de la largeur minimale de la
+   * colonne, qui est ce qui dilate la grille.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  /*
+   * Les quatre bords passent par `env(safe-area-inset-*)`. En portrait les
+   * insets lateraux valent zero, mais les ecrire tous les quatre est la regle
+   * du projet : c'est l'ancrage en bord bas qui tombe sinon sur l'indicateur
+   * d'accueil iOS et sur la barre de gestes Android (design-system.md
+   * section 3, Zones sures). Ces valeurs ne valent quelque chose que si
+   * `viewport-fit=cover` est pose dans index.html, sans quoi elles sont
+   * toujours nulles et cette precaution est un decor.
+   */
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top))
+    calc(var(--esp-lg) + env(safe-area-inset-right))
+    calc(var(--esp-lg) + env(safe-area-inset-bottom))
+    calc(var(--esp-lg) + env(safe-area-inset-left));
+}
+
+.intitule {
+  /* Ancre en haut de la rangee flexible : sans cette ligne, l'intitule se
+     centrerait verticalement et le vide se repartirait de part et d'autre, ce
+     qui detruit la rupture de l'ecran au lieu de la produire. */
+  align-self: start;
+  /* Le cran --esp-2xl separe deux contextes : la metadonnee du paquet et la
+     couche primaire ne sont pas du meme groupe, et c'est cet ecart qui isole
+     la typographie que le narrateur doit retrouver d'un coup d'oeil. */
+  margin-block-start: var(--esp-2xl);
+  font-family: var(--police-sans);
+  /* Space Grotesk 300, valeur de design-system.md section 4. La graisse legere
+     est ce qui rend la taille display supportable sur un ecran aux deux tiers
+     vide ; en 400 elle devient une masse. */
+  font-weight: 300;
+  /* La couche primaire, et la seule de l'ecran a prendre --text-display. */
+  color: var(--text-display);
+  /*
+   * Interlignage de prompteur et non de texte lu. Le token est ne pour la
+   * phase QUESTION, mais il encode exactement la contrainte de celle-ci :
+   * l'intitule est DIT a voix haute, la tete se releve vers la table entre
+   * deux regards, et un interlignage serre fait perdre la ligne au retour
+   * (design-system.md section 4, Contrainte de lecture orale).
+   */
+  line-height: var(--prompteur-interligne);
+  /* Un dernier mot seul sur sa ligne casse la silhouette que l'oeil vise pour
+     revenir au texte. L'equilibrage ne change ni la taille ni le nombre de
+     lignes, il ne deplace que les coupures. */
+  text-wrap: balance;
+  /* Filet de securite du dernier palier : un intitule sans espace atteignant
+     le plafond du schema deborderait lateralement, et une page qui defile en
+     largeur est le seul defaut de mise en page que cet ecran ne peut pas
+     absorber. */
+  overflow-wrap: break-word;
+}
+
+.intitule[data-palier="large"] {
+  font-size: var(--txt-display-lg);
+}
+
+.intitule[data-palier="moyen"] {
+  font-size: var(--txt-display-md);
+}
+
+.intitule[data-palier="reduit"] {
+  font-size: var(--txt-heading);
+}
+
+/*
+ * Les deux emplacements de la pile basse, dans l'ordre : le rang au-dessus,
+ * puis le dernier rang. Sur THEME l'action d'avancement occupe le DERNIER
+ * RANG, donc la metadonnee prend le rang au-dessus ; la passer sous le bouton
+ * la ferait tomber au dernier rang et l'action remonterait, ce qui inverse
+ * l'alternance que toute la chaine repose sur (design-system.md, La regle des
+ * deux emplacements).
+ *
+ * L'ecart entre les deux rangs est --esp-md, et ce n'est pas une respiration
+ * choisie : c'est lui qui produit le decalage documente de 33px entre
+ * `PIOCHER` sur REPOS et `ANNONCER LES CHIFFRES` ici. Remonte a 32,57px sur
+ * une fenetre de 375x812, polices reelles chargees, en reconstituant les deux
+ * ecrans dans la meme grille : la boite d'une metadonnee rend 16,57px, plus
+ * cet ecart de 16px. Le passer a --esp-sm ramenerait les deux boutons a 24px
+ * l'un de l'autre. Le controle definitif porte sur la chaine complete et non
+ * sur un ecran isole, il appartient donc a la composition.
+ */
+.pileBasse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-md);
+}
+
+/*
+ * Pleine largeur, comme `PIOCHER` sur l'accueil. Deux raisons qui vont dans le
+ * meme sens : la cible tactile est maximale a l'endroit ou le pouce arrive, et
+ * les deux boutons se superposent alors exactement d'un ecran a l'autre, ce
+ * qui rend le decalage vertical mesurable au lieu d'etre brouille par deux
+ * largeurs differentes.
+ */
+.action {
+  width: 100%;
+}

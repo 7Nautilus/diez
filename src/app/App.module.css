@@ -1,0 +1,51 @@
+/*
+ * La zone de phase. Deux regles, et aucune couleur : les ecrans portent la
+ * leur, ce module ne fait que les enchainer.
+ */
+
+.phase {
+  /*
+   * Aucune mise en page ici, volontairement : chaque ecran ancre lui-meme sa
+   * pile basse sur `100dvh` et gere ses zones sures. Un conteneur qui
+   * imposerait une hauteur ou un centrage deplacerait les emplacements que la
+   * regle des deux emplacements a mesures.
+   *
+   * Le `isolate` empeche le fondu ci-dessous de composer avec quoi que ce soit
+   * d'exterieur : une opacite anime cree un contexte d'empilement, et mieux
+   * vaut qu'il soit declare que subi.
+   */
+  isolation: isolate;
+}
+
+/*
+ * Fondu d'OPACITE, jamais de glissement, et la duree du systeme
+ * (design-system.md section 7). Le rythme revendique est percussif : un clic,
+ * pas un swoosh.
+ */
+.transition {
+  animation: apparition var(--duree-courte) var(--courbe-transition) both;
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Correctif d'audit : sous `prefers-reduced-motion`, toutes les transitions
+ * passent a 0 ms. Le changement d'ecran reste instantane et parfaitement
+ * lisible, ce qui s'accorde d'ailleurs avec le rythme du systeme.
+ *
+ * La duree est mise a zero plutot que l'animation supprimee : `both` conserve
+ * ainsi son etat final, la ou un `animation: none` laisserait un ecran a
+ * l'opacite d'origine si la regle venait a changer.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .transition {
+    animation-duration: 0ms;
+  }
+}

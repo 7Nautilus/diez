@@ -35,20 +35,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.page {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--esp-lg) + env(safe-area-inset-top)) var(--esp-lg)
-    calc(var(--esp-lg) + env(safe-area-inset-bottom)) var(--esp-lg);
-}
-
-.mot {
-  font-family: var(--police-display);
-  font-size: var(--txt-display-xl);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  color: var(--text-display);
-}
+/*
+ * `.page` et `.mot` ont ete retires en phase 4. C'etait la page temoin de la
+ * phase 1, dont App etait le seul appelant ; l'accueil rend desormais le
+ * wordmark, avec son propre module et le meme interlettrage positif, que Doto
+ * impose parce qu'il est matriciel.
+ */

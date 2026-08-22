@@ -1,0 +1,97 @@
+/*
+ * Diez : l'ecran NIVEAU.
+ *
+ * Le seul ecran a visee precise, et le seul sans retour possible une fois le
+ * niveau choisi (architecture.md section 5). Sa mise en page ne fait que
+ * servir ce fait : les cibles descendent dans l'arc du pouce, et le vide
+ * remonte au-dessus d'elles.
+ *
+ * Aucune couleur en propre, et donc aucune regle conditionnelle au mode : les
+ * primitives portent les leurs, resolues par light-dark() dans tokens.css. Un
+ * ecran qui aurait besoin de savoir dans quel mode il tourne signalerait un
+ * token manquant, jamais un bloc a ajouter (design-system.md section 2).
+ */
+
+.ecran {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  /* Les ancrages bas tombent sur la barre de gestes Android et l'indicateur
+     d'accueil iOS, les ancrages hauts croisent l'encoche : tous passent par
+     env(safe-area-inset-*) (design-system.md section 3, Zones sures). Ces
+     insets valent zero sans viewport-fit=cover, deja pose dans index.html,
+     sans quoi toute cette gestion serait un decor sans effet. Les cotes n'en
+     prennent pas : l'orientation est verrouillee en portrait
+     (architecture.md section 10), ou les insets lateraux sont nuls. */
+  padding: calc(var(--esp-lg) + env(safe-area-inset-top)) var(--esp-lg)
+    calc(var(--esp-lg) + env(safe-area-inset-bottom));
+}
+
+/* Le rappel du theme porte le `h1` de l'ecran, mais pas son traitement, qui
+   appartient a l'Etiquette. Les deux proprietes que le navigateur donne
+   d'autorite a un titre sont donc rendues a l'heritage plutot que reglees
+   ici : ecrire une graisse ou une taille reviendrait a redire ailleurs ce que
+   le composant definit deja. */
+.rappel {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+ * LE VIDE PASSE AU-DESSUS, ET C'EST LA DECISION DE CET ECRAN.
+ *
+ * Ancree en haut, la grille finissait a 52 % de la hauteur d'ecran avec
+ * 315 px de vide en dessous : ses cibles tombaient hors de l'arc naturel du
+ * pouce, sur le seul ecran a visee precise et sans retour. Ancree en bas,
+ * elle occupe 45 a 88 % de la hauteur. Correctif de prototype, mesure
+ * (design-system.md section 4, La grille est ancree en bas). La molette
+ * s'ancre de la meme facon, pour la meme raison.
+ *
+ * `margin-block-start: auto` est tout ce qui deplace le vide. Aucune autre
+ * valeur ne change, et il n'y a rien a "centrer" ici : l'espace sert a
+ * isoler, jamais a combler.
+ */
+.pile {
+  margin-block-start: auto;
+  display: flex;
+  flex-direction: column;
+  /* Le selecteur et les actions sont deux groupes, pas deux elements d'un
+     meme groupe : l'ecart le dit, aucun filet n'a a le dire (design-system.md
+     section 3, la skill nothing-design pour la regle d'espacement). */
+  gap: var(--esp-xl);
+}
+
+/*
+ * LES DEUX RANGS SONT SEPARES DE --esp-md, ET C'EST UNE MESURE, PAS UNE
+ * RESPIRATION.
+ *
+ * La chaine complete a ete mesuree ecran par ecran : il faut 64 px entre VOIR
+ * LA QUESTION et le rang du dessous, faute de quoi un second tap tomberait
+ * sur REVELER LA REPONSE de l'ecran suivant et la reponse serait dite avant
+ * la question (design-system.md section 4, Le controle se fait sur la
+ * chaine). Ces 64 px sont la hauteur minimale d'un bouton plus cet ecart ;
+ * reduire l'un ou l'autre les casse.
+ */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-md);
+}
+
+/* La raison appartient au bouton qu'elle explique, et un ecart serre est ce
+   qui le dit. */
+.rang {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-sm);
+}
+
+/* La rangee est reservee meme vide, pour que les deux boutons ne bougent
+   jamais sous le pouce : la raison du commentaire du composant. La hauteur
+   est un cran de l'echelle, choisi parce qu'il depasse la ligne de
+   --txt-body-xs qu'elle doit tenir ; `output` etant en ligne par defaut, il
+   faut aussi lui donner une boite pour que cette hauteur s'applique. */
+.raison {
+  display: block;
+  min-height: var(--esp-lg);
+}

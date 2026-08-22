@@ -14,10 +14,18 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // Vitest ne teste que domain/ et tools/ : c'est la qu'est la logique
-    // (conventions-code.md section 9). Restreindre ici plutot qu'en revue
-    // evite qu'un test d'ecran s'installe sans qu'on l'ait decide.
-    include: ["src/domain/**/*.test.ts", "tools/**/*.test.ts"],
+    // Vitest ne teste que domain/, tools/ et le reducteur pur d'app/ : c'est
+    // la qu'est la logique (conventions-code.md section 9). Restreindre ici
+    // plutot qu'en revue evite qu'un test d'ecran s'installe sans qu'on l'ait
+    // decide.
+    //
+    // `src/app/` a ete ajoute en phase 4, et pour une raison precise : le
+    // moment ou un niveau est consomme est un CONTRAT DE COMPOSITION que ni le
+    // domaine ni les ecrans ne peuvent tenir, `reduire` ne recevant ni ne
+    // rendant d'Historique (architecture.md section 6). Il ne se prouve qu'en
+    // rejouant une sequence complete au niveau de l'appelant. La restriction
+    // tient toujours : `avancer` est pur, aucun composant n'est monte.
+    include: ["src/domain/**/*.test.ts", "src/app/**/*.test.ts", "tools/**/*.test.ts"],
     // `describe`, `it` et `expect` sans import, et c'est la seule forme
     // ecrivable ici : la regle de dependance interdit a domain/ tout import
     // qui sort de domain/, `vitest` compris, et le lint l'applique jusque dans
