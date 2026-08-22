@@ -1,0 +1,127 @@
+/*
+ * La planche de controle.
+ *
+ * Aucune ombre, aucun flou, aucun degrade, aucun rayon : des rectangles plats
+ * separes par des bordures. C'est le parti pris du systeme
+ * (docs/design-system.md section 8), et une planche qui s'en ecarterait
+ * mesurerait autre chose que ce qu'elle est censee mesurer.
+ */
+
+.planche {
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--text-primary);
+  padding: var(--esp-lg);
+}
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-lg);
+  padding-block-end: var(--esp-lg);
+  border-block-end: 1px solid var(--border-visible);
+}
+
+.titre {
+  font-size: var(--txt-display-md);
+  /* La graisse forte du navigateur pour un `h1` epaissirait Space Grotesk sans
+     que rien ne l'ait demande : la hierarchie se fait par la taille et par le
+     vide, pas par la graisse (docs/design-system.md section 3). */
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-display);
+}
+
+.temoin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-lg);
+}
+
+.mesure {
+  display: flex;
+  flex-direction: column;
+  /* Serre : le libelle et sa valeur sont une seule information. */
+  gap: var(--esp-2xs);
+}
+
+.consigne {
+  /* Passe a la ligne sous le reste de l'entete plutot que de comprimer le
+     selecteur de mode, qui est le controle que cette planche existe pour
+     eprouver. */
+  flex-basis: 100%;
+  max-inline-size: var(--prompteur-mesure);
+}
+
+/*
+ * --- LE TEMOIN DU RENDU ---
+ *
+ * Les deux mots occupent la meme cellule et l'un des deux est transparent :
+ * c'est `light-dark()` qui choisit lequel, donc le mot affiche vient de la
+ * RESOLUTION REELLE du schema et non d'un calcul JavaScript qui la
+ * repeterait. Un attribut pose ne vaut pas un comportement rendu, c'est le
+ * motif que les cinq audits de ce projet ont retrouve a chaque fois.
+ *
+ * C'est le seul `light-dark()` du depot hors de tokens.css, et la derogation
+ * s'arrete la : les deux branches ne portent aucune valeur, elles ne font
+ * qu'interroger le mecanisme. Elle ne vaut que parce que ce dossier ne part
+ * jamais en production.
+ */
+.rendu {
+  display: inline-grid;
+}
+
+.rendu > * {
+  grid-area: 1 / 1;
+}
+
+.renduClair {
+  color: light-dark(var(--text-display), transparent);
+}
+
+.renduSombre {
+  color: light-dark(transparent, var(--text-display));
+}
+
+/* --- Les deux panneaux --- */
+
+.panneaux {
+  /* Largeur en dessous de laquelle un panneau cesse de tenir a cote de
+     l'autre. Ce n'est pas une valeur du systeme : la planche ne s'affiche
+     jamais en production et ne vise aucun appareil en particulier. */
+  --panneau-min: 320px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--panneau-min), 1fr));
+  gap: var(--esp-lg);
+  margin-block-start: var(--esp-lg);
+}
+
+/*
+ * Chaque panneau FORCE son schema, et c'est tout le mecanisme de la planche.
+ * `color-scheme` s'herite, donc une declaration posee ici l'emporte sur celle
+ * de la racine pour tout le sous-arbre, et les variables de tokens.css se
+ * resolvent alors dans les deux sens sur la meme page.
+ */
+.panneau {
+  background: var(--ground);
+  color: var(--text-primary);
+  border: 1px solid var(--border-visible);
+  padding: var(--esp-lg);
+}
+
+.panneau[data-schema="clair"] {
+  color-scheme: only light;
+}
+
+.panneau[data-schema="sombre"] {
+  color-scheme: only dark;
+}
+
+.enseigne {
+  /* Meme raison que sur le titre de la Rubrique : la voix du libelle vient de
+     l'Etiquette, pas de la graisse par defaut du `h2`. */
+  font-weight: 400;
+  margin-block-end: var(--esp-md);
+}

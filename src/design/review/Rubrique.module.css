@@ -1,0 +1,34 @@
+/*
+ * Rubrique : un titre, une note facultative, un corps.
+ *
+ * Separation par bordure et par espacement, jamais par une ombre ni par un
+ * fond : les surfaces du systeme sont plates (docs/design-system.md
+ * section 8). Aucune couleur litterale, aucun rayon invente : la planche est
+ * soumise aux memes regles que ce qu'elle donne a verifier.
+ */
+
+.rubrique {
+  border-block-start: 1px solid var(--border);
+  padding-block-start: var(--esp-md);
+}
+
+/*
+ * Le `h3` ne porte aucune graisse propre : la voix du libelle vient de
+ * l'Etiquette qu'il contient, et la graisse forte du navigateur ferait
+ * basculer Space Mono sur sa coupe 700 sans que rien ne l'ait demande.
+ */
+.titre {
+  font-weight: 400;
+}
+
+.note {
+  margin-block-start: var(--esp-xs);
+  /* Une note se lit vraiment, contrairement aux libelles qui l'entourent. Elle
+     emprunte donc la mesure de lecture du prompteur, seule mesure que le
+     systeme nomme, plutot que d'en inventer une deuxieme. */
+  max-inline-size: var(--prompteur-mesure);
+}
+
+.corps {
+  margin-block-start: var(--esp-md);
+}

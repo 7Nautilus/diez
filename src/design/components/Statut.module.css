@@ -1,0 +1,42 @@
+/*
+ * Diez : le Statut.
+ *
+ * LE TEXTE NE PASSE JAMAIS EN ROUGE, dans aucun ton. --accent sur fond sombre
+ * donne 4,05:1, sous le seuil de 4,5:1 exige pour du texte courant : un statut
+ * ecrit en rouge serait conforme en clair et non conforme en sombre, sans que
+ * rien ne le signale. Le rouge reste sur les CROCHETS, qui relevent du seuil
+ * de 3:1 en tant qu'element non textuel, et le signal garde donc son role
+ * entier sans que le texte y perde sa lisibilite (design-system.md section 5).
+ *
+ * C'est la regle la plus facile a casser du composant : passer le texte en
+ * --accent est exactement ce que quelqu'un fera un jour en trouvant que le
+ * signal ne se voit pas assez.
+ *
+ * Un seul axe, `data-ton`. En `neutre`, les crochets n'ont aucune regle : ils
+ * heritent de --text-primary avec le texte, ce que dit la table du composant
+ * en ne leur donnant pas de couleur propre (tokens-et-composants.md, Statut).
+ */
+
+.statut {
+  display: inline-flex;
+  align-items: baseline;
+  /* L'ecart des crochets se fait a l'espacement et non par une espace ecrite
+     dans le texte : une espace ferait partie du nom lu par un lecteur d'ecran
+     et disparaitrait au premier passage d'un formateur. */
+  gap: var(--esp-xs);
+  color: var(--text-primary);
+  /* Les libelles sont toujours Space Mono (design-system.md section 3). */
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-caption);
+  /* Interlettrage des libelles qui se lisent sans se toucher, aligne sur celui
+     de l'Etiquette : un statut n'est pas un controle, il n'a pas de raison de
+     partager l'interlettrage plus serre du Bouton et du Chip. */
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* --- L'axe, et lui seul. --- */
+
+.statut[data-ton="signal"] .crochet {
+  color: var(--accent);
+}

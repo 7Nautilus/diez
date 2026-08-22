@@ -1,0 +1,122 @@
+/*
+ * L'inventaire des primitives.
+ *
+ * Ce module ne pose que de la MISE EN PAGE. Aucune couleur, aucune taille de
+ * texte, aucune bordure d'un composant n'est redite ici : une planche qui
+ * redeclarerait ce qu'elle mesure cesserait de le mesurer le jour ou le
+ * composant changerait, et c'est exactement le mensonge qu'elle doit rendre
+ * impossible.
+ *
+ * Deux exceptions, toutes deux assumees : la pastille de la rampe, qui n'est
+ * pas un composant mais l'instrument qui rend la rampe lisible, et le
+ * remplissage de --op qu'elle porte.
+ */
+
+.inventaire {
+  display: grid;
+  /* Un vide franc entre rubriques : c'est lui qui dit "nouveau groupe", et il
+     evite d'avoir a poser un filet de plus (docs/design-system.md section 8). */
+  gap: var(--esp-xl);
+}
+
+/* --- Bouton : variante en ligne, etat en colonne. --- */
+
+.matrice {
+  display: grid;
+  /*
+   * Le nom de la variante prend sa largeur, les deux etats se partagent le
+   * reste a egalite pour que la comparaison se fasse a taille identique.
+   *
+   * `minmax(0, 1fr)` et non `1fr` : mesure faite sur la planche a 375 px de
+   * large, la largeur du telephone vise. Un `1fr` a pour minimum le contenu de
+   * la piste, donc les deux boutons refusaient de retrecir sous leur libelle
+   * et poussaient la page de 13 px hors de la fenetre. Le libelle passe a la
+   * ligne, ce que le Bouton prevoit deja en centrant son texte.
+   */
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--esp-sm) var(--esp-md);
+  align-items: center;
+}
+
+/* --- Listes de la planche. --- */
+
+.liste,
+.rampe {
+  /* Les puces d'une liste n'apportent rien a un inventaire, et le reste de
+     base.css a deja retire le retrait qui les logeait. */
+  list-style: none;
+}
+
+.liste {
+  display: grid;
+  gap: var(--esp-sm);
+  /* Chaque libelle commence sa propre ligne : c'est ce qui rend comparables
+     les trois tailles de l'Etiquette. */
+  justify-items: start;
+}
+
+.rangee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-md);
+}
+
+/* --- SelecteurNiveau : les deux formes, cote a cote quand la place le permet. --- */
+
+.formes {
+  display: flex;
+  flex-wrap: wrap;
+  /* Les deux formes s'alignent par le haut : elles n'ont pas la meme hauteur,
+     et les centrer decalerait les crans que l'on compare. */
+  align-items: flex-start;
+  gap: var(--esp-xl);
+}
+
+.forme {
+  display: grid;
+  gap: var(--esp-sm);
+  /* La grille du selecteur est en deux colonnes de largeur libre : sans base
+     nulle, elle prendrait toute la ligne et chasserait la molette dessous. */
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+/* --- La rampe, dix crans cote a cote. --- */
+
+.rampe {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--esp-xs);
+}
+
+.echelon {
+  display: grid;
+  justify-items: center;
+  gap: var(--esp-2xs);
+  flex: 1 1 0;
+}
+
+/*
+ * L'OPACITE, ET RIEN D'AUTRE. La rampe encode la difficulte en opacite et
+ * jamais en couleur : un degrade du vert au rouge serait l'anti-pattern
+ * numero un du projet, et illisible pour une deficience de la vision des
+ * couleurs (docs/design-system.md section 4).
+ *
+ * Le --op de chaque cran vient de `styleDeRampe`, exportee par le composant :
+ * la planche lit l'interpolation a sa source au lieu d'en tenir une deuxieme
+ * copie, qui se desynchroniserait le jour ou le plancher bougerait.
+ */
+.pastille {
+  inline-size: 100%;
+  block-size: var(--esp-xl);
+  background: var(--text-display);
+  opacity: var(--op);
+}
+
+/* --- Contenu de la Feuille. --- */
+
+.menu {
+  display: grid;
+  gap: var(--esp-sm);
+}

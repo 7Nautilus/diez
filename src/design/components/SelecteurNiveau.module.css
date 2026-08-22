@@ -1,0 +1,245 @@
+/*
+ * Diez : le SelecteurNiveau.
+ *
+ * Deux formes, un seul axe : `data-forme` vaut `grille` ou `molette`, et
+ * `data-etat` qualifie chaque cran, `libre` ou `consomme`. Tout le reste est
+ * en pseudo-classes. La matrice tient donc en une seule feuille, ce qui est
+ * precisement le point : les deux formes partagent la base du cran, la rampe
+ * et les etats, et seule la maniere de POSER l'opacite les separe.
+ *
+ * Aucune regle conditionnelle au mode. Chaque couleur passe par un token
+ * semantique que `light-dark()` resout dans tokens.css, donc les deux modes
+ * sont a egalite et le sombre n'est pas derive du clair (design-system.md
+ * section 2). Une regle qui aurait besoin de savoir dans quel mode elle tourne
+ * signalerait un token manquant, jamais un bloc a ajouter.
+ *
+ * Aucune ombre, aucun flou, aucun degrade : les surfaces sont plates et se
+ * separent par une bordure.
+ */
+
+/* --- Le cran, base commune aux deux formes. --- */
+
+.cran {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Bordure sur tous les crans, y compris ceux qui la portent transparente :
+     c'est elle qui subsiste quand le remplissage disparait, et sans elle un
+     cran consomme mesurerait deux pixels de moins que ses voisins. */
+  border: 1px solid transparent;
+  background: none;
+  /* Un chiffre est de la donnee, donc Space Mono (design-system.md
+     section 3). Meme pile que le Bouton. */
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-display-md);
+  line-height: 1;
+  color: var(--text-display);
+  cursor: pointer;
+  /* Un appui long sur un chiffre ouvrirait la selection de texte du systeme
+     par-dessus la molette, au milieu meme du geste qui la fait tourner. */
+  user-select: none;
+}
+
+/* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose a
+   chaque tap est un parasite ; au clavier, son absence rend l'ecran
+   inutilisable. Contour de 2px, tokens-et-composants.md, Bouton. */
+.cran:focus-visible,
+.liste:focus-visible {
+  outline: 2px solid var(--text-display);
+  /* Le decalage est ce qui rend le contour visible sur un cran a forte
+     opacite, dont le remplissage est deja --text-display. */
+  outline-offset: var(--esp-2xs);
+}
+
+/*
+ * UN CRAN CONSOMME CHANGE DE FORME, JAMAIS D'OPACITE.
+ *
+ * Le canal de l'opacite est deja pris par la difficulte. S'en servir aussi
+ * pour l'epuisement rendrait un niveau brule indiscernable d'un niveau facile,
+ * ce qui est l'anti-pattern nomme en design-system.md section 8. Deux
+ * informations, deux canaux : le chiffre cede la place au point median, et le
+ * remplissage disparait au profit de la seule bordure.
+ */
+.cran[data-etat="consomme"] {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+/* --- Forme grille : conservee, engagement immediat. Taper choisit. --- */
+
+.selecteur[data-forme="grille"] {
+  display: grid;
+  /* Deux colonnes, soit une demi-largeur par bloc (design-system.md
+     section 4, La grille). */
+  grid-template-columns: repeat(2, 1fr);
+  /*
+   * L'ecart n'est pas du confort, et c'est le parametre a ne pas sacrifier.
+   * La molette a fait DISPARAITRE le risque de mistap au lieu de l'attenuer,
+   * mais la grille, elle, engage au premier tap et il n'existe aucun retour
+   * arriere depuis QUESTION : dix blocs jointifs sont exactement la cible ou
+   * le pouce derape d'une case. Exige par WCAG 2.2, confirme par deux audits.
+   */
+  gap: var(--niveau-bloc-ecart);
+  /* Le conteneur est un `fieldset`, qui arrive avec une bordure d'auteur du
+     navigateur et une largeur minimale `min-content` l'empechant de retrecir.
+     Le reset de base.css ne couvre ni l'une ni l'autre. */
+  border: 0;
+  min-inline-size: 0;
+}
+
+/* La legende porte le nom accessible du groupe et rien d'autre : l'ecran
+   NIVEAU affiche deja son propre titre, et un second l'y redirait. Masquee a
+   l'oeil sans etre retiree de l'arbre, `display: none` et `visibility` la
+   feraient disparaitre aussi pour un lecteur d'ecran. Le pixel n'est pas une
+   dimension choisie, c'est la plus petite qui ne soit pas zero : une boite de
+   taille nulle est ignoree par certains lecteurs. */
+.legende {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.selecteur[data-forme="grille"] .cran {
+  /* Bien au-dela du minimum tactile, la prevention du mistap reposant
+     entierement sur ce selecteur (design-system.md section 4). */
+  min-height: var(--niveau-bloc-h);
+  /* Bloc technique, rayon 4px (design-system.md section 4, La grille). Le
+     systeme n'admet que la pilule pour un bouton ou 4 a 8px pour une piece
+     technique ; ces blocs sont des pieces techniques. */
+  border-radius: 4px;
+}
+
+/*
+ * L'OPACITE PORTE SUR LE REMPLISSAGE, JAMAIS SUR L'ELEMENT.
+ *
+ * Mesure faite sur la maquette : `opacity` posee sur le bloc faisait tomber le
+ * contraste du chiffre contre son bloc a 1,83:1 en clair. Le chiffre est
+ * exactement la couleur du fond, donc il s'estompait avec son bloc et les deux
+ * convergeaient. En n'attenuant que le remplissage, le chiffre reste opaque et
+ * les deux rapports deviennent identiques, 3,31 en clair et 4,41 en sombre au
+ * niveau 1 (design-system.md section 4). Le seuil tenait, c'est le modele de
+ * calcul qui etait faux.
+ */
+.selecteur[data-forme="grille"] .cran[data-etat="libre"] {
+  --remplissage: color-mix(in srgb, var(--text-display) calc(var(--op) * 100%), transparent);
+  background: var(--remplissage);
+  /* La bordure suit le remplissage : le bloc se lit comme une surface pleine
+     et non comme un contour rempli. */
+  border-color: var(--remplissage);
+  /* Le chiffre est inverse sur le bloc. */
+  color: var(--ground);
+}
+
+/* Le selecteur ne s'anime pas a la pression : la bordure passe a
+   --text-display, point (design-system.md section 7). Aucune transition, aucun
+   ressort, aucun rebond. Percussif, pas fluide. */
+.selecteur[data-forme="grille"] .cran[data-etat="libre"]:active {
+  border-color: var(--text-display);
+}
+
+/*
+ * La bordure qui reste. --border-visible aurait ete le choix reflexe, mais il
+ * donne 1,32:1 sur --noir : a bout de bras dans un salon a lumiere basse, le
+ * cran n'a plus de forme du tout. --text-secondary tient au-dela de 5:1 dans
+ * les deux modes, et c'est aussi la couleur du point median, donc le cran
+ * consomme se lit comme une seule figure.
+ */
+.selecteur[data-forme="grille"] .cran[data-etat="consomme"] {
+  border-color: var(--text-secondary);
+}
+
+/*
+ * --- Forme molette : le defaut.
+ *
+ * Elle separe la DESIGNATION de l'ENGAGEMENT. On fait defiler pour designer,
+ * ce qui ne commet rien, et l'on valide par un geste distinct. C'est ce qui
+ * fait disparaitre le risque de mistap au lieu de l'attenuer, et ce qui a
+ * permis de retirer le label VERROUILLE de l'ecran QUESTION (design-system.md
+ * section 4, La molette).
+ */
+
+.fenetre {
+  position: relative;
+  /* Cinq crans visibles a la fois. */
+  height: var(--niveau-fenetre-h);
+  /* La seule derivation de la feuille, ecrite une fois et lue deux : la liste
+     s'en remplit en haut et en bas pour que le premier et le dernier cran
+     puissent atteindre la bande, et la bande se pose exactement dessus. C'est
+     aussi ce qui rend le pas de defilement mesurable cote composant. */
+  --marge-fenetre: calc((var(--niveau-fenetre-h) - var(--niveau-cran-h)) / 2);
+}
+
+.liste {
+  height: 100%;
+  overflow-y: auto;
+  padding-block: var(--marge-fenetre);
+  /* Defilement natif avec points d'arret. Aucun evenement n'est detourne : la
+     molette est un vrai conteneur qui defile, donc elle a l'inertie du systeme
+     et le geste que le pouce connait deja. */
+  scroll-snap-type: y mandatory;
+  /* Sans quoi, arrivee en butee, la molette entraine la page derriere elle. */
+  overscroll-behavior-y: contain;
+  /* La position dans l'echelle est deja donnee par la bande de lecture. Une
+     barre la redirait, en ajoutant du chrome a un ecran qui n'en a pas. */
+  scrollbar-width: none;
+}
+
+.selecteur[data-forme="molette"] .cran {
+  height: var(--niveau-cran-h);
+  scroll-snap-align: center;
+}
+
+/*
+ * L'OPACITE PORTE ICI SUR LE TEXTE, et ce n'est pas une incoherence avec la
+ * grille : c'est la meme regle de contraste appliquee a une autre geometrie.
+ * Le chiffre n'a aucun bloc derriere lui, donc rien avec quoi il pourrait
+ * converger, et le piege mesure sur la grille n'existe pas. Verifie, 3,31 en
+ * clair et 4,41 en sombre au niveau 1 (design-system.md section 4).
+ *
+ * La regle ne vise que les crans libres, si bien qu'un cran consomme ne touche
+ * jamais a l'opacite, meme par une valeur de repli.
+ */
+.selecteur[data-forme="molette"] .cran[data-etat="libre"] {
+  opacity: var(--op);
+}
+
+/* Bande de lecture : fixe, centree, filets --border-visible et deux reperes
+   --text-secondary (design-system.md section 4, La molette). Elle ne bouge
+   pas, c'est l'echelle qui defile derriere elle. */
+.bande {
+  position: absolute;
+  inset: var(--marge-fenetre) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--esp-sm);
+  border-top: 1px solid var(--border-visible);
+  border-bottom: 1px solid var(--border-visible);
+  /* Posee par-dessus la liste, sinon elle intercepterait le doigt au milieu
+     meme de la zone ou l'on fait tourner la molette. */
+  pointer-events: none;
+}
+
+/*
+ * Deux crochets, la meme figure que celle du Statut. Les filets suffisent a
+ * dessiner la bande mais pas a la designer : --border-visible reste sous 1,5:1
+ * dans les deux modes, ce qui convient a un filet et non a un repere.
+ * --text-secondary tient le seuil de 3:1 des elements non textuels. La bande
+ * porte donc deux couleurs, et c'est la raison.
+ */
+.repere {
+  width: var(--esp-xs);
+  height: var(--esp-md);
+  border: 1px solid var(--text-secondary);
+}
+
+.repere:first-child {
+  border-right: 0;
+}
+
+.repere:last-child {
+  border-left: 0;
+}

@@ -1,0 +1,126 @@
+/*
+ * Diez : le Segment.
+ *
+ * Le groupe porte la bordure, chaque option porte l'axe `data-actif`, dont la
+ * seule valeur `true` INVERSE le fond et le texte
+ * (docs/tokens-et-composants.md, Chip et Segment). L'inversion reprend celle
+ * du Bouton primaire, fond --text-display et texte --ground : c'est le meme
+ * geste, et il ne doit pas exister deux facons d'inverser dans le systeme.
+ *
+ * L'attribut porte toujours une valeur, "true" ou "false", parce que React
+ * serialise les booleens des attributs `data-*`. Les deux cas se selectionnent
+ * donc explicitement, et aucune regle ne repose sur l'absence d'un attribut.
+ *
+ * Aucune regle conditionnelle au mode : chaque couleur passe par un token
+ * semantique que `light-dark()` resout dans tokens.css (design-system.md
+ * section 2).
+ *
+ * AUCUNE TRANSITION, et c'est une decision, pas un oubli : "la bascule de mode
+ * ne s'anime pas, c'est un interrupteur, pas une transition" (design-system.md
+ * section 7). La skill prevoit 200ms sur un controle segmente ; le projet
+ * tranche dans l'autre sens, et le rythme revendique est percussif. Un pave
+ * qui glisse d'une option a l'autre est exactement ce qu'il ne faut pas.
+ */
+
+.groupe {
+  display: inline-flex;
+  align-items: stretch;
+  /* Ce remplissage n'est pas decoratif : il loge exactement le contour de
+     focus d'une option, --esp-2xs d'ecart plus 2px d'epaisseur. Sans lui, le
+     contour de l'option cochee deborderait sur la bordure du groupe. */
+  padding: var(--esp-xs);
+  border: 1px solid var(--border-visible);
+  border-radius: 999px;
+}
+
+.option {
+  /* Base zero et croissance egale : les options se partagent la largeur
+     disponible, et `min-width: auto` les empeche de descendre sous leur
+     libelle. Un groupe pleine largeur garde donc des options de meme taille. */
+  flex: 1 1 0;
+  /* Reference de positionnement du `input` masque, qui est absolu. Sans elle,
+     il se placerait par rapport a un ancetre lointain. */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Cible tactile hors selecteur de niveau (design-system.md section 9). La
+     skill donne 36 a 44px de hauteur pour un controle segmente : on prend le
+     haut de la plage, qui est aussi le minimum tactile, et le groupe mesure
+     cette hauteur plus son remplissage. */
+  min-height: var(--cible-min);
+  padding: 0 var(--esp-md);
+  /* Pilule dans une pilule : c'est ce qui fait lire l'option cochee comme un
+     pave deplace le long du groupe. */
+  border-radius: 999px;
+  color: var(--text-secondary);
+  /* Les libelles sont toujours Space Mono (design-system.md section 3). */
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-label);
+  /* Interlettrage des libelles de controle, aligne sur celui du Bouton
+     (tokens-et-composants.md, Bouton). */
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  /* Un libelle de mode tient en un mot ; le laisser passer a la ligne ferait
+     grandir le groupe entier d'une ligne pour une option. */
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/*
+ * Le bouton radio natif, masque a l'oeil et a lui seul.
+ *
+ * Opacite nulle et JAMAIS `display: none` ni `visibility: hidden` : les deux
+ * retireraient le controle de l'ordre de tabulation et de l'arbre
+ * d'accessibilite, c'est-a-dire tout ce pour quoi on a pris un element natif.
+ * Il garde ici la taille de l'option, ce qui fait de toute la surface du
+ * libelle une cible.
+ */
+.controle {
+  position: absolute;
+  inset: 0;
+  /* Sans quoi le controle garde sa taille intrinseque au lieu de s'etirer. */
+  appearance: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* --- L'axe, et lui seul. --- */
+
+.option[data-actif="true"] {
+  background: var(--text-display);
+  color: var(--ground);
+}
+
+/* --- Les etats, en pseudo-classes. --- */
+
+/* Meme raison que sur le Bouton : sur un ecran tactile, `:hover` reste colle
+   apres le tap. La regle ne vaut que pour les pointeurs qui savent survoler. */
+@media (hover: hover) {
+  /* Le survol eclaircit le texte d'un cran, et seulement celui d'une option
+     non cochee : l'option cochee est deja au maximum de contraste. */
+  .option[data-actif="false"]:hover {
+    color: var(--text-primary);
+  }
+}
+
+/*
+ * Le contour de focus est reporte du controle masque sur le libelle visible.
+ * C'est la contrepartie du choix de l'element natif, et la seule : sans cette
+ * regle, le focus clavier serait invisible, l'anneau se dessinant sur un
+ * element transparent.
+ *
+ * Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose a
+ * chaque tap est un parasite ; au clavier, son absence rend l'ecran
+ * inutilisable. Contour de 2px, tokens-et-composants.md, Bouton.
+ *
+ * Le contour reste visible sur l'option cochee, dont le fond vaut deja
+ * --text-display : le decalage le pose sur le remplissage du groupe, en dehors
+ * du pave. Et comme un groupe radio ne donne le focus qu'a l'option cochee,
+ * c'est le seul cas qui compte vraiment.
+ */
+.option:has(.controle:focus-visible) {
+  outline: 2px solid var(--text-display);
+  outline-offset: var(--esp-2xs);
+}

@@ -1,0 +1,96 @@
+/*
+ * Diez : le Bouton.
+ *
+ * La base, puis UN SEUL axe de variante, `data-variante`. Les etats n'en sont
+ * pas : `:hover`, `:focus-visible` et `:disabled` sont des pseudo-classes la
+ * ou Figma en ferait des axes de plus. C'est la distinction que pose
+ * docs/tokens-et-composants.md, section Composants et variantes, et la raison
+ * pour laquelle la matrice reste une petite table au lieu d'une collection de
+ * classes qui se recopient.
+ *
+ * Aucune regle conditionnelle au mode : chaque couleur passe par un token
+ * semantique que `light-dark()` resout dans tokens.css. Une regle qui aurait
+ * besoin de savoir dans quel mode elle tourne signalerait un token manquant,
+ * pas un bloc a ajouter. Les deux modes sont a egalite, le sombre n'est pas
+ * derive du clair (design-system.md section 2).
+ */
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Un libelle qui passe a la ligne se centre comme le premier. */
+  text-align: center;
+  /* Hauteur minimale de 48px (tokens-et-composants.md, Bouton), soit le cran
+     --esp-2xl de l'echelle. Le `max()` n'est pas une precaution decorative :
+     il fait de --cible-min un plancher, de sorte qu'un deplacement de
+     l'echelle ne puisse pas faire passer le bouton sous le minimum tactile
+     sans que rien ne le signale (design-system.md section 9). */
+  min-height: max(var(--cible-min), var(--esp-2xl));
+  padding: var(--esp-sm) var(--esp-lg);
+  /* Bordure transparente sur TOUTES les variantes, y compris les deux qui
+     n'en portent pas : sans elle, `primaire` et `ghost` mesurent deux pixels
+     de moins que `secondaire`, et deux boutons voisins d'un meme ecran
+     cessent de s'aligner. */
+  border: 1px solid transparent;
+  /* Pilule. Le rayon depasse largement la moitie de la hauteur pour qu'il
+     reste une pilule quelle que soit la longueur du libelle. */
+  border-radius: 999px;
+  background: none;
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-label);
+  /* Les capitales perdent leur air : l'interlettrage positif le rend. Valeur
+     de tokens-et-composants.md, Bouton. */
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* --- L'axe, et lui seul. --- */
+
+.bouton[data-variante="primaire"] {
+  background: var(--text-display);
+  color: var(--ground);
+}
+
+.bouton[data-variante="secondaire"] {
+  border-color: var(--border-visible);
+  color: var(--text-primary);
+}
+
+/* Sans bordure, la zone tactile du ghost n'est garantie que par la hauteur
+   minimale et le remplissage de la base. C'est le bouton SIGNALER
+   (design-system.md section 9, Cibles tactiles). */
+.bouton[data-variante="ghost"] {
+  color: var(--text-secondary);
+}
+
+/* --- Les etats, en pseudo-classes. --- */
+
+/* Sur un ecran tactile, `:hover` reste colle apres le tap jusqu'a ce qu'on
+   touche ailleurs : le bouton garderait sa bordure eclaircie sans raison. La
+   requete limite la regle aux pointeurs qui savent reellement survoler. */
+@media (hover: hover) {
+  /* Le survol eclaircit la bordure, et seule `secondaire` en a une. */
+  .bouton[data-variante="secondaire"]:hover:not(:disabled) {
+    border-color: var(--text-primary);
+  }
+}
+
+.bouton:focus-visible {
+  /* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose a
+     chaque tap est un parasite ; au clavier, son absence rend l'ecran
+     inutilisable. Contour de 2px, tokens-et-composants.md, Bouton. */
+  outline: 2px solid var(--text-display);
+  /* Le decalage est ce qui rend le contour visible sur la variante primaire,
+     dont le fond est deja --text-display : sans lui, les deux se confondent. */
+  outline-offset: var(--esp-2xs);
+}
+
+.bouton:disabled {
+  /* Opacite de 0.4, tokens-et-composants.md, Bouton. Un controle inactif est
+     hors du champ des seuils de contraste, c'est la seule raison pour
+     laquelle une valeur aussi basse est admissible ici. */
+  opacity: 0.4;
+  cursor: default;
+}

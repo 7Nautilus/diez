@@ -1,0 +1,35 @@
+/*
+ * EtatVide : titre, phrase, et du vide autour. Aucune variante.
+ */
+
+.bloc {
+  /* La marge est le composant : c'est elle qui dit "il ne se passe rien ici",
+     la ou une illustration le dirait a grands frais
+     (docs/tokens-et-composants.md, section EtatVide). */
+  margin-block: var(--esp-4xl);
+  text-align: center;
+}
+
+.titre {
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-body);
+  font-weight: 400;
+  /* Interlettrage positif, sans quoi des capitales monospace se referment.
+     Valeur du palier `label` de la skill nothing-design (Tokens section 1). */
+  letter-spacing: 0.08em;
+  /* Les capitales sont posees par le style et non ecrites dans le texte : une
+     synthese vocale epelle volontiers un mot ecrit tout en majuscules. */
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.phrase {
+  /* Serre contre le titre : la phrase l'explique, elle ne commence pas un
+     autre groupe. */
+  margin-block-start: var(--esp-sm);
+  font-size: var(--txt-body-sm);
+  /* Valeur de la specification du composant. Elle passe sous le seuil de
+     contraste du texte courant dans les deux modes ; c'est signale au
+     rapport de phase 3 et arbitre hors de ce fichier, pas ici. */
+  color: var(--text-disabled);
+}

@@ -1,0 +1,132 @@
+/*
+ * Feuille : panneau du bas, aucune variante.
+ *
+ * Trois valeurs de ce composant n'existent pas dans la collection Composant de
+ * tokens.css : le rayon, la hauteur maximale et l'epaisseur de la poignee sont
+ * donnees par la specification du composant lui-meme
+ * (docs/tokens-et-composants.md, section Feuille). Elles sont donc nommees
+ * ici, une fois chacune et avec leur source, puis citees par leur nom : un
+ * nombre nu au point d'usage se fait "simplifier" un jour par quelqu'un qui
+ * ignore ce qu'il tient (docs/conventions-code.md section 6).
+ */
+
+.voile {
+  /* Rayon haut, hauteur maximale, epaisseur de la poignee : les trois valeurs
+     de docs/tokens-et-composants.md, section Feuille. */
+  --feuille-rayon: 16px;
+  --feuille-hauteur-max: 86dvh;
+  --feuille-poignee-e: 2px;
+  /* Contour de focus, aligne sur les etats du Bouton
+     (docs/tokens-et-composants.md, section Bouton, `:focus-visible`). */
+  --feuille-contour: 2px;
+  /* Courbe du systeme, docs/design-system.md section 7. Elle accompagne
+     `--duree-courte` : fondu d'opacite seul, aucun glissement, aucun ressort. */
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: var(--voile);
+  /* Le doigt qui insiste sur le voile ne doit pas faire defiler la page restee
+     derriere : elle n'est plus atteignable, elle ne doit pas bouger non plus.
+     L'`overflow` accompagne la declaration et ne masque rien, le panneau
+     tenant sous la hauteur maximale : sans lui le voile n'est pas un conteneur
+     de defilement, et `overscroll-behavior` n'a alors rien a quoi s'appliquer. */
+  overflow: hidden;
+  overscroll-behavior: contain;
+  animation: apparition var(--duree-courte) var(--courbe-transition);
+}
+
+.feuille {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: var(--feuille-hauteur-max);
+  background: var(--surface);
+  /* Aucune ombre : la separation se fait par la bordure. Une ombre portee
+     "pour faire panneau" est un anti-pattern nomme du projet
+     (docs/design-system.md section 8). */
+  border-top: 1px solid var(--border-visible);
+  border-radius: var(--feuille-rayon) var(--feuille-rayon) 0 0;
+}
+
+.poignee {
+  flex: none;
+  width: var(--esp-2xl);
+  height: var(--feuille-poignee-e);
+  margin: var(--esp-sm) auto var(--esp-md);
+  background: var(--border-visible);
+}
+
+.entete {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-md);
+  padding-inline: var(--esp-lg);
+}
+
+.titre {
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-label);
+  font-weight: 400;
+  /* Interlettrage positif, sans quoi des capitales monospace se referment.
+     Valeur du palier `label` de la skill nothing-design (Tokens section 1). */
+  letter-spacing: 0.08em;
+  /* Les capitales sont posees par le style et non ecrites dans le texte : une
+     synthese vocale epelle volontiers un mot ecrit tout en majuscules. */
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.fermer {
+  /* Ghost : aucun fond, aucune bordure. Sa zone tactile n'etant donc garantie
+     par rien d'autre, elle est posee explicitement
+     (docs/design-system.md section 9, Cibles tactiles). */
+  min-width: var(--cible-min);
+  min-height: var(--cible-min);
+  padding-inline: var(--esp-sm);
+  border: none;
+  background: none;
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose sur
+   `:focus` reste affiche apres le tap et passe pour un defaut. */
+.fermer:focus-visible {
+  outline: var(--feuille-contour) solid var(--text-display);
+  outline-offset: var(--feuille-contour);
+}
+
+.contenu {
+  /* Sans ce zero, un enfant flex ne descend pas sous sa taille naturelle : le
+     contenu long deborderait la hauteur maximale au lieu d'y defiler. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--esp-md) var(--esp-lg) calc(var(--esp-lg) + env(safe-area-inset-bottom));
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* docs/design-system.md section 7 : sous `reduce`, tout passe a 0 ms. Le
+   panneau arrive alors d'un coup, ce qui reste coherent avec un rythme
+   revendique percussif. */
+@media (prefers-reduced-motion: reduce) {
+  .voile {
+    animation-duration: 0ms;
+  }
+}

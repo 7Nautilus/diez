@@ -1,0 +1,59 @@
+/*
+ * Diez : l'Etiquette.
+ *
+ * Le composant le plus utilise du systeme, et celui ou la duplication
+ * s'installait : trois libelles voisins finissaient toujours par recopier
+ * trois fois la meme regle Space Mono. La base la porte une fois, l'axe
+ * `data-fonction` porte le reste (docs/tokens-et-composants.md, Etiquette).
+ *
+ * Un libelle se traite PAR FONCTION et non uniformement : la taille, la casse
+ * et la couleur d'une metadonnee ne conviennent pas a une instruction
+ * (design-system.md section 3).
+ *
+ * Aucune regle conditionnelle au mode : les trois couleurs sont des tokens
+ * semantiques resolus par `light-dark()` dans tokens.css.
+ */
+
+.etiquette {
+  /* Les libelles sont toujours Space Mono. C'est la voix "panneau
+     d'instruments" du jeu (design-system.md section 3). */
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+}
+
+/* Les deux fonctions en capitales partagent leur interlettrage, ecrit une
+   seule fois : il rend aux capitales l'air qu'elles perdent, ce qui ne depend
+   pas de la taille du texte. Valeur du haut de la plage 0.06 a 0.1em que la
+   skill nothing-design fixe pour un libelle en capitales. */
+.etiquette[data-fonction="metadonnee"],
+.etiquette[data-fonction="etat"] {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.etiquette[data-fonction="metadonnee"] {
+  font-size: var(--txt-label);
+  color: var(--text-secondary);
+}
+
+.etiquette[data-fonction="etat"] {
+  font-size: var(--txt-caption);
+  color: var(--text-primary);
+}
+
+/*
+ * AUCUN `text-transform` ici, et ce n'est pas un oubli : c'est la regle qui
+ * justifie a elle seule l'existence de cet axe. Les capitales suppriment la
+ * silhouette du mot, sur laquelle l'oeil s'appuie pour lire vite, et l'effet
+ * se cumule au monospace. Une instruction est le seul libelle qu'on lit
+ * vraiment, les deux autres se reconnaissent plus qu'elles ne se lisent
+ * (design-system.md section 3, correctif d'audit).
+ *
+ * La taille est la seule valeur de la table de l'Etiquette qui ne corresponde
+ * a aucun token : 0.8125rem vaut 13px, entre --txt-caption (12px) et
+ * --txt-body-sm (14px). Elle est ecrite ici parce que c'est ici qu'elle est
+ * definie, et signalee comme un trou probable de l'echelle typographique.
+ */
+.etiquette[data-fonction="instruction"] {
+  font-size: var(--txt-body-xs);
+  color: var(--text-primary);
+}

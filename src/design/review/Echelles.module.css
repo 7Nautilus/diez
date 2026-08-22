@@ -1,0 +1,106 @@
+/*
+ * Les deux echelles, rendues.
+ *
+ * Une regle par palier, et chaque regle ne cite qu'un NOM. C'est le seul
+ * endroit du depot ou l'on ecrit dix-sept selecteurs pour dix-sept variables,
+ * et c'est voulu : la solution courte consisterait a fabriquer `var(--txt-` +
+ * nom + `)` en JavaScript, ce qui rendrait ces tokens introuvables par une
+ * recherche de texte le jour ou l'on voudrait savoir qui les utilise.
+ */
+
+.echelle {
+  list-style: none;
+  display: grid;
+  gap: var(--esp-md);
+}
+
+.palier,
+.pas {
+  display: grid;
+  /* Le nom colle a l'echantillon : les deux sont une seule information. */
+  gap: var(--esp-2xs);
+  justify-items: start;
+}
+
+.echantillon {
+  color: var(--text-display);
+  line-height: 1;
+}
+
+.palier[data-palier="display-xl"] .echantillon {
+  font-size: var(--txt-display-xl);
+}
+
+.palier[data-palier="display-lg"] .echantillon {
+  font-size: var(--txt-display-lg);
+}
+
+.palier[data-palier="display-md"] .echantillon {
+  font-size: var(--txt-display-md);
+}
+
+.palier[data-palier="heading"] .echantillon {
+  font-size: var(--txt-heading);
+}
+
+.palier[data-palier="body"] .echantillon {
+  font-size: var(--txt-body);
+}
+
+.palier[data-palier="body-sm"] .echantillon {
+  font-size: var(--txt-body-sm);
+}
+
+.palier[data-palier="caption"] .echantillon {
+  font-size: var(--txt-caption);
+}
+
+.palier[data-palier="label"] .echantillon {
+  font-size: var(--txt-label);
+}
+
+/*
+ * L'espacement se rend en LARGEUR et non en vide entre deux reperes : un vide
+ * ne se mesure pas a l'oeil, une barre si. La hauteur est constante et prise
+ * dans l'echelle elle-meme, pour qu'aucun nombre n'ait a etre choisi ici.
+ */
+.barre {
+  block-size: var(--esp-sm);
+  background: var(--text-display);
+}
+
+.pas[data-pas="2xs"] .barre {
+  inline-size: var(--esp-2xs);
+}
+
+.pas[data-pas="xs"] .barre {
+  inline-size: var(--esp-xs);
+}
+
+.pas[data-pas="sm"] .barre {
+  inline-size: var(--esp-sm);
+}
+
+.pas[data-pas="md"] .barre {
+  inline-size: var(--esp-md);
+}
+
+.pas[data-pas="lg"] .barre {
+  inline-size: var(--esp-lg);
+}
+
+.pas[data-pas="xl"] .barre {
+  inline-size: var(--esp-xl);
+}
+
+.pas[data-pas="2xl"] .barre {
+  inline-size: var(--esp-2xl);
+}
+
+.pas[data-pas="3xl"] .barre {
+  inline-size: var(--esp-3xl);
+}
+
+.pas[data-pas="4xl"] .barre {
+  inline-size: var(--esp-4xl);
+}

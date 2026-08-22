@@ -58,9 +58,11 @@ Des valeurs brutes, sans sens attaché. On ne les utilise jamais directement dan
 
 **Typographie**, en `rem` pour suivre le réglage de taille de texte du téléphone.
 
-`--txt-display-xl` 4.5 · `--txt-display-lg` 3 · `--txt-display-md` 2.25 · `--txt-heading` 1.5 · `--txt-body` 1 · `--txt-body-sm` .875 · `--txt-caption` .75 · `--txt-label` .6875
+`--txt-display-xl` 4.5 · `--txt-display-lg` 3 · `--txt-display-md` 2.25 · `--txt-heading` 1.5 · `--txt-body` 1 · `--txt-body-sm` .875 · **`--txt-body-xs` .8125** · `--txt-caption` .75 · `--txt-label` .6875
 
-**Durée.** `--duree-courte` 200ms
+**Mouvement.** `--duree-courte` 200ms · `--courbe-transition` `cubic-bezier(0.25, 0.1, 0.25, 1)`
+
+La courbe est un token et non une valeur de module : `design-system.md` §7 la prescrit pour tout le système, la Feuille s'en sert déjà et les transitions entre phases s'en serviront. Recopiée dans deux modules, elle diverge au premier réglage.
 
 ## Collection 2 : Sémantique, avec modes
 
@@ -162,7 +164,7 @@ Le composant le plus utilisé, et celui où la duplication s'installait. Base : 
 |---|---|---|---|
 | `metadonnee` | `--txt-label` | majuscules | `--text-secondary` |
 | `etat` | `--txt-caption` | majuscules | `--text-primary` |
-| `instruction` | 0.8125rem | **normale** | `--text-primary` |
+| `instruction` | `--txt-body-xs` | **normale** | `--text-primary` |
 
 La casse normale de `instruction` n'est pas un oubli : les capitales suppriment la silhouette du mot, sur laquelle l'œil s'appuie pour lire vite, et une instruction est le seul label qu'on lit vraiment.
 
@@ -206,7 +208,7 @@ Ce qui donne, pour information et non pour recopie : 0,45 · 0,51 · 0,57 · 0,6
 
 Panneau du bas. `--surface`, bordure haute `--border-visible`, rayon 16px en haut, poignée de 2px, hauteur maximale 86dvh. Aucune ombre : la séparation se fait par bordure. Aucune variante.
 
-Voile associé : `rgba(0,0,0,.8)`.
+Voile associé : **`--voile`**, dérivé de `--noir` à 80 %. Il ne prend pas `light-dark()` : un voile clair ne masque rien, il reste noir dans les deux modes. Ce token existe parce que la valeur littérale écrite ici obligeait `Feuille.module.css` à enfreindre la règle « aucune couleur hors de `tokens.css` ».
 
 ## Statut
 

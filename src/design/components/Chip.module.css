@@ -1,0 +1,76 @@
+/*
+ * Diez : le Chip.
+ *
+ * La base, puis UN SEUL axe, `data-actif`. Les etats subis restent en
+ * pseudo-classes, comme sur le Bouton : c'est la distinction posee par
+ * docs/tokens-et-composants.md, section Composants et variantes.
+ *
+ * L'attribut porte toujours une valeur, "true" ou "false", parce que React
+ * serialise les booleens des attributs `data-*`. Les deux cas se selectionnent
+ * donc explicitement, et aucune regle ne repose sur l'absence d'un attribut.
+ *
+ * Aucune regle conditionnelle au mode : chaque couleur passe par un token
+ * semantique que `light-dark()` resout dans tokens.css. Une regle qui aurait
+ * besoin de savoir dans quel mode elle tourne signalerait un token manquant
+ * (design-system.md section 2).
+ */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Le chip est une cible tactile hors selecteur de niveau : c'est --cible-min
+     qui s'applique, et non les 4px de remplissage vertical que la skill donne
+     pour une etiquette (design-system.md section 9, Cibles tactiles). Le
+     remplissage suit l'echelle, la hauteur est garantie par le plancher. */
+  min-height: var(--cible-min);
+  padding: var(--esp-xs) var(--esp-md);
+  border: 1px solid var(--border-visible);
+  /* Pilule, comme le Bouton. Le rayon depasse largement la moitie de la
+     hauteur pour qu'il le reste quelle que soit la longueur du libelle. */
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  /* Les libelles sont toujours Space Mono, c'est la voix "panneau
+     d'instruments" du jeu (design-system.md section 3). */
+  font-family: "Space Mono", "JetBrains Mono", monospace;
+  font-size: var(--txt-caption);
+  /* Interlettrage des libelles de controle, aligne sur celui du Bouton
+     (tokens-et-composants.md, Bouton) : les capitales perdent leur air, il le
+     rend. Les libelles qui se lisent sans se toucher, ceux de l'Etiquette,
+     portent une valeur plus large. */
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* --- L'axe, et lui seul. --- */
+
+.chip[data-actif="true"] {
+  border-color: var(--text-display);
+  color: var(--text-display);
+}
+
+/* --- Les etats, en pseudo-classes. --- */
+
+/* Sur un ecran tactile, `:hover` reste colle apres le tap jusqu'a ce qu'on
+   touche ailleurs. La requete limite la regle aux pointeurs qui savent
+   reellement survoler, c'est-a-dire a la planche de controle et non au
+   telephone du narrateur. */
+@media (hover: hover) {
+  /* Le survol eclaircit la bordure, d'un cran et d'un seul : un chip inactif
+     survole qui prendrait --text-display deviendrait indiscernable d'un chip
+     actif. */
+  .chip[data-actif="false"]:hover {
+    border-color: var(--text-secondary);
+  }
+}
+
+.chip:focus-visible {
+  /* Sur `:focus-visible` et jamais sur `:focus` : au doigt, un contour pose a
+     chaque tap est un parasite ; au clavier, son absence rend l'ecran
+     inutilisable. Contour de 2px, tokens-et-composants.md, Bouton. */
+  outline: 2px solid var(--text-display);
+  outline-offset: var(--esp-2xs);
+}

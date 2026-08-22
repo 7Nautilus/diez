@@ -5,8 +5,10 @@
  * fichier. Les noms et les valeurs viennent de docs/tokens-et-composants.md,
  * qui fait foi ; ce fichier ne fait que les rendre executables.
  *
- * Phase 1 : les collections Primitives et Semantique. La collection
- * Composant arrive avec les ecrans, en phase 3.
+ * Les trois collections y sont : Primitives sans signification, Semantique
+ * qui leur donne un role, Composant qui nomme les decisions locales. Chaque
+ * valeur de la troisieme porte un commentaire renvoyant a la section qui la
+ * justifie, conformement a docs/conventions-code.md section 6.
  */
 
 :root {
@@ -49,10 +51,22 @@
   --txt-heading: 1.5rem;
   --txt-body: 1rem;
   --txt-body-sm: 0.875rem;
+  /* 13px, le seul cran ajoute apres coup. Il porte l'Etiquette de fonction
+     `instruction`, seule etiquette qu'on lise vraiment et seule a rester en
+     casse normale (tokens-et-composants.md, Etiquette). L'echelle sautait de
+     12 a 14px et la valeur se retrouvait ecrite en clair dans un module, ce
+     que la regle de derivation interdit. */
+  --txt-body-xs: 0.8125rem;
   --txt-caption: 0.75rem;
   --txt-label: 0.6875rem;
 
   --duree-courte: 200ms;
+
+  /* La courbe des transitions du systeme, prescrite avec la duree par
+     design-system.md section 7. Elle vit ici et non dans un module : la Feuille
+     s'en sert aujourd'hui, les transitions entre phases s'en serviront en phase
+     4, et une courbe recopiee dans deux modules diverge au premier reglage. */
+  --courbe-transition: cubic-bezier(0.25, 0.1, 0.25, 1);
 
   /* --- Collection 2 : Semantique, avec modes. --- */
   --ground: light-dark(var(--gris-050), var(--noir));
@@ -65,6 +79,73 @@
   --text-primary: light-dark(var(--gris-900), var(--gris-100));
   --text-display: light-dark(var(--noir), var(--blanc));
   --accent: var(--rouge);
+
+  /* Voile de la Feuille. tokens-et-composants.md le donne sous forme
+     litterale, or c'est une couleur et aucune couleur ne s'ecrit hors de ce
+     fichier : sans ce token, le module de la Feuille serait oblige
+     d'enfreindre la regle. Noir dans les deux modes, un voile clair ne
+     masquant rien, et derive de la primitive plutot qu'ecrit en dur pour
+     qu'elle reste la seule source. Opacite de 80 %, valeur du document. */
+  --voile: color-mix(in srgb, var(--noir) 80%, transparent);
+
+  /* --- Collection 3 : Composant. Les decisions locales, nommees. --- */
+
+  /* Selecteur de niveau, forme grille. Il n'existe aucun retour arriere apres
+     le choix : la prevention du mistap repose entierement sur ce selecteur
+     (design-system.md section 4, NIVEAU). La hauteur d'un bloc passe donc
+     bien au-dela du minimum tactile. */
+  --niveau-bloc-h: 64px;
+  /* L'ecart entre blocs est le seul garde-fou qui reste ensuite, exige par
+     WCAG 2.2 et confirme par deux audits : dix blocs jointifs sont exactement
+     la cible ou le pouce derape d'une case. Alias volontaire, et non un
+     nombre : un espacement de composant est une valeur de l'echelle, pas une
+     valeur choisie a part (tokens-et-composants.md, collection 3). */
+  --niveau-bloc-ecart: var(--esp-sm);
+
+  /* Selecteur de niveau, forme molette (design-system.md section 4, La
+     molette). La fenetre vaut cinq fois la hauteur d'un cran, parce que cinq
+     crans restent visibles a la fois. */
+  --niveau-cran-h: 56px;
+  --niveau-fenetre-h: 280px;
+
+  /* La rampe de difficulte s'encode en opacite, jamais en couleur : un
+     degrade du vert au rouge serait l'anti-pattern numero un du projet, et
+     illisible pour une deficience de la vision des couleurs. L'opacite d'un
+     cran s'interpole entre les deux bornes, elle ne se recopie pas, sans quoi
+     dix valeurs se desynchronisent le jour ou le seuil bouge :
+       op(n) = --rampe-min + (n - 1) x (--rampe-max - --rampe-min) / 9 */
+
+  /* NE JAMAIS DESCENDRE SOUS 0.45. C'est un seuil de contraste, pas un gout.
+     Tenir 3:1 demande 0,35 sur du noir mais 0,42 sur --gris-050 : c'est donc
+     le mode CLAIR qui contraint, contre l'intuition du fond blanc plus
+     permissif. Sous ce plancher, le niveau 1 cesse d'etre choisissable par
+     quelqu'un qui voit mal dans un salon sombre (design-system.md section 4,
+     Le plancher de la rampe). Une rampe qui part de plus bas est plus
+     spectaculaire ; c'est precisement la simplification a refuser. */
+  --rampe-min: 0.45;
+  /* Pleine intensite au niveau 10, l'autre borne de l'interpolation. */
+  --rampe-max: 1;
+
+  /* Vide entre l'enonce et le bouton, en phase QUESTION. Ce n'est pas de la
+     respiration : c'est un dispositif de securite contre le tap parasite, et
+     il est incompressible, c'est l'enonce qui defile quand il est long
+     (design-system.md section 4, QUESTION). Alias volontaire, meme raison que
+     --niveau-bloc-ecart. */
+  --revelation-vide: var(--esp-4xl);
+
+  /* Regles de prompteur : l'ecran de QUESTION n'est pas lu, il est dit a voix
+     haute, et le narrateur releve la tete vers la table entre deux regards.
+     D'ou 1,5 d'interlignage contre 1,2 pour un texte simplement lu, et une
+     mesure plafonnee : au-dela, l'oeil ne retrouve plus le debut de la ligne
+     suivante (design-system.md section 4, Contrainte de lecture orale). */
+  --prompteur-interligne: 1.5;
+  --prompteur-mesure: 45ch;
+
+  /* Minimum tactile partout ailleurs que sur le selecteur, qui a le sien.
+     Vaut en particulier pour le bouton ghost SIGNALER : sans bordure, sa zone
+     tactile n'est garantie que par le remplissage (design-system.md section 9,
+     Cibles tactiles). */
+  --cible-min: 44px;
 }
 
 /* La bascule manuelle gagne dans les deux sens, y compris contre le systeme. */
