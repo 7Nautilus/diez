@@ -46,9 +46,11 @@ Le seul biais à surveiller : le papier laisse voir la carte entière, donc les 
 
 ### Phase 1 : le tuyau de déploiement, à vide
 
-> **Construite et en ligne** sur https://7nautilus.github.io/diez/. Le pipeline publie sur push, le service worker s'enregistre en portée `/diez/` et contrôle la page, les six graisses se chargent depuis l'origine. Le piège s'est produit exactement où la phase l'attendait : la Source de GitHub Pages doit valoir « GitHub Actions » et non une branche, faute de quoi le dépôt brut est publié et l'écran reste blanc. Découvert sur une page qui affiche un mot.
+> **Passée.** En ligne sur https://7nautilus.github.io/diez/. Le pipeline publie sur push, le service worker s'enregistre en portée `/diez/` et contrôle la page, les six graisses se chargent depuis l'origine. Les trois contrôles sur appareil sont bons : installation sans barre d'URL, icône d'écran d'accueil, ouverture hors ligne après une première visite.
 >
-> Restent trois contrôles qui demandent le téléphone : installation sans barre d'URL, icône d'écran d'accueil sur iPhone, ouverture en mode avion.
+> Le piège s'est produit exactement où la phase l'attendait : la Source de GitHub Pages doit valoir « GitHub Actions » et non une branche, faute de quoi le dépôt brut est publié, la page charge `/src/main.tsx` en `application/octet-stream` et l'écran reste blanc. Découvert sur une page qui affiche un mot, pas sur une application entière.
+>
+> **Le téléphone du narrateur est un Android.** L'icône validée est donc la variante `maskable`, celle dont la géométrie resserrée avait été calculée pour survivre au masque circulaire du lanceur. L'`apple-touch-icon` reste correct mais **non vérifié** : il ne le sera que si quelqu'un du groupe prend le rôle de narrateur avec un iPhone.
 
 **Objet :** faire échouer tôt ce qui casse habituellement tard.
 
