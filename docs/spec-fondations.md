@@ -84,23 +84,37 @@ Le point 5 n'est pas une exigence du projet, le hors-ligne ayant été rétrogra
 
 ## Les icônes
 
-*Décision validée : la lettre `D` seule.* Elle règle le problème du masque, où quatre lettres se faisaient rogner par la zone de sécurité circulaire.
+*Décision validée : la lettre `d` bas-de-casse, seule.* Un seul caractère règle le problème du masque, où le wordmark de quatre lettres se faisait rogner par la zone de sécurité circulaire.
 
-Elle en règle un second, moins évident : **l'icône n'a plus besoin de la police.** Un `D` matriciel se dessine en cercles explicites, ce qui supprime toute dépendance au rendu de Doto, tout risque de substitution silencieuse, et donne le contrôle exact de la géométrie. Le motif dot-matrix reste cité, sans que rien ne dépende d'un fichier de police.
+Le bas-de-casse a été préféré à la capitale pour deux raisons. Il est **plus distinctif** : sa hampe crée une asymétrie qui se reconnaît plus vite dans une grille d'icônes, là où une capitale dans un carré noir est une forme déjà vue partout. Il est aussi **plus léger**, 16 points contre 18, donc le motif se bouche moins à la taille réelle d'un écran d'accueil.
+
+Le choix règle par ailleurs un problème que la question de la lettre ne laissait pas prévoir : **l'icône n'a plus besoin de la police.** Un `d` matriciel se dessine en cercles explicites, ce qui supprime toute dépendance au rendu de Doto, tout risque de substitution silencieuse, et donne le contrôle exact de la géométrie. Le motif dot-matrix reste cité sans que rien ne dépende d'un fichier de police.
 
 ### Le motif
 
-Matrice de 5 colonnes sur 7 rangées, le `D` de fonte matricielle classique, 18 points allumés sur 35 :
+Matrice de 5 colonnes sur 7 rangées, 16 points allumés sur 35 :
 
 ```
-● ● ● ● ○
+○ ○ ○ ○ ●
+○ ○ ○ ○ ●
+○ ● ● ● ●
 ● ○ ○ ○ ●
 ● ○ ○ ○ ●
 ● ○ ○ ○ ●
-● ○ ○ ○ ●
-● ○ ○ ○ ●
-● ● ● ● ○
+○ ● ● ● ●
 ```
+
+### La correction optique, obligatoire
+
+**C'est la contrainte à ne pas perdre, et c'est celle qui saute quand on génère les fichiers sans relire.**
+
+Un bas-de-casse ne remplit pas sa boîte de façon symétrique : sa hampe n'occupe qu'une colonne sur les deux premières rangées. Le centre de gravité des points allumés se trouve donc à **(2,500 ; 3,562)** en coordonnées de grille, alors que le centre de la boîte est à (2,0 ; 3,0).
+
+Écart : **une demi-cellule vers la droite, 0,5625 cellule vers le bas.**
+
+Centrer le glyphe sur sa boîte, comme on le ferait d'une capitale, le fait donc flotter visiblement en bas à droite. Le décalage n'est pas une impression, il est mesuré, et il vaut environ un quart de la largeur du glyphe.
+
+Les décalages du tableau ci-dessous **intègrent déjà cette correction**. Ils ne sont pas le centrage géométrique.
 
 ### Géométrie
 
@@ -111,12 +125,13 @@ Fond `#000000` à fond perdu, points `#FFFFFF`, points centrés dans leur cellul
 | Toile | 512 × 512 | 512 × 512 |
 | Cellule | 58 px | 46 px |
 | Diamètre du point | 44 px | 35 px |
-| Grille obtenue | 290 × 406 | 230 × 322 |
-| Décalage (x, y) | 111, 53 | 141, 95 |
+| Décalage géométrique | 111, 53 | 141, 95 |
+| **Décalage à appliquer** | **82, 20** | **118, 69** |
+| Correction appliquée | 29 px à gauche, 33 px en haut | 23 px à gauche, 26 px en haut |
 
-**D'où viennent ces deux jeux de valeurs.** La zone de sécurité d'une icône `maskable` est un cercle de 80 % du côté, soit un rayon de 204,8 px sur une toile de 512. Le coin de la grille se trouve à `cellule × √18,5`, soit `4,301 × cellule`. Il faut donc une cellule inférieure à 47,6 px : 46 laisse une marge confortable à 197,8 px du centre.
+**D'où viennent les deux jeux de cellules.** La zone de sécurité d'une icône `maskable` est un cercle de 80 % du côté, soit un rayon de 204,8 px sur une toile de 512. Après correction optique, le point le plus éloigné du centre se trouve à **195,4 px**, soit neuf pixels sous la limite.
 
-À 58 px de cellule, ce coin serait à 249 px et **dépasserait la zone de sécurité** : un masque circulaire mangerait les points d'angle du `D`. D'où le second jeu, plus resserré, réservé au masque.
+À 58 px de cellule, ce même point tomberait à 246,5 px et **sortirait de la zone** : un masque circulaire mangerait la hampe. D'où le second jeu, plus resserré, réservé au masque.
 
 L'icône `any` garde la cellule de 58 px, sans quoi le glyphe n'occuperait que 63 % de la hauteur et paraîtrait timide sur une toile jamais rognée.
 
@@ -124,7 +139,11 @@ Le 192 × 192 se dérive du 512 `any` par mise à l'échelle, les proportions é
 
 ### Ce qui reste à produire
 
-Les fichiers eux-mêmes relèvent de la phase 1. La géométrie ci-dessus est suffisante pour les générer mécaniquement, sans arbitrage supplémentaire.
+Les fichiers relèvent de la phase 1. La géométrie ci-dessus suffit à les générer mécaniquement, sans arbitrage supplémentaire, à trois conditions de recette :
+
+- [ ] les décalages employés sont ceux de la ligne **Décalage à appliquer**, pas le centrage géométrique ;
+- [ ] sur la variante `maskable`, aucun point n'est rogné par un masque circulaire de rayon 204,8 ;
+- [ ] à 56 px, les points ne se touchent pas et la contreforme de la panse reste ouverte.
 
 ---
 
