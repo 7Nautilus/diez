@@ -167,6 +167,8 @@ Deux d'entre elles sont des **alias** de primitives plutôt que des nombres : `-
 
 Les plafonds de longueur du contenu (`theme` 40, `q` 140, `r` 60, `note` 160) n'ont pas de forme CSS. Leur source unique est **`content/schema/lot.schema.json`**, qui les fait respecter mécaniquement à la saisie.
 
+Ils le sont désormais **aussi au build** : `tools/compiler.ts` ouvre le schéma et en extrait les quatre `maxLength` au lieu de les recopier, puis refuse d'écrire le corpus si une carte les dépasse. Le schéma reste donc la seule écriture de ces nombres, et il est exécuté au lieu d'être seulement cité. Le détail de ce que la CI bloque, et de ce qu'elle ne bloque toujours pas, est dans `conventions-code.md` §10.
+
 ---
 
 # Composants et variantes
@@ -243,6 +245,17 @@ Panneau du bas. `--surface`, bordure haute `--border-visible`, rayon 16px en hau
 
 Voile associé : **`--voile`**, dérivé de `--noir` à 80 %. Il ne prend pas `light-dark()` : un voile clair ne masque rien, il reste noir dans les deux modes. Ce token existe parce que la valeur littérale écrite ici obligeait `Feuille.module.css` à enfreindre la règle « aucune couleur hors de `tokens.css` ».
 
+**Chaque panneau ouvert s'inscrit dans une pile, `design/panneaux.ts`, et seul celui du dessus répond à un geste de fermeture.** L'écouteur d'Échap est posé sur `window`, donc deux panneaux ouverts étaient prévenus de la même touche et se fermaient tous les deux. Mesure au navigateur, menu et Confirmation ouverts, un seul Échap :
+
+```
+AVANT   panneaux ["Menu", "Réinitialiser l'historique"]
+APRÈS   panneaux []                       focus BODY
+```
+
+Échap sortait donc de la demande de réinitialisation **et** emportait le menu, en rendant le focus à un bouton que le même geste venait de démonter. Après correctif, même mesure : `["Menu"]` reste, et le focus revient au bouton `Réinitialiser l'historique`.
+
+La pile vit dans `design/` et non dans `app/` parce que c'est le seul endroit que les deux atteignent : `design/` ne remonte vers rien, alors qu'`app/` descend librement vers lui. C'est elle qui donne au **geste de retour du téléphone** le même ordre de fermeture qu'à Échap, et qui lui dit qu'il y a un panneau à fermer plutôt qu'une partie à reculer (`architecture.md` §5).
+
 ## Statut
 
 | `data-ton` | Usage |
@@ -256,7 +269,7 @@ Le texte ne passe jamais en rouge : `--accent` sur fond sombre donne 4,05:1, sou
 
 Garde de la seule action destructrice de l'application. **Aucune variante :** un panneau qui se decline finit par exister en version discrete, et une confirmation discrete ne confirme rien.
 
-Batie **sur** `Feuille`, jamais a cote : les quatre pieces du confinement du focus (`inert` sur l'arriere-plan, focus deplace a l'ouverture, rendu au declencheur a la fermeture, Echap) restent ecrites une seule fois.
+Batie **sur** `Feuille`, jamais a cote : les cinq pieces du confinement du focus (`inert` sur l'arriere-plan, focus deplace a l'ouverture, rendu au declencheur a la fermeture, Echap, et le filtre qui ne fait repondre que le panneau du dessus) restent ecrites une seule fois.
 
 | Propriete | Role |
 |---|---|

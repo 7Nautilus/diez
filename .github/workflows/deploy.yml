@@ -45,18 +45,30 @@ jobs:
       # ORDRE IMPOSE : corpus, lint, tests, build, publication. Le controle le
       # plus rapide en premier, pour echouer tot.
 
-      # 1. Validation du corpus contre content/schema/lot.schema.json.
+      # 1. Validation COMPLETE du corpus contre content/schema/lot.schema.json,
+      #    par ajv.
       #    ETAPE MANQUANTE : tools/valider.ts n'existe pas encore, il arrive
       #    avec le chantier de contenu. Ne pas supprimer ce bloc : son absence
       #    est une dette, pas un choix.
+      #
+      #    CE QUE SON ABSENCE LAISSE PASSER, aujourd'hui et sans filet : le
+      #    theme duplique d'une carte a l'autre, la relecture des noms propres
+      #    du paquet maison, les motifs de `id` et de `lot`, les champs du lot
+      #    lui-meme, et les proprietes excedentaires, donc un nom de champ mal
+      #    orthographie qui est simplement ignore.
       # - name: Valider le corpus
       #   run: npm run valider
 
-      # 2. Compilation du corpus. Ce n'est PAS le validateur ci-dessus : il ne
-      #    controle que les invariantes structurelles (identifiant present et
-      #    unique, dix questions, niveaux 1 a 10 couverts une fois chacun) et
-      #    laisse au schema les plafonds de longueur et les regles
-      #    editoriales. Voir l'en-tete de tools/compiler.ts.
+      # 2. Compilation du corpus. Ce n'est PAS le validateur ci-dessus, mais ce
+      #    n'est plus seulement la structure non plus. Il controle les
+      #    invariantes structurelles (identifiant present et unique, dix
+      #    questions, niveaux 1 a 10 couverts une fois chacun) ET les plafonds
+      #    de longueur de theme, q, r et note, qu'il LIT dans le schema au lieu
+      #    de les recopier. Le schema reste ainsi la seule ecriture de ces
+      #    nombres, et devient executable sans ajv. Sans cette lecture, un
+      #    theme de 77 caracteres et une reponse de 112 traversaient toutes les
+      #    etapes ci-dessous et arrivaient dans le bundle publie. Voir
+      #    l'en-tete de tools/compiler.ts et conventions-code.md section 10.
       #
       #    L'etape est ici et pas seulement dans `npm run build`, qui l'appelle
       #    aussi : src/data/cartes.gen.json n'est pas versionne, donc un corpus

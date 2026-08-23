@@ -46,6 +46,21 @@ const OUVERTURE = 10_000;
 const NIVEAU_JOUE: Niveau = 4;
 const AUTRE_NIVEAU: Niveau = 7;
 
+/*
+ * Les deux textes que `carteDeTest` met dans chaque question, cherches par
+ * sous-chaine dans l'etat serialise. Nommes plutot que recopies a cinq
+ * endroits : le jour ou la fixture change de formulation, un `not.toContain`
+ * qui ne trouve plus rien passe au vert sans plus rien prouver, et il faut
+ * alors qu'une seule ligne le corrige. Les deux controles positifs plus bas
+ * sont ce qui rend cette derive visible.
+ *
+ * Ils ne viennent pas de `fixtures.ts`, qui nomme ses propres sentinelles pour
+ * les suites du domaine : ce sont deux valeurs differentes et les confondre
+ * sous un meme nom rendrait les deux suites illisibles ensemble.
+ */
+const MOTIF_ENONCE = "Énoncé de niveau";
+const MOTIF_REPONSE = "Réponse de niveau";
+
 function rejouer(gestes: readonly Geste[]): EtatPartie {
   let etat = etatInitial(PAQUETS);
   let horloge = OUVERTURE;
@@ -119,27 +134,67 @@ describe("Le moment ou un niveau est consomme", () => {
   });
 });
 
+/*
+ * CES CONTROLES SERIALISENT L'ETAT ENTIER, ET NON SON SEUL CHAMP `tour`.
+ *
+ * Ils ne lisaient que `etat.tour`, ce qui reposait sur une garantie que le
+ * typage ne donne pas. `ResumeCarte` et `EnonceQuestion` refusent une `Carte`
+ * entiere a la compilation par leurs champs a `never` (domain/types.ts), donc
+ * le TOUR est protege ; `EtatPartie` n'a aucun champ de cette sorte et rien
+ * n'empeche un champ de plus d'entrer dans l'etat A COTE du tour.
+ *
+ * Mesure faite avant correctif, sur un champ `carteCourante?: Carte` renseigne
+ * a la pioche : `tsc`, Biome et les 245 tests restaient verts. En phase THEME,
+ * `etat.tour` faisait alors 103 octets sans une seule reponse, et `etat` 1229
+ * octets avec LES DIX. Ce n'etait pas une fuite, c'etait la porte par laquelle
+ * elle serait entree sans que rien ne l'annonce : `etat` est l'objet que React
+ * tient et que la distribution aux ecrans parcourt.
+ */
 describe("P3 au niveau de la composition", () => {
+  /*
+   * La phase la plus exposee, et celle qu'aucun controle ne couvrait : c'est la
+   * pioche qui tient la carte complete, donc le seul geste de la sequence a
+   * partir duquel une carte entiere peut se retrouver dans l'etat.
+   */
+  it("ne met ni enonce ni reponse dans l'etat des la pioche", () => {
+    const etat = rejouer([PIOCHER]);
+    expect(etat.tour.phase).toBe("THEME");
+    expect(JSON.stringify(etat)).not.toContain(MOTIF_ENONCE);
+    expect(JSON.stringify(etat)).not.toContain(MOTIF_REPONSE);
+  });
+
   it("ne met aucun enonce dans l'etat avant la phase QUESTION", () => {
     const etat = rejouer([PIOCHER, ANNONCER]);
-    expect(JSON.stringify(etat.tour)).not.toContain("Énoncé de niveau");
+    expect(etat.tour.phase).toBe("NIVEAU");
+    expect(JSON.stringify(etat)).not.toContain(MOTIF_ENONCE);
   });
 
   /*
    * L'invariant le plus important du projet : le narrateur lit a voix haute en
-   * fixant son ecran. Le texte cherche est celui que `carteDeTest` met dans
-   * chaque reponse.
+   * fixant son ecran.
    */
   it("ne met aucune reponse dans l'etat avant la phase REPONSE", () => {
     const etat = rejouer([PIOCHER, ANNONCER, CHOISIR]);
     expect(etat.tour.phase).toBe("QUESTION");
-    expect(JSON.stringify(etat.tour)).not.toContain("Réponse de niveau");
+    expect(JSON.stringify(etat)).not.toContain(MOTIF_REPONSE);
   });
 
-  it("la reponse arrive avec la revelation, et pas avant", () => {
+  /*
+   * LES DEUX CONTROLES POSITIFS. Sans eux, les trois precedents passeraient
+   * aussi bien sur une fixture devenue muette : un `not.toContain` qui cherche
+   * un texte que plus personne n'ecrit ne refuse plus rien. Ils portent sur
+   * `etat.tour` et non sur l'etat entier, parce que ce qu'ils prouvent est plus
+   * fort : l'enonce et la reponse arrivent LA OU la phase les attend.
+   */
+  it("l'enonce arrive dans le tour avec le choix du niveau, et pas avant", () => {
+    const etat = rejouer([PIOCHER, ANNONCER, CHOISIR]);
+    expect(JSON.stringify(etat.tour)).toContain(MOTIF_ENONCE);
+  });
+
+  it("la reponse arrive dans le tour avec la revelation, et pas avant", () => {
     const etat = rejouer([PIOCHER, ANNONCER, CHOISIR, REVELER]);
     expect(etat.tour.phase).toBe("REPONSE");
-    expect(JSON.stringify(etat.tour)).toContain("Réponse de niveau");
+    expect(JSON.stringify(etat.tour)).toContain(MOTIF_REPONSE);
   });
 });
 

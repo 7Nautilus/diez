@@ -484,3 +484,173 @@ export function avancer(
       return { ...etat, historique: {}, epuise: false };
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* LE VOISINAGE : DEUX DOCUMENTS DE LA MEME ORIGINE                          */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * LE DEFAUT, MESURE AU NAVIGATEUR SUR DEUX ONGLETS. Chaque document lisait les
+ * quatre clefs une fois a l'amorcage et les reecrivait ensuite depuis sa
+ * memoire, sans jamais ecouter ce que l'autre ecrivait. Sequence rejouee :
+ *
+ *   A joue la carte 009 niveau 1  base historique {"seconde-guerre-mondiale-001":[1]}
+ *   B tire la meme carte          ses dix crans affiches "libre"
+ *   B choisit le niveau 1         B pose LA MEME QUESTION MOT POUR MOT
+ *   B revele                      le tour de A est remplace en base
+ *   B signale                     le signalement de A a disparu de la base
+ *
+ * Le narrateur n'a qu'un telephone, mais un onglet survit a une fermeture, une
+ * PWA et un navigateur coexistent, et un lien rouvre l'application. Ce n'est
+ * pas un cas de laboratoire, et il COMPOSE avec le geste de retour : on sortait
+ * de l'application par un balayage, on la rouvrait, et le second document
+ * naissait la (app/navigation.ts).
+ *
+ * LA REGLE RETENUE, CLEF PAR CLEF, ET SA RAISON.
+ *
+ * `historique` : UNION. Perdre une question est moins grave que la reposer, et
+ * une question reentendue est ce que le projet tient pour cassant la partie
+ * (architecture.md section 6). L'union ne retire jamais rien, donc au pire elle
+ * brule une question que personne n'a lue, ce qui coute une question sur dix
+ * dans le pire des cas : exactement l'arbitrage deja fait pour la consommation
+ * sur `choisir`.
+ *
+ * `signalements` : UNION, dedoublonnee sur le couple carte et niveau. Perdre un
+ * signalement est pire que d'en garder un en double : il parle du contenu, sa
+ * destination est le depot, et personne ne le reposera.
+ *
+ * `tour` : JAMAIS ADOPTE. C'est le seul de la liste qu'un narrateur est en
+ * train de LIRE A VOIX HAUTE. Un ecran qui change sous ses yeux au milieu d'une
+ * phrase serait pire que la perte qu'on evite, et cette perte est justement
+ * celle que le projet classe comme la moins grave : le niveau ayant deja ete
+ * consomme a l'entree en QUESTION, un tour perdu ne fait jamais revenir une
+ * question, il fait piocher.
+ *
+ * `reglages` : PAS RECONCILIE non plus, et pour une raison differente. Ce n'est
+ * pas ce qui casse une soiree, et son seul ecrivain d'aujourd'hui est l'echo de
+ * ce qui vient d'etre lu, le selecteur de paquets etant en sommeil
+ * (screens/Accueil.tsx). Adopter la liste d'un document reste en arriere
+ * laisserait au contraire un `PIOCHER` desactive au milieu de la partie, ce qui
+ * est un cout reel pour un gain nul.
+ */
+
+/** Ce qu'un autre document de la meme origine a dans son etat. */
+export type NouvellesDuVoisin = {
+  historique: Historique;
+  signalements: readonly Signalement[];
+};
+
+/**
+ * L'union des deux historiques.
+ *
+ * UN HISTORIQUE ENTRANT VIDE EST UNE REINITIALISATION, ET IL EST ADOPTE. C'est
+ * la seule exception a l'union, et elle tient a un fait verifiable : un
+ * document qui s'ouvre RELIT la clef avant de la reecrire, donc il ne peut
+ * ecrire un historique vide que si la clef l'etait deja, ou si le narrateur
+ * vient de demander l'effacement. Sans cette exception, une reinitialisation
+ * faite dans un document serait defaite par l'autre, et le narrateur qui joue
+ * avec un nouveau groupe verrait l'application continuer d'ecarter des
+ * questions que personne autour de la table n'a entendues.
+ *
+ * Rend l'objet LOCAL inchange quand le voisin n'apporte rien. Ce n'est pas une
+ * optimisation : l'ecriture de la clef est un effet qui suit l'identite de ce
+ * champ, donc une identite neuve a chaque evenement ferait rebondir les deux
+ * documents l'un sur l'autre sans fin.
+ */
+export function fusionnerHistorique(local: Historique, voisin: Historique): Historique {
+  const cartesDuVoisin = Object.keys(voisin);
+  if (cartesDuVoisin.length === 0) {
+    return Object.keys(local).length === 0 ? local : {};
+  }
+
+  const fusionne: Record<CarteId, readonly Niveau[]> = { ...local };
+  let change = false;
+  for (const carte of cartesDuVoisin) {
+    const deja = local[carte] ?? [];
+    const arrivants = voisin[carte] ?? [];
+    const inedits = arrivants.filter((niveau) => !deja.includes(niveau));
+    if (inedits.length === 0) continue;
+    fusionne[carte] = [...deja, ...inedits];
+    change = true;
+  }
+  return change ? fusionne : local;
+}
+
+/**
+ * L'union des deux listes de signalements, dedoublonnee sur ce qui designe une
+ * question, et JAMAIS amputee.
+ *
+ * Les notres passent en tete : c'est ce qui garde stable l'ordre de la liste
+ * qui part dans le presse-papier, et ce qui fait converger deux documents en un
+ * echange au lieu de les faire rebondir.
+ */
+export function fusionnerSignalements(
+  local: readonly Signalement[],
+  voisin: readonly Signalement[],
+): readonly Signalement[] {
+  const inedits = voisin.filter((signale) => !estSignalee(local, signale.carte, signale.niveau));
+  return inedits.length === 0 ? local : [...local, ...inedits];
+}
+
+/**
+ * Le tour, mis a jour de ce que l'historique fusionne vient d'apprendre.
+ *
+ * CECI N'EST PAS UN CHANGEMENT D'ECRAN, C'EST LE CORRECTIF LUI-MEME. La phase
+ * NIVEAU porte un INSTANTANE des niveaux consommes, pris a l'entree dans la
+ * phase (domain/types.ts) : sans cette mise a jour, un document reste sur son
+ * selecteur pendant que l'autre brule un niveau, et il l'offre encore. C'est
+ * exactement la sequence mesuree, ou les dix crans s'affichaient "libre" sur
+ * une carte dont un niveau venait d'etre joue ailleurs.
+ *
+ * Elle ne peut QU'AJOUTER des crans consommes, jamais en rendre un. La phase ne
+ * change pas, la carte ne change pas, l'enonce n'existe pas encore : rien de ce
+ * que le narrateur lit ne bouge, seul un cran qu'il ne doit plus choisir cesse
+ * d'etre offert.
+ */
+export function tourAJour(tour: EtatTour, historique: Historique): EtatTour {
+  if (tour.phase !== "NIVEAU") return tour;
+  const connus = historique[tour.carte.id] ?? [];
+  const manquants = connus.filter((niveau) => !tour.consommes.includes(niveau));
+  if (manquants.length === 0) return tour;
+  return { ...tour, consommes: [...tour.consommes, ...manquants] };
+}
+
+/**
+ * Prend acte de ce qu'un autre document vient d'ecrire.
+ *
+ * Rend l'etat LUI-MEME quand il n'y a rien a prendre, ce qui est le cas
+ * courant : les quatre effets d'ecriture suivent l'identite de leur champ, donc
+ * un etat reconstruit pour rien reecrirait les clefs, et cette ecriture
+ * reveillerait le voisin, qui reecrirait a son tour.
+ */
+export function reconcilier(etat: EtatPartie, voisin: NouvellesDuVoisin): EtatPartie {
+  const historique = fusionnerHistorique(etat.historique, voisin.historique);
+  const signalements = fusionnerSignalements(etat.signalements, voisin.signalements);
+  const tour = tourAJour(etat.tour, historique);
+  if (historique === etat.historique && signalements === etat.signalements && tour === etat.tour) {
+    return etat;
+  }
+  return { ...etat, historique, signalements, tour };
+}
+
+/**
+ * Ce que le reducteur recoit : un geste du narrateur, ou des nouvelles d'un
+ * autre document.
+ *
+ * Les deux passent par le MEME reducteur et non par deux chemins : l'etat de la
+ * soiree n'a qu'un seul point de mise a jour, et une reconciliation posee a
+ * cote arriverait sur un etat qu'un geste vient peut-etre de remplacer.
+ */
+export type Mouvement =
+  | { origine: "narrateur"; commande: Commande }
+  | { origine: "voisin"; nouvelles: NouvellesDuVoisin };
+
+export function appliquer(
+  corpus: readonly Carte[],
+  etat: EtatPartie,
+  mouvement: Mouvement,
+): EtatPartie {
+  return mouvement.origine === "narrateur"
+    ? avancer(corpus, etat, mouvement.commande)
+    : reconcilier(etat, mouvement.nouvelles);
+}

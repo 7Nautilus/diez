@@ -18,9 +18,19 @@
  * `inert` etant herite, marquer l'arriere-plan sans marquer le panneau exige
  * qu'il ne soit descendant d'aucun de ses voisins. Et pose en dernier, il
  * peint au-dessus du reste sans qu'aucun `z-index` n'ait a etre invente.
+ *
+ * CHAQUE PANNEAU OUVERT S'INSCRIT DANS LA PILE, et c'est ce qui repare le
+ * quatrieme point ci-dessus quand DEUX panneaux sont ouverts. L'ecouteur
+ * d'Echap est pose sur `window`, donc les deux panneaux etaient prevenus de la
+ * meme touche et se fermaient tous les deux : la demande de reinitialisation
+ * emportait le menu qui l'avait ouverte, et rendait le focus a un bouton
+ * demonte dans le meme geste, donc a `<body>`. Le filtre `estAuDessus` fait
+ * repondre le seul panneau du dessus. La pile porte la mesure et la seconde
+ * entree du meme defaut, le geste de retour (design/panneaux.ts).
  */
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { type InscriptionDePanneau, PANNEAUX } from "../panneaux";
 import styles from "./Feuille.module.css";
 
 type ProprietesFeuille = {
@@ -55,6 +65,32 @@ export function Feuille({ titre, ouverte, surFermeture, children }: ProprietesFe
 function PanneauOuvert({ titre, surFermeture, children }: Omit<ProprietesFeuille, "ouverte">) {
   const idTitre = useId();
   const refPanneau = useRef<HTMLDivElement>(null);
+  const inscription = useRef<InscriptionDePanneau | null>(null);
+
+  /*
+   * La derniere version du rappel, sans reinscrire le panneau : la pile retient
+   * de quoi fermer, et une inscription refaite a chaque rendu changerait de
+   * rang dans la pile a chaque rendu.
+   */
+  const fermer = useRef(surFermeture);
+  useEffect(() => {
+    fermer.current = surFermeture;
+  });
+
+  /*
+   * L'inscription se fait dans un effet et non a la construction : React monte,
+   * demonte puis remonte les effets en developpement, et une inscription posee
+   * ailleurs qu'ici laisserait un panneau fantome au fond de la pile. Ici le
+   * demontage la retire, le remontage en repose une, et la hauteur reste juste.
+   */
+  useEffect(() => {
+    const prise = PANNEAUX.inscrire(() => fermer.current());
+    inscription.current = prise;
+    return () => {
+      inscription.current = null;
+      prise.retirer();
+    };
+  }, []);
 
   useEffect(() => {
     const panneau = refPanneau.current;
@@ -86,7 +122,16 @@ function PanneauOuvert({ titre, surFermeture, children }: Omit<ProprietesFeuille
 
   useEffect(() => {
     const surTouche = (evenement: KeyboardEvent) => {
-      if (evenement.key === "Escape") surFermeture();
+      if (evenement.key !== "Escape") return;
+      /*
+       * SEUL LE PANNEAU DU DESSUS REPOND. Deux panneaux ouverts ont chacun leur
+       * ecouteur sur `window` et sont donc prevenus de la meme touche : sans ce
+       * filtre, Echap dans la Confirmation fermait aussi le menu qui l'avait
+       * ouverte, et le focus retombait sur `<body>` faute de declencheur ou
+       * revenir (mesure en tete de design/panneaux.ts).
+       */
+      if (inscription.current?.estAuDessus() !== true) return;
+      surFermeture();
     };
     /*
      * Ecoute posee sur `window` et non sur le panneau : une touche pressee

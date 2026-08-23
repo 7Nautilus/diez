@@ -69,6 +69,7 @@ diez/
 │   ├── design/                   # système Nothing (voir design-system.md)
 │   │   ├── fonts/                # .woff2 auto-hébergés
 │   │   ├── tokens.css
+│   │   ├── panneaux.ts           # pile des panneaux ouverts, voir §5
 │   │   ├── components/           # primitives : Bouton, Etiquette, Segment…
 │   │   └── review/               # planche de contrôle des deux modes, dev uniquement
 │   ├── screens/                  # Accueil, Theme, Niveau, Question, Reponse
@@ -102,7 +103,9 @@ storage  →  rien
 
 `domain/` n'importe jamais depuis `screens/`, `design/` ou `storage/`. Une seule ligne violant cette règle et P2 est mort.
 
-**Ce n'est plus un point à surveiller en revue.** Chaque remontée est refusée par une règle de lint, éprouvée dans les deux sens : ce qui doit passer passe, ce qui doit être refusé l'est. Et `tools/garde-p2.test.ts` fait échouer la suite si la règle du domaine cesse de mordre, parce qu'elle n'était qu'une chaîne de caractères qu'une faute d'une lettre désarmait en silence.
+**Ce n'est plus un point à surveiller en revue.** Chaque remontée est refusée par une règle de lint, et `tools/garde-p2.test.ts` rejoue le tableau ci-dessus **à chaque exécution de la suite**, override par override, dans les deux sens : ce qui doit passer passe, ce qui doit être refusé l'est. Il cherche le nom de la règle dans la sortie de Biome et jamais son seul code de sortie, parce que les deux confondent « refusé par la règle visée » et « refusé pour autre chose » (`conventions-code.md` §3).
+
+> *Corrigé après la phase 5.* Cette garantie était écrite ici avant d'être vraie. La garde n'écrivait ses sondes qu'à `src/domain/`, donc elle n'éprouvait que **le premier des cinq `overrides`** de `biome.json`. Mesure : la même faute d'une lettre, portée cette fois sur le second, celui qui couvre les sous-dossiers du domaine, laissait les 245 tests verts et `biome ci` propre sur 96 fichiers, pendant qu'un module écrit ensuite dans `src/domain/regles/` pouvait importer `react` et `storage/`. Les cinq `overrides` ont désormais chacun leurs sondes, négatives **et positives** : sans les positives, une règle qui refuserait tout satisferait toute la colonne de droite du tableau.
 
 `app/` n'a délibérément aucune restriction : c'est la couche de composition. La contrainte porte sur l'autre sens, et elle est tenue : aucune couche inférieure ne peut importer `app/`.
 
@@ -198,9 +201,26 @@ Cette règle a **une exception, une seule, nommée en §10** : la garde de câbl
 - **QUESTION vers NIVEAU.** *Décision confirmée sous le modèle du narrateur.* Elle avait été prise au motif que le chiffre engageait le joueur actif ; ce joueur n'existe plus, l'arbitrage a donc été rejoué et reconduit. La transition n'existe pas dans le type. Voir la discussion en fin de section.
 - **REPONSE vers QUESTION.** Sans objet, et source de confusion.
 
-**Gestion du bouton « retour » du téléphone.** Point de fiabilité souvent raté : en mode `standalone`, le geste de retour ferme l'app. Il faut le brancher sur la machine à états via l'History API (un `history.pushState` par phase) pour que « retour » signifie *étape précédente* et jamais *quitter la partie*.
+**Gestion du bouton « retour » du téléphone.** Point de fiabilité souvent raté : en mode `standalone`, le geste de retour ferme l'app. Il est branché sur la machine à états via l'History API pour que « retour » signifie *étape précédente* et jamais *quitter la partie*.
+
+**Une seule entrée de garde, et non une par phase**, contre ce que disait la première rédaction de ce paragraphe. Une entrée posée à chaque phase s'accumulerait sur une vingtaine de tours à quatre phases, et il faudrait alors presser retour quatre-vingts fois pour sortir d'un accueil où plus rien ne se passe. La garde est posée dès qu'il y a quelque chose à protéger, consommée par le geste, et reposée aussitôt.
+
+**Ce que le geste fait est une table, `effetDuRetour` (`app/navigation.ts`), et non une condition écrite au point de câblage.** Elle a quatre issues, dans cet ordre de priorité :
+
+| Situation | Effet | Garde armée |
+|---|---|---|
+| un panneau est ouvert, quelle que soit la phase | ferme le panneau **du dessus** | oui |
+| phase NIVEAU | retour au thème, la seule transition qui recule | oui |
+| phases THEME, QUESTION, REPONSE | absorbé sans effet et en silence | oui |
+| accueil **nu**, aucun panneau ouvert | quitte l'application | non |
+
+> *Corrigé après la phase 5.* La garde n'était armée que par `tour.phase !== "REPOS"`, or le menu et la demande de réinitialisation ne vivent **qu'au repos**. Mesure au navigateur, menu ouvert sur l'accueil : `history.state` valait `null`, donc aucune garde, et `history.back()` faisait passer l'URL de `/diez/` à la page précédente. En PWA installée il n'y a pas de page précédente : le balayage **fermait l'application**, depuis le seul écran qui porte les règles du jeu, le mode d'affichage et la réinitialisation. Témoin apparié : le même geste en phase NIVEAU ramenait bien à THEME, le mécanisme marchait donc là où il était armé. Après correctif, même mesure : `history.state` vaut `{diez:"garde"}`, le retour ferme le panneau et l'URL ne bouge pas.
+
+**L'ordre compte quand deux panneaux sont ouverts** : la Confirmation se ferme avant le menu qui l'a ouverte. C'est la pile `design/panneaux.ts` qui l'impose, et la touche Échap suit la même pile, parce que c'est le même geste vu par deux entrées (`tokens-et-composants.md`, Feuille).
 
 En phase QUESTION, le geste est **absorbé sans effet**, et en silence : le label `VERROUILLÉ` qui l'annonçait a été retiré (`design-system.md` §4). Avec la molette comme sélecteur par défaut, le narrateur n'a plus de raison de vouloir revenir en arrière, puisqu'il n'a rien pu valider par accident.
+
+**Ce module n'était pas testé, et il ne l'était pas parce qu'il n'était pas testable** : il lisait `history` et `window` directement. Tout ce qui touche au navigateur y est désormais injecté, comme dans `execution.ts` et pour la même raison mesurée. Trois mutations passaient auparavant `tsc`, `biome ci` et les 286 tests sans une rougeur : les deux `pushState` remplacés par `replaceState`, l'inscription de l'écouteur `popstate` remplacée par son retrait, et le drapeau qui distingue notre propre retour d'un geste du narrateur, supprimé. Les trois tombent maintenant, chacune sur le contrôle qui nomme sa règle.
 
 ### Discussion : le verrou, rejoué sous le modèle du narrateur
 
@@ -278,6 +298,39 @@ Le préfixe `v1` est un choix de fiabilité : le jour où la forme change, on é
 
 Le niveau étant consommé dès `choisir(n)` (§6), une reprise en phase QUESTION est cohérente avec l'historique : la question a bien été retirée du stock, qu'elle ait été lue ou non.
 
+### Deux documents de la même origine ne s'écrasent plus
+
+*Correctif après la phase 5.* Aucun écouteur `storage` n'existait : chaque document lisait les quatre clés **une fois** à l'amorçage, puis les réécrivait depuis sa mémoire. Deux documents ouverts sur la même origine se recouvraient donc l'un l'autre.
+
+Mesure au navigateur, deux onglets, avant correctif :
+
+| Geste | Ce que la base montrait |
+|---|---|
+| A joue la carte 009, niveau 1 | `diez:v1:historique` = `{"seconde-guerre-mondiale-001":[1]}` |
+| B tire la même carte | ses dix crans affichés `libre` |
+| B choisit le niveau 1 | B pose **la même question mot pour mot** |
+| B révèle | le tour de A est remplacé par celui de B |
+| B signale | le signalement de A a disparu de la base |
+
+Le narrateur n'a qu'un téléphone, mais un onglet survit à une fermeture, une PWA et un navigateur coexistent, et un lien rouvre l'application. Le défaut **compose** avec le geste de retour de §5 : on sortait de l'application par un balayage, on la rouvrait, et le second document naissait là.
+
+**La règle de réconciliation, clé par clé, et sa raison :**
+
+| Clé | Règle | Pourquoi |
+|---|---|---|
+| `historique` | **union** | perdre une question est moins grave que la reposer, et une question réentendue est ce que §6 tient pour cassant la partie. L'union ne retire jamais rien, donc au pire elle brûle une question que personne n'a lue : une sur dix dans le pire des cas, exactement l'arbitrage déjà fait pour la consommation sur `choisir` |
+| `signalements` | **union**, dédoublonnée sur carte et niveau | perdre un signalement est pire que d'en garder un en double : il parle du contenu, sa destination est le dépôt, et personne ne le reposera |
+| `tour` | **jamais adopté** | c'est le seul que le narrateur est en train de lire à voix haute. Un écran qui change au milieu d'une phrase serait pire que la perte évitée, et cette perte est la moins grave : le niveau étant consommé dès l'entrée en QUESTION, un tour perdu ne fait jamais revenir une question, il fait piocher |
+| `reglages` | **pas réconcilié** | ce n'est pas ce qui casse une soirée, et son seul écrivain d'aujourd'hui est l'écho de ce qui vient d'être lu, le sélecteur de paquets étant en sommeil. Adopter la liste d'un document resté en arrière laisserait au contraire `PIOCHER` désactivé en pleine partie |
+
+Une **exception unique à l'union** : un historique entrant vide est adopté. Un document qui s'ouvre relit la clé avant de la réécrire, donc il ne peut écrire un historique vide que si la clé l'était déjà, ou si le narrateur vient de demander l'effacement. Sans cette exception, une réinitialisation faite dans un document serait défaite par l'autre.
+
+**La phase NIVEAU est mise à jour, et c'est le correctif lui-même**, pas un effet de bord. Elle porte un *instantané* des niveaux consommés, pris à l'entrée dans la phase : sans mise à jour, un document reste sur son sélecteur pendant que l'autre brûle un niveau, et il l'offre encore. La mise à jour ne peut qu'**ajouter** des crans consommés, jamais en rendre un.
+
+L'événement ne sert que de **signal** : `storage/voisinage.ts` dit quelle clé a bougé, et la valeur est relue par le chemin normal, celui qui valide. Une forme validée à un seul endroit ne peut pas diverger d'elle-même. Le navigateur n'envoie jamais l'événement au document qui a écrit, il n'y a donc pas d'écho à distinguer.
+
+Mesure après correctif, même séquence : B, assis sur son sélecteur, affiche `Niveau 1, déjà joué` dès que A l'a joué ; la clé d'historique passe à `{"seconde-guerre-mondiale-001":[1,2]}` au lieu d'être remplacée ; le signalement de B s'ajoute à celui de A, que l'accueil de A annonce aussitôt par `Copier les 2 signalements`. Une réinitialisation faite dans A laisse bien la clé vide, sans que B la restaure.
+
 ### Les signalements doivent pouvoir sortir du téléphone
 
 *Correctif d'audit.* Le corpus vit dans un dépôt Git, les signalements dans le `localStorage` d'un téléphone, et aucun pont n'existait entre les deux. La fonctionnalité collectait donc une donnée que personne n'aurait jamais lue.
@@ -289,25 +342,34 @@ L'accueil expose une action `COPIER LES SIGNALEMENTS` en couche tertiaire, **vis
 ## 8. Pipeline de contenu
 
 ```
+content/schema/lot.schema.json
+        │  les quatre plafonds de longueur, lus à chaque compilation
+        ▼
 content/cartes/**.json
         │
-        ├─ tools/valider.ts    ← lancé en pre-commit et en CI
+        ├─ tools/valider.ts    ← À ÉCRIRE. Schéma complet par ajv, chantier de
+        │                        contenu. Son étape est commentée dans la CI.
         │
-        └─ tools/compiler.ts   ← ne retient que valide: true
+        └─ tools/compiler.ts   ← structure et plafonds ; ne retient que valide: true
                 │
                 └→ src/data/cartes.gen.json  (bundlé dans l'app)
 ```
 
-| Contrôle | Raison |
-|---|---|
-| exactement 10 questions, niveaux 1 à 10 sans doublon | intégrité de la carte |
-| `id` unique sur tout le corpus | l'historique en dépend |
-| `q` et `r` non vides | évidence |
-| **`r` de 60 caractères maximum** | force la règle « réponse courte et indiscutable » |
-| **`q` de 140 caractères maximum** | garantit `--revelation-vide` avant `RÉVÉLER` |
-| `theme` de 40 caractères maximum | tient à l'écran en taille display |
-| pas de thème dupliqué | évite les cartes jumelles |
-| build : au moins 5 cartes valides | interdit de déployer une app vide |
+La colonne de droite dit **qui refuse aujourd'hui**, et non qui devrait. C'est la distinction que ce tableau a longtemps effacée, en listant des contrôles sans dire qu'aucune commande ne les exécutait.
+
+| Contrôle | Raison | Appliqué par |
+|---|---|---|
+| exactement 10 questions, niveaux 1 à 10 sans doublon | intégrité de la carte | `compiler.ts` |
+| `id` unique sur tout le corpus | l'historique en dépend | `compiler.ts` |
+| `q` et `r` non vides | évidence | `compiler.ts` |
+| **`r` de 60 caractères maximum** | force la règle « réponse courte et indiscutable » | schéma, **lu** par `compiler.ts` |
+| **`q` de 140 caractères maximum** | garantit `--revelation-vide` avant `RÉVÉLER` | schéma, **lu** par `compiler.ts` |
+| `theme` de 40 caractères maximum | tient à l'écran en taille display | schéma, **lu** par `compiler.ts` |
+| `note` de 160 caractères maximum | reste lisible sous la réponse | schéma, **lu** par `compiler.ts` |
+| pas de thème dupliqué | évite les cartes jumelles | **personne**, en attente de `valider.ts` |
+| build : au moins 5 cartes valides | interdit de déployer une app vide | `compiler.ts` |
+
+Les quatre plafonds ne s'écrivent qu'à un seul endroit, `content/schema/lot.schema.json`, et le compilateur les y **lit** au lieu de les recopier. Le schéma est ainsi exécuté sans ajv, et une carte hors plafond arrête la compilation au lieu de partir en soirée : une réponse de 112 caractères ne casse pas le corpus, elle casse l'écran `RÉPONSE`. Les nombres ci-dessus sont donnés pour la lecture ; en cas de désaccord, c'est le schéma qui fait foi.
 
 Deux de ces contrôles méritent d'être compris plutôt que subis.
 
@@ -352,7 +414,7 @@ C'est le principe P1 qui rend ce report gratuit : le corpus n'ayant jamais été
 
 Aucune de ces données n'est du contenu. Elles sont exclues des builds de production par leur paquet dédié.
 
-**Contrôle spécifique au paquet `maison`.** Le dépôt étant public (§9), le validateur relève chaque nom propre détecté dans les cartes `maison`, c'est-à-dire chaque mot capitalisé hors début de phrase, et les liste en avertissement. Il ne bloque pas et ne devine rien : distinguer un prénom d'un nom de famille par programme produirait surtout des faux positifs. Son rôle est de forcer un regard humain sur la liste avant chaque publication. La règle éditoriale reste une décision d'écriture, pas un test automatique.
+**Contrôle spécifique au paquet `maison`.** *Il n'existe pas encore : il arrive avec `valider.ts`, et rien ne le remplace en attendant.* Le dépôt étant public (§9), le validateur relèvera chaque nom propre détecté dans les cartes `maison`, c'est-à-dire chaque mot capitalisé hors début de phrase, et les liste en avertissement. Il ne bloque pas et ne devine rien : distinguer un prénom d'un nom de famille par programme produirait surtout des faux positifs. Son rôle est de forcer un regard humain sur la liste avant chaque publication. La règle éditoriale reste une décision d'écriture, pas un test automatique.
 
 ---
 

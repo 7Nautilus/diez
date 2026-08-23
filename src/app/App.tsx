@@ -1,6 +1,15 @@
 import { registerSW } from "virtual:pwa-register";
-import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import CORPUS from "../data/cartes.gen.json";
+import { PANNEAUX } from "../design/panneaux";
 import type { Carte, PaquetId } from "../domain/types";
 import { TOUR_PERIME_H } from "../domain/types";
 import { Accueil } from "../screens/Accueil";
@@ -19,17 +28,18 @@ import { ecrireHistorique, lireHistorique } from "../storage/historique";
 import { ecrireMode, ecrirePaquetsActifs, lireMode, lirePaquetsActifs } from "../storage/reglages";
 import { ecrireSignalements, lireSignalements } from "../storage/signalements";
 import { ecrireTour, lireTour } from "../storage/tour";
+import { abonnerAuxEcrituresVoisines } from "../storage/voisinage";
 import styles from "./App.module.css";
 import { Epuisement } from "./Epuisement";
 import { type InscrireLeServiceWorker, useEcranAllume, useMiseAJour } from "./execution";
-import { useGesteDeRetour } from "./navigation";
+import { effetDuRetour, gardeArmee, useGesteDeRetour } from "./navigation";
 import {
-  avancer,
-  type Commande,
+  appliquer,
   type EtatPartie,
   estSignalee,
   etatRepris,
   type Geste,
+  type Mouvement,
   nombreDeCartesRestantes,
   paquetsDuCorpus,
   rangDansLeCorpus,
@@ -134,13 +144,17 @@ function amorcer(corpus: readonly Carte[]): EtatPartie {
 
 export function App({ corpus = CORPUS }: ProprietesApp) {
   /*
-   * Le reducteur ne fait que fournir le corpus a `avancer`, qui porte toute la
-   * logique et reste pur, donc rejouable en test sans React. Son identite ne
+   * Le reducteur ne fait que fournir le corpus a `appliquer`, qui porte toute
+   * la logique et reste pur, donc rejouable en test sans React. Son identite ne
    * change que si le corpus change, ce qui n'arrive jamais au cours d'une
    * execution : les deux points d'entree le tiennent d'une constante de module.
+   *
+   * IL RECOIT DEUX SORTES DE MOUVEMENTS DEPUIS LA RECONCILIATION : un geste du
+   * narrateur, et ce qu'un autre document de la meme origine vient d'ecrire.
+   * Les deux passent par le meme point de mise a jour (partie.ts).
    */
   const reduirePartie = useCallback(
-    (etat: EtatPartie, commande: Commande) => avancer(corpus, etat, commande),
+    (etat: EtatPartie, mouvement: Mouvement) => appliquer(corpus, etat, mouvement),
     [corpus],
   );
   const [partie, commander] = useReducer(reduirePartie, corpus, amorcer);
@@ -162,10 +176,42 @@ export function App({ corpus = CORPUS }: ProprietesApp) {
    */
   const jouer = useCallback((geste: Geste) => {
     setRetourCopie("aucun");
-    commander({ geste, maintenant: Date.now(), tirage: Math.random() });
+    commander({
+      origine: "narrateur",
+      commande: { geste, maintenant: Date.now(), tirage: Math.random() },
+    });
   }, []);
 
   const tour = partie.tour;
+
+  /*
+   * CE QU'UN AUTRE DOCUMENT DE LA MEME ORIGINE VIENT D'ECRIRE.
+   *
+   * Sans cet abonnement, chaque document lisait les quatre clefs une fois a
+   * l'amorcage puis les reecrivait depuis sa memoire : deux documents ouverts
+   * s'ecrasaient l'un l'autre, et le second reposait mot pour mot une question
+   * que le premier venait de jouer. La regle de reconciliation, clef par clef
+   * et avec sa raison, est ecrite dans partie.ts.
+   *
+   * L'evenement ne sert que de SIGNAL : la valeur est RELUE par le chemin
+   * normal, celui qui valide, plutot que decodee depuis l'evenement
+   * (storage/voisinage.ts). Le navigateur ne l'envoie jamais au document qui a
+   * ecrit, donc il n'y a pas d'echo a distinguer.
+   *
+   * `commander` est stable, l'effet ne se rejoue donc jamais et l'abonnement
+   * tient toute la soiree.
+   */
+  useEffect(
+    () =>
+      abonnerAuxEcrituresVoisines(window, (suffixes) => {
+        if (!suffixes.includes("historique") && !suffixes.includes("signalements")) return;
+        commander({
+          origine: "voisin",
+          nouvelles: { historique: lireHistorique(), signalements: lireSignalements() },
+        });
+      }),
+    [],
+  );
 
   /*
    * LES QUATRE ECRITURES, UNE PAR CLEF, ET CHACUNE SUR SA SEULE DEPENDANCE.
@@ -275,24 +321,38 @@ export function App({ corpus = CORPUS }: ProprietesApp) {
   );
 
   /*
-   * LE GESTE DE RETOUR DU TELEPHONE, phase par phase. La table des transitions
-   * autorisees decide, et elle n'en offre qu'UNE SEULE qui recule
-   * (architecture.md section 5).
+   * LE GESTE DE RETOUR DU TELEPHONE. La table des issues vit dans navigation.ts
+   * et elle decide seule ; ici il n'y a plus qu'un cablage.
    *
-   * NIVEAU : retour au theme, la vraie.
-   * QUESTION : absorbe SANS EFFET et EN SILENCE, c'est la specification.
-   * THEME et REPONSE : absorbes aussi, faute de transition vers l'arriere. Un
-   * retour depuis THEME ne peut mener nulle part, et un retour depuis REPONSE
-   * ne peut pas "de-reveler" la reponse.
+   * LE NOMBRE DE PANNEAUX OUVERTS EN FAIT PARTIE, et c'est ce qui reparait un
+   * defaut mesure : la garde n'etait armee que hors du repos, or le menu et la
+   * demande de reinitialisation ne vivent QU'AU repos. Menu ouvert, un balayage
+   * depuis le bord sortait de l'application, et en PWA installee il n'y a pas
+   * d'entree precedente, donc il la FERMAIT, sur le telephone dont depend toute
+   * la table et depuis le seul endroit qui porte les regles du jeu.
    *
-   * Absorber n'est pas ne rien faire : le module de navigation a intercepte le
-   * geste, donc l'application ne s'est pas fermee, ce qui est tout l'objet.
+   * La pile est lue par `useSyncExternalStore` plutot que remontee en propriete
+   * depuis l'accueil : l'ouverture d'un panneau n'est ni du jeu ni un reglage
+   * persiste, elle appartient a la Feuille qui la porte, et `screens/` ne peut
+   * de toute facon pas atteindre `app/` (architecture.md section 3).
    */
-  const surRetour = useCallback(() => {
-    if (tour.phase === "NIVEAU") jouer({ type: "retour" });
-  }, [tour.phase, jouer]);
+  const panneauxOuverts = useSyncExternalStore(PANNEAUX.abonner, PANNEAUX.hauteur);
+  const effet = effetDuRetour(tour.phase, panneauxOuverts > 0);
 
-  useGesteDeRetour(tour.phase !== "REPOS", surRetour);
+  const surRetour = useCallback(() => {
+    /*
+     * Fermer le panneau du DESSUS et rien d'autre : la Confirmation avant le
+     * menu qui l'a ouverte. La pile s'en charge, et c'est le meme ordre
+     * qu'Echap suit desormais (design/panneaux.ts).
+     */
+    if (effet === "fermerLePanneau") {
+      PANNEAUX.fermerLeDessus();
+      return;
+    }
+    if (effet === "revenirAuTheme") jouer({ type: "retour" });
+  }, [effet, jouer]);
+
+  useGesteDeRetour(gardeArmee(effet), surRetour);
 
   function ecranDeLaPhase(): ReactNode {
     switch (tour.phase) {

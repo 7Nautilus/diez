@@ -6,14 +6,24 @@
  * (architecture.md section 8), et le seul endroit ou une carte passe de
  * donnee brute a `Carte`.
  *
- * CE QU'IL NE GARDE PAS. Il ne valide PAS le corpus contre
- * content/schema/lot.schema.json : ni les plafonds de longueur, ni le theme
- * duplique, ni la relecture des noms propres du paquet maison. Cette
- * validation demande ajv et releve du chantier de contenu, avec
- * tools/valider.ts, dont l'etape reste commentee dans le workflow. La porte
- * est donc moins gardee qu'il n'y parait : ce fichier ne controle que les
- * invariantes STRUCTURELLES, celles sans lesquelles une carte se comporterait
- * mal un soir de partie.
+ * CE QU'IL GARDE DU SCHEMA, ET RIEN DE PLUS. Outre les invariantes
+ * STRUCTURELLES (identifiant present et unique, dix questions, niveaux 1 a 10
+ * couverts une fois chacun), il fait respecter les PLAFONDS DE LONGUEUR de
+ * content/schema/lot.schema.json, qu'il LIT dans ce fichier au lieu de les
+ * recopier. Le schema reste ainsi la source unique de ces nombres
+ * (tokens-et-composants.md, « Ce qui n'est pas un token ») et devient
+ * executable sans ajv. Un depassement arrete la compilation comme n'importe
+ * quel autre manquement : une reponse de 112 caracteres la ou le plafond en
+ * admet 60 ne casse pas le corpus, elle casse l'ecran REPONSE le soir ou elle
+ * sort.
+ *
+ * CE QU'IL NE GARDE TOUJOURS PAS, et qui reste le chantier de contenu avec ajv
+ * et tools/valider.ts, dont l'etape est encore commentee dans le workflow :
+ * le theme duplique d'une carte a l'autre, que le schema n'exprime d'ailleurs
+ * pas non plus ; la relecture des noms propres du paquet maison ; les motifs
+ * de `id` et de `lot` ; les champs du lot lui-meme, dont son `statut` et sa
+ * note ; et le refus des proprietes excedentaires, qui laisse aujourd'hui un
+ * nom de champ mal orthographie passer en etant simplement ignore.
  *
  * Il tourne sous Node sans etape de compilation, Node effacant les types a la
  * lecture. C'est ce qui lui interdit d'importer une VALEUR du domaine :
@@ -32,6 +42,14 @@ import type { Carte, CarteId, Domaine, Niveau, PaquetId, Question } from "../src
 const RACINE = process.cwd();
 const DOSSIER_CARTES = join(RACINE, "content", "cartes");
 const SORTIE = join(RACINE, "src", "data", "cartes.gen.json");
+
+/**
+ * Le schema du corpus, ouvert a la compilation et non seulement par l'editeur.
+ *
+ * C'est la seule ecriture des plafonds de longueur du depot : ce fichier les y
+ * lit, aucun n'est recopie ici.
+ */
+const CHEMIN_SCHEMA = join(RACINE, "content", "schema", "lot.schema.json");
 
 /**
  * La seconde sortie, et elle ne part JAMAIS en production.
@@ -123,6 +141,21 @@ const NB_QUESTIONS = Object.keys(NIVEAUX_ATTENDUS).length;
 /** Un manquement, avec l'endroit exact ou le relire. */
 export type Faute = { readonly ou: string; readonly quoi: string };
 
+/**
+ * Les plafonds de longueur du contenu, tels que le schema les declare.
+ *
+ * Aucune de ces valeurs n'est ecrite dans ce fichier : elles arrivent par
+ * `lirePlafonds`. Chacune protege un geste de mise en page precis, et la
+ * raison de chacune est portee par le `description` du champ correspondant
+ * dans le schema, la aussi a un seul endroit.
+ */
+export type Plafonds = {
+  readonly theme: number;
+  readonly q: number;
+  readonly r: number;
+  readonly note: number;
+};
+
 /** Un fichier de contenu, lu mais pas encore interprete. */
 export type LotLu = { readonly chemin: string; readonly brut: unknown };
 
@@ -181,7 +214,71 @@ function estNiveau(valeur: unknown): valeur is Niveau {
   return typeof valeur === "number" && Object.hasOwn(NIVEAUX_ATTENDUS, valeur);
 }
 
-function analyserQuestion(brut: unknown, releve: (quoi: string) => void): Question | null {
+/**
+ * Extrait les quatre plafonds d'un schema deja analyse, ou LEVE.
+ *
+ * Lever, et non relever une faute : un plafond introuvable n'est pas un defaut
+ * du corpus mais du cablage (conventions-code.md section 7). Le cas qui compte
+ * est la cle deplacee ou renommee dans le schema. Sans ce refus, la lecture
+ * rendrait `undefined`, la comparaison ci-dessous ne comparerait plus rien, et
+ * la porte se rouvrirait en silence : c'est exactement l'etat d'avant, ou le
+ * schema etait cite par neuf fichiers et execute par aucun.
+ */
+export function extrairePlafonds(schema: unknown): Plafonds {
+  const plafond = (...cles: readonly string[]): number => {
+    let courant: unknown = schema;
+    for (const cle of cles) courant = estObjet(courant) ? courant[cle] : undefined;
+    if (typeof courant !== "number" || !Number.isInteger(courant) || courant < 1) {
+      throw new Error(
+        `plafond de longueur absent ou invalide dans le schema du corpus : ${cles.join(".")}`,
+      );
+    }
+    return courant;
+  };
+
+  return {
+    theme: plafond("$defs", "carte", "properties", "theme", "maxLength"),
+    q: plafond("$defs", "question", "properties", "q", "maxLength"),
+    r: plafond("$defs", "question", "properties", "r", "maxLength"),
+    note: plafond("$defs", "question", "properties", "note", "maxLength"),
+  };
+}
+
+/** Ouvre le schema du depot et en extrait les plafonds. */
+export function lirePlafonds(chemin: string = CHEMIN_SCHEMA): Plafonds {
+  const schema: unknown = JSON.parse(readFileSync(chemin, "utf8"));
+  return extrairePlafonds(schema);
+}
+
+/**
+ * Vrai si la chaine tient dans son plafond, sinon releve la mesure exacte.
+ *
+ * La longueur se compte en POINTS DE CODE, parce que c'est ainsi que JSON
+ * Schema definit `maxLength`. Compter en unites UTF-16, ce que fait `.length`,
+ * ferait diverger ce controle de celui que l'editeur applique a la frappe des
+ * le premier caractere hors du plan multilingue de base : deux verdicts
+ * opposes pour un seul plafond et un seul fichier.
+ */
+function tientDansSonPlafond(
+  champ: string,
+  valeur: string,
+  plafond: number,
+  releve: (quoi: string) => void,
+): boolean {
+  const longueur = [...valeur].length;
+  if (longueur <= plafond) return true;
+  releve(
+    `${champ} de ${longueur} caracteres pour un plafond de ${plafond}, ` +
+      "fixe par content/schema/lot.schema.json",
+  );
+  return false;
+}
+
+function analyserQuestion(
+  brut: unknown,
+  releve: (quoi: string) => void,
+  plafonds: Plafonds,
+): Question | null {
   if (!estObjet(brut)) {
     releve("une question n'est pas un objet");
     return null;
@@ -201,13 +298,26 @@ function analyserQuestion(brut: unknown, releve: (quoi: string) => void): Questi
   const noteOk = note === undefined || typeof note === "string";
   if (!noteOk) releve("note d'arbitrage presente mais pas une chaine");
 
-  if (!(niveauOk && qOk && rOk && noteOk)) return null;
+  /*
+   * Les plafonds ne se mesurent que sur une chaine effectivement presente : le
+   * `typeof` de gauche n'est pas une precaution, c'est ce qui evite d'annoncer
+   * une longueur sur une valeur qui n'existe pas, alors que son absence vient
+   * deja d'etre relevee juste au-dessus.
+   */
+  const qCourt = typeof q !== "string" || tientDansSonPlafond("enonce", q, plafonds.q, releve);
+  const rCourt = typeof r !== "string" || tientDansSonPlafond("reponse", r, plafonds.r, releve);
+  const noteCourte =
+    typeof note !== "string" ||
+    tientDansSonPlafond("note d'arbitrage", note, plafonds.note, releve);
+
+  if (!(niveauOk && qOk && rOk && noteOk && qCourt && rCourt && noteCourte)) return null;
   return note === undefined ? { niveau, q, r } : { niveau, q, r, note };
 }
 
 function analyserQuestions(
   brut: unknown,
   releve: (quoi: string) => void,
+  plafonds: Plafonds,
 ): readonly Question[] | null {
   if (!estTableau(brut)) {
     releve("questions absentes ou pas un tableau");
@@ -221,7 +331,7 @@ function analyserQuestions(
 
   const lues: Question[] = [];
   for (const element of brut) {
-    const question = analyserQuestion(element, releve);
+    const question = analyserQuestion(element, releve, plafonds);
     if (question !== null) lues.push(question);
   }
   if (lues.length !== NB_QUESTIONS) return null;
@@ -250,6 +360,7 @@ function analyserQuestions(
 export function analyserCarte(
   brut: unknown,
   ou: string,
+  plafonds: Plafonds,
 ): { readonly carte: Carte | null; readonly fautes: readonly Faute[] } {
   const fautes: Faute[] = [];
   const releve = (quoi: string) => {
@@ -269,6 +380,9 @@ export function analyserCarte(
   const themeOk = chaineNonVide(theme);
   if (!themeOk) releve("theme absent ou vide");
 
+  const themeCourt =
+    typeof theme !== "string" || tientDansSonPlafond("theme", theme, plafonds.theme, releve);
+
   const paquetOk = estPaquet(paquet);
   if (!paquetOk) releve(`paquet inconnu : ${String(paquet)}`);
 
@@ -281,11 +395,12 @@ export function analyserCarte(
   const valideOk = typeof valide === "boolean";
   if (!valideOk) releve("champ valide absent ou pas un booleen");
 
-  const questions = analyserQuestions(brut.questions, releve);
+  const questions = analyserQuestions(brut.questions, releve, plafonds);
 
   if (
     idOk &&
     themeOk &&
+    themeCourt &&
     paquetOk &&
     domaineOk &&
     sourceOk &&
@@ -339,8 +454,12 @@ export function lireLots(dossier: string): readonly LotLu[] {
  * Le coeur du compilateur, sans aucune entree-sortie : il prend les lots lus
  * et rend ce qu'il faut ecrire, plus ce qui l'empeche de l'etre. C'est cette
  * separation qui rend les invariantes testables sans toucher au disque.
+ *
+ * Les plafonds sont INJECTES pour la meme raison, et non lus ici : un test peut
+ * alors en passer d'autres et prouver que le controle depend bien de ce qui
+ * vient du schema, la ou une lecture interne rendrait la mesure invisible.
  */
-export function compilerCorpus(lots: readonly LotLu[]): Rapport {
+export function compilerCorpus(lots: readonly LotLu[], plafonds: Plafonds): Rapport {
   const fautes: Faute[] = [];
   const saines: Carte[] = [];
 
@@ -369,7 +488,7 @@ export function compilerCorpus(lots: readonly LotLu[]): Rapport {
         estObjet(brut) && chaineNonVide(brut.id) ? brut.id : `carte en position ${index + 1}`;
       const ou = `${ouLot} : ${identifiant}`;
 
-      const { carte, fautes: relevees } = analyserCarte(brut, ou);
+      const { carte, fautes: relevees } = analyserCarte(brut, ou, plafonds);
       fautes.push(...relevees);
       if (carte === null) return;
 
@@ -405,7 +524,7 @@ export function compilerCorpus(lots: readonly LotLu[]): Rapport {
 }
 
 function principal(): void {
-  const rapport = compilerCorpus(lireLots(DOSSIER_CARTES));
+  const rapport = compilerCorpus(lireLots(DOSSIER_CARTES), lirePlafonds());
 
   if (rapport.fautes.length > 0) {
     process.stdout.write(

@@ -44,6 +44,8 @@ content/
 
 Le schéma est en JSON Schema 2020-12 et n'est pas décoratif : il refuse un niveau dupliqué, une réponse de 61 caractères, un domaine hors énumération ou une propriété non prévue. Avec la ligne `$schema` en tête de chaque lot, l'éditeur signale l'erreur à la frappe.
 
+Ce que l'éditeur signale, la CI ne le bloquait pas encore : **`tools/compiler.ts` lit désormais les quatre plafonds de longueur dans le schéma** et refuse d'écrire le corpus si une carte les dépasse. Le schéma reste la seule écriture de ces nombres, et il est exécuté sans ajv. La validation du schéma *entier* reste à écrire, dans `tools/valider.ts` ; `docs/conventions-code.md` §10 dit précisément ce qui est bloqué et ce qui ne l'est pas.
+
 **Le lot pilote n'est pas du contenu de production.** Son calibrage est défectueux et documenté comme tel dans `docs/audit-contenu.md` : six cartes sur dix ont une progression de difficulté plate dans leur moitié basse. Il sert à développer, pas à jouer.
 
 ## Licence

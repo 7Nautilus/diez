@@ -160,7 +160,11 @@ Modules CSS, pas de styles en ligne sauf pour une valeur calculée à l'exécuti
 
 ## 9. Tests
 
-**Vitest, sur `domain/` et `tools/` uniquement.** C'est là qu'est la logique. Tester les écrans coûterait plus qu'il ne rapporte pour un usage privé, et le prototype a montré que les défauts d'interface se trouvent en mesurant le rendu, pas en simulant des clics.
+**Vitest, sur `domain/`, `app/`, `storage/` et `tools/`.** C'est là qu'est la logique. Tester les écrans coûterait plus qu'il ne rapporte pour un usage privé, et le prototype a montré que les défauts d'interface se trouvent en mesurant le rendu, pas en simulant des clics. Le périmètre exact et la raison de chaque ajout sont dans `vitest.config.ts`.
+
+**Une suite se dépose là où elle sera lancée, jamais là où elle se lirait le mieux.** `src/design/` n'est pas dans la liste ci-dessus : une sonde posée à côté d'un module de `design/` ne serait donc **jamais exécutée**, ce qui est pire que pas de sonde du tout. La pile des panneaux est ainsi éprouvée depuis `src/app/__tests__/panneaux.test.ts`, `app/` important légitimement `design/`. C'est le raisonnement qui a déjà mis `tools/garde-p2.test.ts` dans `tools/`, où `node:child_process` est importable.
+
+**Deux sondes lisent du texte source, et c'est un dernier recours assumé.** `App.tsx` et `Feuille.tsx` montent des composants React : la suite tourne sans DOM ni plugin JSX, ils sont donc hors de sa portée. Or les correctifs se terminent tous par quelques lignes de câblage posées là, et une ligne de câblage supprimée ne casse rien de ce que les autres suites savent lire. Mesure : `useGesteDeRetour(tour.phase !== "REPOS", ...)` remplacé par `(false, ...)` laissait `tsc`, `biome ci` et les 286 tests verts, alors que plus aucun geste de retour n'était intercepté de toute la soirée. Le choix était entre une sonde textuelle et aucune sonde. `tools/garde-cablage.test.ts` ne prouve pas le comportement, qui est prouvé ailleurs sur des fonctions pures : il prouve que le câblage l'appelle.
 
 **Un nom de test énonce l'invariant protégé, pas la fonction appelée.**
 
@@ -174,11 +178,34 @@ Six mois plus tard, c'est le nom du test qui explique pourquoi la ligne existe.
 
 ## 10. Intégration continue
 
-Le workflow **bloque le déploiement** si les tests ou la validation du corpus échouent. L'application en ligne est toujours celle qui passe ses propres contrôles.
+Le workflow **bloque le déploiement** si un contrôle échoue. L'application en ligne est toujours celle qui passe ses propres contrôles.
 
 Le coût est assumé : un soir où tu veux corriger vite, un test cassé t'empêchera de publier. C'est le comportement souhaité, sinon la barrière ne sert à rien le seul jour où elle compte.
 
-Ordre : validation du corpus, puis les vérifications du dépôt (§8), puis lint, puis tests, puis build, puis publication. Le contrôle le plus rapide en premier.
+Ordre réel, le contrôle le plus rapide en premier : `npm run compiler`, puis `npm run verifier` (§8), puis `npm run lint`, puis `npm test`, puis `npm run build`, puis la publication.
+
+### Ce que la CI bloque du corpus, exactement
+
+La formule « la validation du corpus » a longtemps désigné une étape qui n'existait pas : `tools/valider.ts` reste à écrire et son bloc reste commenté dans le workflow. Voici ce que `npm run compiler` refuse réellement, et d'où vient chaque règle.
+
+| Contrôle | Écrit dans |
+|---|---|
+| `id` présent, et unique sur tout ce qui est lu | `tools/compiler.ts` |
+| exactement dix questions, niveaux 1 à 10 une fois chacun | `tools/compiler.ts` |
+| `theme`, `q` et `r` non vides | `tools/compiler.ts` |
+| `paquet`, `domaine` et `source` connus des types du domaine | `tools/compiler.ts` |
+| au moins cinq cartes valides | `tools/compiler.ts` |
+| **plafonds de longueur de `theme`, `q`, `r` et `note`** | **`content/schema/lot.schema.json`**, que le compilateur ouvre et lit |
+
+La dernière ligne est la seule dont la valeur n'est pas dans le code, et c'est voulu. Le compilateur extrait les quatre `maxLength` du schéma au lieu de les recopier : le schéma devient exécutable sans ajv tout en restant la **seule écriture** de ces nombres (`tokens-et-composants.md`, « Ce qui n'est pas un token »). Un plafond dont la clé aurait bougé fait **lever** le compilateur au lieu de le laisser passer : sans ce refus, la lecture rendrait `undefined`, la comparaison ne comparerait plus rien, et la porte se rouvrirait en silence.
+
+C'était l'état antérieur, et il se mesurait : un thème de 77 caractères et une réponse de 112 traversaient compilation, vérifications, lint, tests et build, et arrivaient dans le bundle publié. Le schéma était cité par neuf fichiers et exécuté par aucun.
+
+### Ce que la CI ne bloque toujours pas
+
+Le thème dupliqué d'une carte à l'autre, que le schéma n'exprime d'ailleurs pas non plus ; la relecture des noms propres du paquet `maison` ; les motifs de `id` et de `lot` ; les champs du lot lui-même, dont son `statut` et sa note ; et le refus des propriétés excédentaires, qui laisse aujourd'hui un nom de champ mal orthographié passer en étant simplement ignoré.
+
+Ces règles attendent la validation complète par ajv, dans `tools/valider.ts`, avec le chantier de contenu. La dette est nommée ici et dans l'en-tête de `tools/compiler.ts` ; elle n'est pas refermée.
 
 ## 11. Commits
 

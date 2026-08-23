@@ -62,6 +62,12 @@ Sur le téléphone, `npm run dev -- --host` : le banc ne part jamais sur Pages, 
 - [ ] Onglet tué en phase QUESTION, puis réouverture : reprise dans la même phase, sur la même question.
 - [ ] Écran laissé au repos pendant deux minutes en phase QUESTION : il ne se verrouille pas.
 - [ ] Geste de retour du téléphone en phase QUESTION : absorbé, l'app ne se ferme pas.
+- [ ] Geste de retour **menu ouvert sur l'accueil** : le menu se ferme, l'app ne se ferme pas.
+- [ ] Geste de retour **menu et demande de réinitialisation ouverts** : la demande se ferme, le menu reste.
+- [ ] Échap dans la demande de réinitialisation, au clavier : la demande se ferme, le menu reste.
+- [ ] Geste de retour sur l'accueil **nu**, aucun panneau ouvert : là, et là seulement, on sort de l'application.
+- [ ] Deux documents ouverts sur la même origine, PWA installée plus onglet : un niveau joué dans l'un s'affiche `déjà joué` dans l'autre, un signalement posé dans l'un apparaît au compteur de l'autre.
+- [ ] Réinitialisation faite dans l'un des deux documents : l'autre ne la défait pas, le compteur reste à plein des deux côtés.
 - [ ] Rotation en paysage : impossible, l'orientation est verrouillée.
 
 ### Déploiement

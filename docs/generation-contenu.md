@@ -69,7 +69,7 @@ Quand la contestation est légitime et ne peut pas être supprimée par la formu
 
 ## 6. Les contraintes mécaniques
 
-Appliquées par `content/schema/lot.schema.json`, donc signalées par l'éditeur à la frappe.
+Appliquées par `content/schema/lot.schema.json`, donc signalées par l'éditeur à la frappe, **et refusées au build** : `tools/compiler.ts` lit ces quatre plafonds dans le schéma et arrête la compilation si une carte les dépasse. Une carte hors plafond n'est pas publiée, elle bloque le déploiement.
 
 | Champ | Plafond | Ce que ça protège |
 |---|---|---|
