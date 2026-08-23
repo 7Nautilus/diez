@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      Le banc de recette, servi UNIQUEMENT par le serveur de developpement, sur
+      /recette.html. Ce fichier n'est pas une entree de build : Vite n'en connait
+      qu'une, index.html, donc rien d'ici ne peut partir en production. Voir
+      src/app/recette/entree.tsx.
+
+      Le corpus monte se choisit dans la query : /recette.html?corpus=limites.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Diez : banc de recette</title>
+  </head>
+  <body>
+    <div id="racine"></div>
+    <script type="module" src="/src/app/recette/entree.tsx"></script>
+  </body>
+</html>

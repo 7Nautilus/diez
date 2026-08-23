@@ -25,6 +25,22 @@
 .groupe {
   display: inline-flex;
   align-items: stretch;
+  /*
+   * LE GROUPE PASSE A LA LIGNE PLUTOT QUE DE SORTIR DE L'ECRAN.
+   *
+   * Ses options portent `white-space: nowrap` et un remplissage horizontal :
+   * sa largeur minimale intrinseque vaut donc la somme des trois libelles, et
+   * rien ne la fait descendre. Mesure au navigateur : 217 px pour 140 px
+   * disponibles dans la Feuille a 200 % de zoom, 328 px pour 140 px a taille de
+   * texte doublee. Le groupe depassait le bord droit dans les deux cas, sur le
+   * menu comme sur la planche de controle (docs/recette.md section 1).
+   *
+   * L'enroulement est le seul correctif qui ne coute rien a l'affichage
+   * nominal : sur une ligne qui tient, il ne se produit jamais. Retrecir le
+   * remplissage ou l'interlettrage abimerait le controle a toutes les tailles
+   * pour un cas qui n'arrive qu'aux grandes.
+   */
+  flex-wrap: wrap;
   /* Ce remplissage n'est pas decoratif : il loge exactement le contour de
      focus d'une option, --esp-2xs d'ecart plus 2px d'epaisseur. Sans lui, le
      contour de l'option cochee deborderait sur la bordure du groupe. */
@@ -40,7 +56,26 @@
    * rien d'autre que sa bordure, et c'est toute la difference.
    */
   border: 1px solid var(--border-visible);
-  border-radius: var(--rayon-pilule);
+  /*
+   * RAYON CONCENTRIQUE A CELUI D'UNE OPTION, et non --rayon-pilule lui-meme.
+   *
+   * Sur une seule ligne les deux sont indiscernables, et c'est verifiable a la
+   * main : l'option est une pilule de --cible-min de haut, le groupe ajoute son
+   * remplissage de chaque cote, donc la moitie de la hauteur de l'option plus ce
+   * remplissage rend exactement le contour que --rayon-pilule produisait. Le
+   * groupe n'a pas change de forme.
+   *
+   * Ce qui change, c'est le cas ou il passe a la ligne. Un rayon de pilule pose
+   * sur une boite haute est rabattu par le navigateur proportionnellement aux
+   * deux dimensions et donne une amande : mesure a 200 % de zoom, les trois
+   * options empilees tenaient dans un ovale, et la piste sur laquelle le pave se
+   * deplace ne se lisait plus. Le rayon derive, lui, reste le meme quel que soit
+   * le nombre de rangs.
+   *
+   * Il n'introduit aucune valeur : les deux termes sont des tokens, et leur
+   * somme est la definition meme de la concentricite.
+   */
+  border-radius: calc(var(--cible-min) / 2 + var(--esp-xs));
 }
 
 .option {

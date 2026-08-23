@@ -197,6 +197,23 @@ export type Aleatoire = () => number;
 export const VERROU_MS = 400;
 
 /**
+ * Peremption du tour enregistre : architecture.md section 7.
+ *
+ * Au-dela, c'est une AUTRE SOIREE et non une reprise. Reprendre le lendemain
+ * midi une carte laissee a deux heures du matin rouvrirait une phase QUESTION
+ * devant des gens qui n'ont jamais entendu la question, et sur un niveau deja
+ * consomme puisqu'il l'est des `choisir` (architecture.md section 6).
+ *
+ * DEFINIE ICI ET NON DANS `storage/`, qui est pourtant seul a s'en servir : la
+ * regle de dependance interdit a `storage/` d'importer le domaine, donc une
+ * constante ecrite la-bas serait invisible d'ici et l'inverse est faux. Elle
+ * suit la meme regle que `VERROU_MS` et `NIVEAUX`, definie une fois et citee
+ * par son nom (tokens-et-composants.md, collection 4) ; c'est le cablage qui la
+ * passe en parametre a `lireTour`, comme il passe deja l'horloge au domaine.
+ */
+export const TOUR_PERIME_H = 12;
+
+/**
  * Les dix niveaux d'une carte, dans l'ordre. Sa longueur est le seuil
  * d'epuisement d'une carte (paquet.ts).
  *

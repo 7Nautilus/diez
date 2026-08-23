@@ -34,6 +34,22 @@ const DOSSIER_CARTES = join(RACINE, "content", "cartes");
 const SORTIE = join(RACINE, "src", "data", "cartes.gen.json");
 
 /**
+ * La seconde sortie, et elle ne part JAMAIS en production.
+ *
+ * Les deux cartes de fixture existent pour eprouver les bornes de mise en page,
+ * et docs/recette.md section 1 exige de les parcourir niveau par niveau. Elles
+ * sont exclues du corpus par leur paquet, ce qui est juste : elles n'ont rien a
+ * faire dans une soiree. Sans ce second fichier elles n'etaient atteignables
+ * par rien du tout, donc la moitie de la recette technique etait injouable.
+ *
+ * CE FICHIER N'EST IMPORTE QUE PAR LE BANC DE RECETTE (src/app/recette/), dont
+ * l'entree `recette.html` n'est pas une entree de build : ce qui n'est pas
+ * atteignable depuis index.html n'est pas construit. Le controle se fait par
+ * `npm run build` puis une recherche dans dist/, et non par la lecture.
+ */
+const SORTIE_FIXTURES = join(RACINE, "src", "data", "fixtures.gen.json");
+
+/**
  * Interdit de publier une application vide (architecture.md section 8, qui
  * pose ce seuil a cinq cartes valides). Cinq et non dix : le corpus est
  * differe, le seuil est celui de la preuve de concept.
@@ -113,6 +129,16 @@ export type LotLu = { readonly chemin: string; readonly brut: unknown };
 export type Rapport = {
   /** Les cartes retenues pour la production, dans l'ordre du corpus. */
   readonly cartes: readonly Carte[];
+  /**
+   * Les cartes du paquet de fixtures, dans l'ordre, pour le banc de recette
+   * seul (voir SORTIE_FIXTURES).
+   *
+   * Elles passent exactement les memes controles structurels que les autres :
+   * une fixture mal formee arrete la compilation entiere. C'est la seule
+   * garantie qui vaille ici, une carte de test qui ne se comporterait pas comme
+   * une carte reelle n'eprouvant plus rien.
+   */
+  readonly fixtures: readonly Carte[];
   /** Vide, et seulement vide, le corpus est sain et le fichier peut s'ecrire. */
   readonly fautes: readonly Faute[];
   readonly lues: number;
@@ -369,6 +395,7 @@ export function compilerCorpus(lots: readonly LotLu[]): Rapport {
 
   return {
     cartes,
+    fixtures: saines.filter((carte) => carte.paquet === PAQUET_FIXTURES),
     fautes,
     lues: saines.length,
     questions: cartes.reduce((total, carte) => total + carte.questions.length, 0),
@@ -392,12 +419,15 @@ function principal(): void {
 
   mkdirSync(dirname(SORTIE), { recursive: true });
   writeFileSync(SORTIE, `${JSON.stringify(rapport.cartes, null, 2)}\n`, "utf8");
+  writeFileSync(SORTIE_FIXTURES, `${JSON.stringify(rapport.fixtures, null, 2)}\n`, "utf8");
 
+  const nom = (chemin: string) => relative(RACINE, chemin).split(sep).join("/");
   process.stdout.write(
     `Compilation du corpus : ${rapport.cartes.length} cartes, ${rapport.questions} questions.\n` +
       `  lues : ${rapport.lues}, dont ecartees ${rapport.ecarteesFixtures} de fixture ` +
       `et ${rapport.ecarteesNonRelues} non relue(s).\n` +
-      `  ecrit : ${relative(RACINE, SORTIE).split(sep).join("/")}\n`,
+      `  ecrit : ${nom(SORTIE)}\n` +
+      `  ecrit : ${nom(SORTIE_FIXTURES)} (${rapport.fixtures.length} carte(s), banc de recette)\n`,
   );
 }
 

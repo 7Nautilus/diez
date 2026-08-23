@@ -122,11 +122,15 @@
   }
 }
 
-/* docs/design-system.md section 7 : sous `reduce`, tout passe a 0 ms. Le
-   panneau arrive alors d'un coup, ce qui reste coherent avec un rythme
-   revendique percussif. */
-@media (prefers-reduced-motion: reduce) {
-  .voile {
-    animation-duration: 0ms;
-  }
-}
+/*
+ * AUCUN BLOC `prefers-reduced-motion` ICI, et c'est un retrait, pas un oubli.
+ *
+ * Ce module en portait un, qui ramenait la duree ci-dessus a 0 ms. Il faisait
+ * mot pour mot ce que fait desormais le filet de base.css, qui couvre tout le
+ * systeme par construction plutot que module par module : la regle locale ne
+ * pouvait plus changer le resultat, et une regle qui ne decide rien se recopie,
+ * se generalise, puis finit par s'appliquer a autre chose.
+ *
+ * Le panneau arrive donc d'un coup sous `reduce`, ce qui reste coherent avec un
+ * rythme revendique percussif (docs/design-system.md section 7).
+ */

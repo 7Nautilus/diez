@@ -118,6 +118,97 @@ export function etatInitial(paquets: readonly PaquetId[]): EtatPartie {
 }
 
 /**
+ * Ce que le stockage rend au demarrage, avant toute confrontation au corpus.
+ *
+ * Les quatre champs arrivent de `storage/`, qui les a valides sur leur FORME et
+ * ne peut rien dire de plus : il n'importe rien, donc il ne connait pas le
+ * corpus (architecture.md section 3). C'est ici que la confrontation a lieu.
+ *
+ * `tour` a `null` couvre les trois causes que `lireTour` confond volontiers, et
+ * a raison de confondre : clef absente, contenu corrompu, autre soiree. Trois
+ * causes, une seule consequence, une partie neuve.
+ */
+export type EtatEnregistre = {
+  tour: EtatTour | null;
+  historique: Historique;
+  signalements: readonly Signalement[];
+  paquets: readonly PaquetId[];
+};
+
+/**
+ * Le tour relu designe-t-il encore quelque chose de jouable ?
+ *
+ * CETTE FONCTION EST CE QUI FAIT TOMBER LES TROIS LEVEES D'UN COUP. Les trois
+ * acces au corpus plus bas levent quand une carte est introuvable, et c'etait
+ * juste tant qu'un tour ne pouvait venir que d'une pioche : le tour ne
+ * referencait alors que des cartes tirees de ce meme corpus, donc l'absence
+ * etait un defaut de cablage. Un tour RELU casse cette propriete. Un lot retire
+ * du corpus entre deux soirees, une carte renommee, un `_fixtures` present dans
+ * le banc et absent de la production : la carte disparait pour une raison
+ * parfaitement normale, et le demarrage leverait.
+ *
+ * Le tri se fait donc ICI, une seule fois, au seul point ou un tour entre dans
+ * l'application sans venir d'une pioche. Les levees restent en place et
+ * redeviennent ce qu'elles pretendent etre, des gardes de cablage
+ * inatteignables en jeu (conventions-code.md section 7). Les affaiblir en
+ * repli silencieux aurait rendu muet le vrai defaut de programmation qu'elles
+ * attrapent, pour couvrir un cas qui n'est pas le leur.
+ *
+ * LE NIVEAU EST CONTROLE EN PLUS DE LA CARTE, et seulement dans les deux phases
+ * qui portent un enonce. C'est `reveler` qui va rechercher la question dans le
+ * corpus a partir de `enonce.niveau` : une carte reecrite avec d'autres niveaux
+ * garderait la carte et perdrait la question, donc la seule presence de la
+ * carte ne suffit pas. En THEME et en NIVEAU il n'y a rien de tel a verifier,
+ * le compilateur garantissant les dix niveaux de toute carte qu'il ecrit
+ * (architecture.md section 8).
+ */
+export function tourJouable(corpus: readonly Carte[], tour: EtatTour): boolean {
+  if (tour.phase === "REPOS") return true;
+  const carte = corpus.find((connue) => connue.id === tour.carte.id);
+  if (carte === undefined) return false;
+  if (tour.phase !== "QUESTION" && tour.phase !== "REPONSE") return true;
+  return carte.questions.some((question) => question.niveau === tour.enonce.niveau);
+}
+
+/**
+ * L'etat d'ouverture quand une soiree precedente a laisse quelque chose.
+ *
+ * LA REPRISE EN PHASE QUESTION EST COHERENTE AVEC L'HISTORIQUE, et c'est le
+ * raisonnement qui rend toute cette phase juste. Le niveau est consomme des
+ * `choisir(n)`, a l'entree en QUESTION, jamais a la fin du tour (architecture.md
+ * section 6, et l'invariant est rejoue par le test de ce fichier) : quand le
+ * tour est ecrit en phase QUESTION, la question a DEJA ete retiree du stock.
+ * Reprendre affiche donc une question que rien ne peut reproposer, ce qui est
+ * exactement l'etat qu'on avait quitte.
+ *
+ * Deplacer la consommation a la fin du tour casserait la reprise en silence, et
+ * quelqu'un voudra le faire un jour, parce que bruler une question que personne
+ * n'a peut-etre lue a l'air d'un gaspillage. Ce serait alors le cas inverse qui
+ * arriverait : l'application meurt entre `choisir` et `reveler`, le niveau n'est
+ * pas consomme, la reprise reaffiche la question, et le meme niveau ressort plus
+ * tard sur la meme carte. La table reentend une question deja posee, ce que le
+ * projet tient pour cassant la partie. Le cout de l'arbitrage retenu est d'une
+ * question sur dix dans le pire des cas, ce qui ne se voit pas.
+ *
+ * `epuise` N'EST PAS RELU et repart a faux, alors que les quatre autres champs
+ * sont repris. Ce n'est pas un oubli : `epuise` retient qu'un TIRAGE a echoue,
+ * pas que le vivier est vide (voir `EtatPartie`). Le relire ouvrirait
+ * l'application sur l'ecran d'impasse sans qu'aucune pioche ait eu lieu, et il
+ * se repose de lui-meme au premier `PIOCHER` si le vivier est effectivement
+ * vide. Un narrateur qui rouvre son telephone doit voir l'accueil.
+ */
+export function etatRepris(corpus: readonly Carte[], enregistre: EtatEnregistre): EtatPartie {
+  const { tour, historique, signalements, paquets } = enregistre;
+  return {
+    tour: tour !== null && tourJouable(corpus, tour) ? tour : initial(),
+    historique,
+    paquets,
+    signalements,
+    epuise: false,
+  };
+}
+
+/**
  * Les paquets presents dans le corpus, dans son ordre, sans doublon.
  *
  * Deduits et jamais ecrits : proposer un paquet vide donnerait une pilule qui
@@ -169,10 +260,12 @@ export function nombreDeCartesRestantes(corpus: readonly Carte[], etat: EtatPart
  * tirees de ce meme corpus, donc l'absence est un defaut de cablage et non un
  * etat de jeu (conventions-code.md section 7). Un rang de repli afficherait un
  * numero qui designe une autre carte, ce que la phase THEME refuse deja pour
- * la troncature. Meme reserve de phase 5 que les deux acces ci-dessous : une
- * carte retiree du corpus entre deux soirees deviendra un etat normal le jour
- * ou le tour sera relu depuis le stockage, et les trois levees devront tomber
- * ensemble.
+ * la troncature.
+ *
+ * LA LEVEE TIENT TOUJOURS APRES LA PHASE 5, et c'est `tourJouable` qui la rend
+ * a nouveau vraie : un tour relu du stockage passe par ce filtre avant
+ * d'atteindre l'etat, donc la seule facon d'arriver ici avec une carte inconnue
+ * reste un defaut de programmation.
  */
 export function rangDansLeCorpus(corpus: readonly Carte[], id: CarteId): number {
   const index = corpus.findIndex((carte) => carte.id === id);
@@ -206,9 +299,11 @@ export function signalementsEnJson(signalements: readonly Signalement[]): string
  * (conventions-code.md section 7) ; le rendre silencieux donnerait un ecran ou
  * le bouton ne repond plus, sans que rien n'en dise la cause.
  *
- * A REVOIR EN PHASE 5, quand le tour sera relu depuis le stockage : une carte
- * retiree du corpus entre deux soirees deviendra alors un etat de jeu normal,
- * et cette levee devra redevenir une reprise au repos.
+ * LA RESERVE DE PHASE 5 EST LEVEE, ET SANS TOUCHER A CES DEUX FONCTIONS. Le
+ * tour relu du stockage est le seul tour qui n'ait pas ete produit par une
+ * pioche, et `tourJouable` l'ecarte au demarrage quand il designe une carte
+ * disparue : la reprise redevient alors une ouverture au repos, ce qui est
+ * l'etat de jeu attendu, pendant que ces levees gardent le defaut de cablage.
  */
 function carteDuCorpus(corpus: readonly Carte[], id: CarteId): Carte {
   const trouvee = corpus.find((carte) => carte.id === id);

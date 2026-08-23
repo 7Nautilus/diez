@@ -7,7 +7,12 @@ import { type OptionSegment, Segment } from "../design/components/Segment";
 import { Statut } from "../design/components/Statut";
 import type { PaquetId } from "../domain/types";
 import styles from "./Accueil.module.css";
-import { CONFIRMATION_REINITIALISATION, type ModeAffichage, type PaquetActif } from "./types";
+import {
+  CONFIRMATION_REINITIALISATION,
+  type ModeAffichage,
+  type PaquetActif,
+  type RetourCopie,
+} from "./types";
 
 /*
  * Diez : l'ecran d'accueil, phase REPOS.
@@ -94,12 +99,29 @@ export type ProprietesAccueil = {
    * C'est le geste meme que le verrou existe pour empecher, et c'est le
    * symetrique exact du `signalee` de l'ecran REPONSE.
    *
-   * Il vaut `true` UNE FOIS LE PRESSE-PAPIER REELLEMENT ECRIT, jamais de
-   * facon optimiste : l'ecriture est asynchrone et peut echouer, et afficher
-   * un succes qui n'a pas eu lieu serait un mensonge que P3 interdit. C'est
-   * donc app/ qui le porte, seul a tenir la promesse.
+   * Il ne passe a `reussie` QU'UNE FOIS LE PRESSE-PAPIER REELLEMENT ECRIT,
+   * jamais de facon optimiste : l'ecriture est asynchrone et peut echouer, et
+   * afficher un succes qui n'a pas eu lieu serait un mensonge que P3 interdit.
+   * C'est donc app/ qui le porte, seul a tenir la promesse.
+   *
+   * Il porte TROIS etats depuis la phase 5, et la raison du troisieme est
+   * ecrite avec le type (./types.ts) : un booleen rendait l'echec par le meme
+   * ecran vide que l'inaction, ce qui laissait le trou a moitie ouvert.
    */
-  copie: boolean;
+  retourCopie: RetourCopie;
+  /*
+   * QUATRIEME ET CINQUIEME CHAMPS, POSES EN PHASE 5. La strategie de mise a
+   * jour est `prompt` et jamais `autoUpdate` : un rechargement en pleine
+   * question ferait disparaitre la carte au milieu d'une phrase, donc la
+   * proposition n'est presentee qu'en phase REPOS (architecture.md section 10).
+   *
+   * L'ecran ne connait pas cette regle et n'a pas a la connaitre : `app/` ne
+   * pose `miseAJourPrete` a vrai qu'au repos, et c'est le seul endroit qui sait
+   * dans quelle phase la soiree se trouve. Un ecran est une fonction de ses
+   * proprietes.
+   */
+  miseAJourPrete: boolean;
+  onMettreAJour: () => void;
   onPiocher: () => void;
   /*
    * PLUS AUCUN CONTROLE DE L'ECRAN NE LE DECLENCHE, et il reste au contrat.
@@ -120,7 +142,9 @@ export function Accueil(proprietes: ProprietesAccueil) {
     signalements,
     mode,
     onChoisirMode,
-    copie,
+    retourCopie,
+    miseAJourPrete,
+    onMettreAJour,
     onPiocher,
     onReinitialiser,
     onCopierSignalements,
@@ -211,6 +235,24 @@ export function Accueil(proprietes: ProprietesAccueil) {
        * il deplacerait le bouton d'avancement d'une soiree a l'autre.
        */}
       <div className={styles.pile}>
+        {/*
+         * LA PROPOSITION DE MISE A JOUR, EN TETE DE PILE ET NULLE PART
+         * AILLEURS. Elle occupe le rang le plus haut des elements
+         * intermittents, donc le plus loin de PIOCHER : son apparition ne
+         * deplace ni l'action d'avancement ni le compteur, qui gardent les deux
+         * emplacements que la regle leur reserve (design-system.md, La regle
+         * des deux emplacements).
+         *
+         * En ghost, parce qu'elle ne fait pas avancer la soiree. Le libelle dit
+         * l'effet et non le fait : une version en attente n'interesse personne,
+         * ce qui interesse est qu'il y ait quelque chose a faire.
+         */}
+        {miseAJourPrete && (
+          <Bouton variante="ghost" onClick={onMettreAJour}>
+            Mettre à jour l'application
+          </Bouton>
+        )}
+
         {/* Visible uniquement s'il existe des signalements (correctif
             d'audit, architecture.md section 7) : sans signalement, l'action
             n'a rien a copier et n'est qu'une ligne de plus a lire. */}
@@ -229,7 +271,30 @@ export function Accueil(proprietes: ProprietesAccueil) {
             <Bouton variante="ghost" onClick={onCopierSignalements}>
               {libelleCopie(signalements)}
             </Bouton>
-            {copie ? <Statut>Copié</Statut> : null}
+            {/*
+             * UN SEUL MOT COURT, ET LA LONGUEUR EST LE CRITERE, PAS LE TON.
+             * Le retour partage la rangee avec un bouton qui peut lire "Copier
+             * les 12 signalements", et la rangee ne se replie pas : c'est le
+             * BOUTON qui se comprime, et son libelle qui passe sur deux lignes.
+             *
+             * Mesure au navigateur, 375 px, douze signalements, polices reelles.
+             * Rien ne deborde dans aucun des trois cas, ce n'est donc pas le
+             * debordement qui tranche :
+             *   "Echec"                       statut  66 px, bouton 242, rangee 48
+             *   "Copie impossible"            statut 121 px, bouton 198, rangee 50
+             *   "Presse-papier indisponible"  statut 150 px, bouton 169, rangee 50
+             * La rangee GRANDIT de 2 px des la formule explicite. Or la pile est
+             * ancree en bord bas : une rangee qui grandit remonte PIOCHER, a
+             * l'instant precis ou le narrateur vient de taper a cote. C'est ce
+             * que `.rangCopie` existe pour empecher (Accueil.module.css), et
+             * deux pixels suffisent a le defaire.
+             *
+             * Le rouge est sur les CROCHETS et jamais sur le texte, ce dont le
+             * Statut se charge : un echec est une erreur, donc l'un des deux
+             * seuls emplois du signal admis par le systeme.
+             */}
+            {retourCopie === "reussie" && <Statut>Copié</Statut>}
+            {retourCopie === "echouee" && <Statut ton="signal">Échec</Statut>}
           </div>
         )}
 

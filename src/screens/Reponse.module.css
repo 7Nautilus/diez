@@ -30,6 +30,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--esp-md);
+  /*
+   * La metadonnee et TERMINER tiennent cote a cote a taille nominale et pas au
+   * dela : mesure au navigateur, 171 px de contenu pour 140 px disponibles a
+   * 200 % de zoom sur un ecran de 375 px, et le bouton sortait du bord droit de
+   * 6,8 px. Un libelle de Bouton ne se coupe pas, la rangee passe donc a la
+   * ligne. Elle ne le fait jamais a taille nominale, ou les deux tiennent.
+   */
+  flex-wrap: wrap;
 }
 
 .terminer {

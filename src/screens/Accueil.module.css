@@ -45,9 +45,47 @@
  * LA RUPTURE. Doto, --txt-display-xl, et nulle part ailleurs dans l'app.
  */
 .wordmark {
+  /*
+   * L'AVANCE DE "DIEZ" EN DOTO 700, interlettrage compris : 2,48 fois la
+   * taille de police. Mesuree au navigateur a 24, 48, 72, 96 et 144 px, stable
+   * a la quatrieme decimale, ce qui est attendu d'une somme d'avances de
+   * glyphes. Elle depend du MOT autant que de la POLICE : changer l'un ou
+   * l'autre oblige a la remesurer, et c'est pour cela qu'elle porte un nom.
+   */
+  --wordmark-avance: 2.48;
+
   flex: none;
   font-family: var(--police-display);
-  font-size: var(--txt-display-xl);
+  /*
+   * LE PLAFOND N'EST PAS UNE COQUETTERIE RESPONSIVE, c'est ce qui garde la page
+   * dans sa largeur. Le mot est insecable, et le casser donnerait "Die-z" : il
+   * ne reste que la taille pour le faire tenir. Sans plafond il sort de la
+   * colonne dans les deux conditions que docs/recette.md section 1 exige, et
+   * les deux ont ete mesurees, polices reelles :
+   *   zoom navigateur a 200 % sur un ecran de 375 px, 179 px de mot pour 140 px
+   *   disponibles ; taille de texte systeme doublee, 357 px pour 327 px.
+   * Dans les deux cas la page se mettait a defiler en largeur.
+   *
+   * `min()` et non un palier sous media query : le plafond doit repondre aux
+   * DEUX conditions a la fois, or l'une retrecit la fenetre et l'autre agrandit
+   * le rem. Une seule expression continue les couvre, y compris cumulees.
+   *
+   * Les insets lateraux valent zero en portrait, ou l'orientation est
+   * verrouillee (architecture.md section 10) ; ils sont ecrits quand meme parce
+   * que la soustraction doit rendre la largeur reellement disponible, qui est
+   * celle du remplissage de `.ecran` juste au-dessus.
+   *
+   * Limite connue : `dvw` compte la barre de defilement classique d'un
+   * navigateur de bureau, que l'appareil vise n'a pas. Sur un bureau qui en
+   * affiche une, le plafond est optimiste de sa largeur.
+   */
+  font-size: min(
+    var(--txt-display-xl),
+    calc(
+      (100dvw - 2 * var(--esp-lg) - env(safe-area-inset-left) - env(safe-area-inset-right)) /
+      var(--wordmark-avance)
+    )
+  );
   /* Doto n'a qu'une seule face embarquee (design-system.md section 1) : toute
      autre valeur ferait synthetiser la graisse par le navigateur. Le chiffre
      est celui de --graisse-forte, et il n'est plus ecrit ici : le budget de

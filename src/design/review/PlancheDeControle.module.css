@@ -93,7 +93,15 @@
   --panneau-min: 320px;
 
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--panneau-min), 1fr));
+  /*
+   * `min(--panneau-min, 100%)` ET NON --panneau-min seul. Un `minmax` dont le
+   * plancher est une longueur fixe ne descend jamais en dessous, meme quand la
+   * grille est plus etroite que lui : mesure a 200 % de zoom, les panneaux
+   * tenaient 320 px de large dans une fenetre de 188 px et poussaient la
+   * planche entiere a 344 px. Le `min()` rend le plancher inoperant des que la
+   * place manque, ce qui est exactement sa raison d'etre.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--panneau-min), 100%), 1fr));
   gap: var(--esp-lg);
   margin-block-start: var(--esp-lg);
 }

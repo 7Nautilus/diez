@@ -83,6 +83,41 @@ describe("Le compilateur de contenu", () => {
     expect(rapport.ecarteesFixtures).toBe(1);
   });
 
+  /*
+   * L'AUTRE MOITIE DU MEME PARTAGE, et sans elle le test ci-dessus serait
+   * satisfait par un compilateur qui jetterait les fixtures a la poubelle. Le
+   * banc de recette monte ces cartes-la, et docs/recette.md section 1 demande de
+   * les parcourir niveau par niveau : ecartees du corpus publie, elles doivent
+   * rester rendues a part, et rendues COMPLETES.
+   */
+  it("les cartes de fixture ressortent a part, hors du corpus publie", () => {
+    const fixture = carteSaine(6, { paquet: "_fixtures" });
+    const rapport = compilerCorpus(lots([...corpusAuSeuil(), fixture]));
+
+    expect(rapport.fixtures.map((carte) => carte.id)).toEqual(["sonde-6"]);
+    expect(rapport.fixtures[0]?.questions).toHaveLength(NIVEAUX.length);
+    expect(rapport.cartes.map((carte) => carte.id)).not.toContain("sonde-6");
+  });
+
+  /*
+   * Une fixture mal formee doit arreter la compilation ENTIERE, comme n'importe
+   * quelle autre carte. Une carte de test qui ne se comporterait pas comme une
+   * carte reelle n'eprouverait plus rien, et le banc afficherait des bornes de
+   * mise en page qui ne sont pas celles du jeu.
+   */
+  it("une fixture mal formee arrete la compilation comme les autres", () => {
+    const amputee = carteSaine(6, {
+      paquet: "_fixtures",
+      questions: questionsCompletes().slice(0, -1),
+    });
+    const rapport = compilerCorpus(lots([...corpusAuSeuil(), amputee]));
+
+    expect(rapport.fautes.map((faute) => faute.quoi).join(" ")).toContain(
+      `9 question(s) au lieu de ${NIVEAUX.length}`,
+    );
+    expect(rapport.fixtures).toEqual([]);
+  });
+
   it("un identifiant absent arrete la compilation", () => {
     const anonyme = carteSaine(6);
     delete anonyme.id;
@@ -179,5 +214,16 @@ describe("Le compilateur de contenu", () => {
     expect(rapport.ecarteesFixtures).toBeGreaterThan(0);
     expect(rapport.cartes.every((carte) => carte.valide)).toBe(true);
     expect(rapport.cartes.every((carte) => carte.paquet !== "_fixtures")).toBe(true);
+
+    /*
+     * Les deux cartes que docs/recette.md section 1 nomme, et que le banc de
+     * recette monte. Elles sont citees par leur identifiant : la recette designe
+     * chacune par ce qu'elle eprouve, donc l'une qui disparaitrait du depot
+     * rendrait une moitie de la liste inexecutable sans que rien ne le dise.
+     */
+    expect(rapport.fixtures.map((carte) => carte.id)).toEqual([
+      "_fixture-limites-001",
+      "_fixture-minimal-001",
+    ]);
   });
 });

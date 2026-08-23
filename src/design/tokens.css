@@ -173,11 +173,33 @@
      valeur choisie a part (tokens-et-composants.md, collection 3). */
   --niveau-bloc-ecart: var(--esp-sm);
 
-  /* Selecteur de niveau, forme molette (design-system.md section 4, La
-     molette). La fenetre vaut cinq fois la hauteur d'un cran, parce que cinq
-     crans restent visibles a la fois. */
-  --niveau-cran-h: 56px;
-  --niveau-fenetre-h: 280px;
+  /*
+   * Selecteur de niveau, forme molette (design-system.md section 4, La
+   * molette).
+   *
+   * LES 56 PX SONT UN PLANCHER, PLUS UNE HAUTEUR. Ils l'etaient de fait tant
+   * que le chiffre restait plus petit qu'eux, et cette hypothese tombe des que
+   * le telephone est regle en grande taille de texte : mesure au navigateur, a
+   * 32 px de racine le chiffre passe a 72 px de ligne dans une boite de 56, et
+   * deux chiffres voisins se chevauchent de 24 px. C'est le premier reglage que
+   * touche quelqu'un qui voit mal, et il casse la molette, c'est-a-dire le seul
+   * controle a visee precise de l'application (docs/recette.md section 1).
+   *
+   * Le cran vaut donc le PLUS GRAND des deux contraintes qui pesent sur lui :
+   * la cible tactile, et la ligne du chiffre qu'il porte. Les deux termes de la
+   * seconde sont cites par leur nom, le cran etant compose en --txt-display-md
+   * sur --interligne-serre (SelecteurNiveau.module.css). Deux crans espaces de
+   * la hauteur de leur ligne se touchent sans jamais se recouvrir, ce qui est
+   * exactement la condition cherchee ; les filets du cran n'entrent pas dans le
+   * calcul, ils sont transparents et se chevauchent sans consequence.
+   */
+  --niveau-cran-h: max(56px, calc(var(--txt-display-md) * var(--interligne-serre)));
+  /* La fenetre vaut cinq fois la hauteur d'un cran, parce que cinq crans
+     restent visibles a la fois. Ecrite comme un produit et non comme les 280 px
+     qu'elle valait : deux nombres qui doivent s'accorder finissent toujours par
+     se desaccorder, et celui du cran bouge desormais tout seul. */
+  --niveau-crans-visibles: 5;
+  --niveau-fenetre-h: calc(var(--niveau-crans-visibles) * var(--niveau-cran-h));
 
   /* La rampe de difficulte s'encode en opacite, jamais en couleur : un
      degrade du vert au rouge serait l'anti-pattern numero un du projet, et

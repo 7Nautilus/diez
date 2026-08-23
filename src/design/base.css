@@ -41,3 +41,53 @@ body {
  * wordmark, avec son propre module et le meme interlettrage positif, que Doto
  * impose parce qu'il est matriciel.
  */
+
+/*
+ * MOUVEMENT REDUIT : LE FILET EST POSE ICI, UNE FOIS, POUR TOUT LE SYSTEME.
+ *
+ * docs/design-system.md section 7 l'ecrit sans reserve : sous `reduce`, TOUTES
+ * les transitions passent a 0 ms. Une liste de regles locales tient cette
+ * promesse tant que la liste est a jour, et c'est justement ce qu'aucune
+ * machine ne verifie : l'animation ecrite demain dans un module y echappe en
+ * silence. Le filet la couvre par CONSTRUCTION, ce qui est la difference entre
+ * une regle qu'on maintient et une regle qui tient toute seule.
+ *
+ * Il remplace les deux blocs locaux que le systeme portait, dans la Feuille et
+ * dans la zone de phase. Ils faisaient la meme chose a deux endroits, et une
+ * regle recopiee est une regle qui divergera.
+ *
+ * `0ms` et non les `0.01ms` de l'idiome courant. Ce dernier existe pour que
+ * l'evenement de fin d'animation continue de se declencher ; aucun code du
+ * projet ne l'ecoute, verifie par recherche sur `src/`. Zero est de surcroit la
+ * valeur que le document ecrit.
+ *
+ * `animation-iteration-count` : une animation infinie a duree nulle boucle
+ * indefiniment sur rien du tout. Le projet n'en a aucune aujourd'hui, et c'est
+ * exactement le genre de chose que ce filet existe pour tenir demain.
+ *
+ * `scroll-behavior` : la molette du selecteur de niveau est un vrai conteneur
+ * qui defile. Aucune regle ne demande `smooth` aujourd'hui, verifie au
+ * navigateur sur les cinq ecrans ; le filet garde le defilement instantane le
+ * jour ou quelqu'un l'ecrira. Il ne peut rien contre un `smooth` demande en
+ * JavaScript au point d'appel, qui reste a la charge de qui l'ecrit.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /*
+     * `!important` est ce qui rend le filet independant de l'ordre d'injection
+     * des feuilles de module, que Vite decide et qui suit le graphe d'imports.
+     * Sans lui, le selecteur universel (specificite nulle) perd contre la
+     * moindre classe de module, c'est-a-dire contre tout ce qu'il doit couvrir.
+     */
+    /* biome-ignore-start lint/complexity/noImportantStyles: sans !important le filet perd contre toute regle de module, donc contre tout ce qu'il doit couvrir */
+    animation-duration: 0ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    /* biome-ignore-end lint/complexity/noImportantStyles: fin du filet */
+  }
+}

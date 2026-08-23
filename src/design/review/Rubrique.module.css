@@ -27,6 +27,11 @@
      emprunte donc la mesure de lecture du prompteur, seule mesure que le
      systeme nomme, plutot que d'en inventer une deuxieme. */
   max-inline-size: var(--prompteur-mesure);
+  /* Les notes de la planche citent des noms de variables, qui sont de longues
+     chaines sans espace : mesure a 200 % de zoom, une note rendait 103 px dans
+     une colonne de 90 px. Un nom de variable coupe reste lisible ; une planche
+     qui defile en largeur ne se lit plus du tout. */
+  overflow-wrap: break-word;
 }
 
 .corps {

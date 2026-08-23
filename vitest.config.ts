@@ -25,7 +25,19 @@ export default defineConfig({
     // rendant d'Historique (architecture.md section 6). Il ne se prouve qu'en
     // rejouant une sequence complete au niveau de l'appelant. La restriction
     // tient toujours : `avancer` est pur, aucun composant n'est monte.
-    include: ["src/domain/**/*.test.ts", "src/app/**/*.test.ts", "tools/**/*.test.ts"],
+    //
+    // `src/storage/` a ete ajoute en phase 5. C'est de la logique pure, sans
+    // DOM : la validation des quatre clefs ne tient qu'a des predicats de
+    // forme, et le stockage du navigateur y est remplace par une fixture en
+    // memoire. Une validation qu'on n'a pas vue refuser ne protege rien, et
+    // c'est exactement ce que la section 9 de conventions-code.md veut voir
+    // teste.
+    include: [
+      "src/domain/**/*.test.ts",
+      "src/app/**/*.test.ts",
+      "src/storage/**/*.test.ts",
+      "tools/**/*.test.ts",
+    ],
     // `describe`, `it` et `expect` sans import, et c'est la seule forme
     // ecrivable ici : la regle de dependance interdit a domain/ tout import
     // qui sort de domain/, `vitest` compris, et le lint l'applique jusque dans

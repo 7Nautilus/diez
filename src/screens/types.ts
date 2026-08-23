@@ -45,6 +45,27 @@ export const MODES_AFFICHAGE = ["auto", "sombre", "clair"] as const;
 export type ModeAffichage = (typeof MODES_AFFICHAGE)[number];
 
 /**
+ * Ce que l'accueil sait dire d'une tentative de copie des signalements.
+ *
+ * TROIS ETATS ET NON DEUX, ET C'EST LA TOUTE LA CORRECTION. Un booleen ne
+ * distinguait pas "pas encore copie" de "copie impossible" : l'echec etait donc
+ * rendu par le meme ecran vide que l'inaction, et le narrateur retapait. C'est
+ * le geste meme que le verrou d'entree existe pour empecher, obtenu ici par
+ * l'absence de retour plutot que par un double tap.
+ *
+ * L'echec n'est pas theorique : `navigator.clipboard` est absent hors contexte
+ * securise, et l'ecriture est asynchrone, donc elle peut etre refusee par la
+ * politique du navigateur. Rien de tout cela n'est reparable par le narrateur,
+ * ce qui est precisement pourquoi il faut le lui DIRE plutot que le lui laisser
+ * deviner en reappuyant.
+ *
+ * Aucun etat "en cours" : l'ecriture du presse-papier est instantanee a
+ * l'echelle d'un ecran, et un troisieme affichage qui passerait trop vite pour
+ * etre lu ne serait qu'un scintillement.
+ */
+export type RetourCopie = "aucun" | "reussie" | "echouee";
+
+/**
  * Le nom affichable d'un paquet, en table EXHAUSTIVE.
  *
  * `Record<PaquetId, string>` refuse de compiler des qu'un paquet est ajoute a

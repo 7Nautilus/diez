@@ -10,6 +10,24 @@ Deux recettes distinctes. La première dit si l'app est correcte. La seconde dit
 
 À passer sur la planche de contrôle et sur les deux cartes de fixture.
 
+### Où passer cette liste
+
+Trois surfaces, servies par `npm run dev`, et la distinction n'est pas administrative : deux d'entre elles n'existent qu'en développement, et c'est ce qui rend la moitié de cette liste exécutable.
+
+| Surface | Ce qu'on y passe |
+|---|---|
+| `/diez/` | l'application publiée, sur le corpus réel. Tout ce qui touche au déploiement, à la PWA et au chemin de base |
+| `/diez/planche.html` | la planche de contrôle : l'inventaire du socle, les échelles, les composants |
+| `/diez/recette.html` | le banc de recette : l'application réelle montée sur les cartes de fixture, plus les gestes de stockage |
+
+Le banc se choisit un corpus dans l'URL, `?corpus=pilote` (défaut), `limites`, `minimal` ou `tout`. **`limites` et `minimal` ne montent qu'une seule carte**, ce qui n'est pas un confort : la pioche est aléatoire et une carte revient au vivier tant qu'il lui reste des niveaux, donc atteindre les dix niveaux d'une carte précise dans un corpus de douze demanderait de la retirer dix fois de suite. Sur une carte unique, les dix tours suivants la parcourent, et le onzième tombe sur l'épuisement.
+
+Le bouton `BANC`, en haut au centre, ouvre le panneau : charger l'historique partiel, vider le vivier, décocher tous les paquets, poser un signalement, effacer le tour, tout effacer, et **lire le contenu réel des quatre clés**. Chaque geste écrit puis recharge, l'état de la soirée étant amorcé au démarrage.
+
+Le déclencheur flotte au-dessus de l'application : **`Masquer le banc` avant toute mesure de mise en page**, il revient au rechargement.
+
+Sur le téléphone, `npm run dev -- --host` : le banc ne part jamais sur Pages, il n'est pas une entrée de build.
+
 ### Modes et typographie
 
 - [ ] Les cinq écrans rendus dans les deux modes, côte à côte, sans qu'aucun ne soit visiblement moins soigné.

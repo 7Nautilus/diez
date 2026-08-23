@@ -14,6 +14,14 @@
 
 .inventaire {
   display: grid;
+  /*
+   * `minmax(0, 1fr)` et non la colonne implicite, qui vaut `auto` et prend
+   * pour minimum le contenu le plus large qu'elle porte. Mesure a taille de
+   * texte doublee : les rubriques rendaient 437 px dans un panneau de 277 px et
+   * debordaient la planche. C'est la meme correction, pour la meme raison, que
+   * celle de l'ecran THEME.
+   */
+  grid-template-columns: minmax(0, 1fr);
   /* Un vide franc entre rubriques : c'est lui qui dit "nouveau groupe", et il
      evite d'avoir a poser un filet de plus (docs/design-system.md section 8). */
   gap: var(--esp-xl);
@@ -32,8 +40,13 @@
    * la piste, donc les deux boutons refusaient de retrecir sous leur libelle
    * et poussaient la page de 13 px hors de la fenetre. Le libelle passe a la
    * ligne, ce que le Bouton prevoit deja en centrant son texte.
+   *
+   * `minmax(0, auto)` sur la premiere piste et non `auto` seul, pour la meme
+   * raison a l'autre bout de l'echelle : a taille de texte doublee, le nom de
+   * la variante ne descendait pas sous ses 137 px de min-content et la matrice
+   * poussait la rubrique hors du panneau.
    */
-  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--esp-sm) var(--esp-md);
   align-items: center;
 }

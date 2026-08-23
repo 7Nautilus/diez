@@ -1,5 +1,8 @@
+import { registerSW } from "virtual:pwa-register";
 import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import CORPUS from "../data/cartes.gen.json";
+import type { Carte, PaquetId } from "../domain/types";
+import { TOUR_PERIME_H } from "../domain/types";
 import { Accueil } from "../screens/Accueil";
 import { Niveau } from "../screens/Niveau";
 import { Question } from "../screens/Question";
@@ -10,17 +13,22 @@ import {
   MODES_AFFICHAGE,
   type ModeAffichage,
   type PaquetActif,
+  type RetourCopie,
 } from "../screens/types";
-import { ecrireMode, lireMode } from "../storage/reglages";
+import { ecrireHistorique, lireHistorique } from "../storage/historique";
+import { ecrireMode, ecrirePaquetsActifs, lireMode, lirePaquetsActifs } from "../storage/reglages";
+import { ecrireSignalements, lireSignalements } from "../storage/signalements";
+import { ecrireTour, lireTour } from "../storage/tour";
 import styles from "./App.module.css";
 import { Epuisement } from "./Epuisement";
+import { type InscrireLeServiceWorker, useEcranAllume, useMiseAJour } from "./execution";
 import { useGesteDeRetour } from "./navigation";
 import {
   avancer,
   type Commande,
   type EtatPartie,
   estSignalee,
-  etatInitial,
+  etatRepris,
   type Geste,
   nombreDeCartesRestantes,
   paquetsDuCorpus,
@@ -33,58 +41,118 @@ import {
  *
  * TOUT CE QU'UN ECRAN N'A PAS LE DROIT DE FAIRE VIT ICI, et c'est la raison
  * d'etre de ce fichier : le corpus, l'horloge, l'aleatoire, le stockage, le
- * presse-papier, l'attribut de mode sur la racine du document et l'historique
- * du navigateur. Un ecran est une fonction de ses proprietes ; ce qu'il lui
- * faut descend d'ici (architecture.md section 3).
+ * presse-papier, l'attribut de mode sur la racine du document, l'historique du
+ * navigateur, le verrou de veille et le service worker. Un ecran est une
+ * fonction de ses proprietes ; ce qu'il lui faut descend d'ici
+ * (architecture.md section 3).
  *
  * P3 SE LIT DANS LE RENDU CI-DESSOUS. Chaque ecran recoit exactement ce que sa
  * phase porte, parce qu'il ne recoit rien d'autre que des champs de `EtatTour`.
  * Aucun ecran ne voit le corpus, aucun ne voit l'historique, aucun ne recoit de
  * `Carte` entiere : le typage refuse les trois (domain/types.ts).
  *
- * CE QUI N'EST PAS ENCORE LA, ET QUI EST DE LA PHASE 5. L'historique, les
- * signalements et le tour en cours vivent EN MEMOIRE : un rechargement de page
- * perd l'anti-repetition, donc des questions deja posees peuvent revenir, et un
- * tour en cours est perdu. Le maintien de l'ecran allume, le verrouillage en
- * portrait, la proposition de mise a jour du service worker et la reprise apres
- * interruption ne sont pas cables non plus (architecture.md sections 7 et 10).
- * Seul le mode d'affichage est persiste, parce qu'un selecteur de preference
- * qui ne survit pas au rechargement n'est pas une preference.
+ * P3 TIENT AUSSI DANS LE STOCKAGE DEPUIS LA PHASE 5, et c'est le point qu'il
+ * fallait mesurer plutot que supposer. Ce qui est ecrit sous `diez:v1:tour` est
+ * l'`EtatTour` lui-meme : en phase QUESTION il ne porte pas de reponse, donc la
+ * clef n'en porte pas non plus. Une fuite la serait pire qu'une fuite en
+ * memoire, puisqu'elle survivrait a la fermeture de l'application ; le banc de
+ * recette affiche le contenu reel des quatre clefs pour que le controle se
+ * fasse en le lisant, et non en relisant ce commentaire.
  */
 
 /*
- * Le corpus et la liste des paquets sont fixes pour toute la duree de
- * l'execution : les calculer au niveau du module plutot que dans le composant
- * evite de refaire a chaque rendu un travail dont le resultat ne peut pas
- * changer.
+ * LE CORPUS EST UN PARAMETRE ET NON PLUS UN IMPORT FIGE, avec le corpus de
+ * production pour defaut. C'est ce qui permet au banc de recette de monter la
+ * meme application sur les deux cartes de fixture, que le compilateur ecarte de
+ * la production par leur paquet (architecture.md section 8) : sans cela,
+ * docs/recette.md section 1 exigeait un parcours niveau par niveau sur des
+ * cartes qu'aucun chemin ne pouvait atteindre.
+ *
+ * Le defaut garde `<App />` ecrivable tel quel dans main.tsx, qui est le seul
+ * point d'entree construit.
  */
-const PAQUETS_DU_CORPUS = paquetsDuCorpus(CORPUS);
+export type ProprietesApp = {
+  corpus?: readonly Carte[];
+};
 
-/*
- * Le reducteur est declare ICI, au niveau du module, et non en fonction
- * flechee au point d'appel : `useReducer` doit recevoir la meme fonction d'un
- * rendu a l'autre. Il ne fait que fournir le corpus a `avancer`, qui porte
- * toute la logique et reste pur, donc rejouable en test sans React.
+/**
+ * Le pont vers le service worker, fabrique ICI et une seule fois.
+ *
+ * `registerSW` vient de `virtual:pwa-register`, un module qui n'existe que sous
+ * Vite : execution.ts ne peut pas l'importer sans devenir illisible par Vitest,
+ * d'ou l'injection (execution.ts, `InscrireLeServiceWorker`).
+ *
+ * `true` demande le RECHARGEMENT DE LA PAGE, ce qui est tout l'objet du geste :
+ * une nouvelle version qui attend ne devient la version courante qu'apres. Le
+ * moment reste decide ailleurs, et il n'y en a qu'un, la phase REPOS.
+ *
+ * Au niveau du module, parce que l'inscription doit etre idempotente d'un rendu
+ * a l'autre : une identite qui change relancerait l'effet qui inscrit.
  */
-function reduirePartie(etat: EtatPartie, commande: Commande): EtatPartie {
-  return avancer(CORPUS, etat, commande);
-}
+const INSCRIRE: InscrireLeServiceWorker = (rappels) => {
+  const appliquer = registerSW(rappels);
+  return () => appliquer(true);
+};
 
 function estMode(valeur: string): valeur is ModeAffichage {
   return MODES_AFFICHAGE.some((connu) => connu === valeur);
 }
 
-export function App() {
-  const [partie, commander] = useReducer(reduirePartie, PAQUETS_DU_CORPUS, etatInitial);
+/**
+ * L'etat d'ouverture, relu du stockage et confronte au corpus.
+ *
+ * LES QUATRE CLEFS SONT LUES ICI ET NULLE PART AILLEURS, au moment ou le
+ * reducteur recoit son etat initial. C'est le pendant exact des quatre effets
+ * d'ecriture plus bas, et le couple lecture-ecriture n'est pas qu'une symetrie
+ * de confort : c'est lui qui maintient l'accord entre les formes redeclarees
+ * par `storage/` et les types du domaine. `storage/` n'important rien, les deux
+ * declarations ne sont liees par rien d'autre que ce point de cablage, et une
+ * clef qui ne serait plus que LUE laisserait la moitie du controle tomber sans
+ * que rien ne le signale (storage/validation.ts, en-tete).
+ *
+ * `TOUR_PERIME_H` se passe EN HEURES : la conversion en millisecondes vit dans
+ * `storage/`, et aucun nombre nu n'apparait ici (conventions-code.md section 6).
+ */
+function amorcer(corpus: readonly Carte[]): EtatPartie {
+  const paquets = paquetsDuCorpus(corpus);
+  /*
+   * Le vocabulaire des paquets DESCEND vers `storage/`, il n'y est pas
+   * redeclare : la liste se deduit du corpus, donc elle change avec lui, et
+   * `storage/` n'a pas le droit de l'importer. Un identifiant inconnu est
+   * ecarte plutot que de faire retomber la clef entiere (storage/reglages.ts).
+   */
+  const connu = (valeur: string): valeur is PaquetId =>
+    paquets.some((identifiant) => identifiant === valeur);
+
+  return etatRepris(corpus, {
+    tour: lireTour(connu, Date.now(), TOUR_PERIME_H),
+    historique: lireHistorique(),
+    signalements: lireSignalements(),
+    paquets: lirePaquetsActifs(connu, paquets),
+  });
+}
+
+export function App({ corpus = CORPUS }: ProprietesApp) {
+  /*
+   * Le reducteur ne fait que fournir le corpus a `avancer`, qui porte toute la
+   * logique et reste pur, donc rejouable en test sans React. Son identite ne
+   * change que si le corpus change, ce qui n'arrive jamais au cours d'une
+   * execution : les deux points d'entree le tiennent d'une constante de module.
+   */
+  const reduirePartie = useCallback(
+    (etat: EtatPartie, commande: Commande) => avancer(corpus, etat, commande),
+    [corpus],
+  );
+  const [partie, commander] = useReducer(reduirePartie, corpus, amorcer);
   const [mode, setMode] = useState<ModeAffichage>(() => lireMode(estMode, "auto"));
 
   /*
    * Le retour de copie ne vit pas dans `EtatPartie` : l'ecriture du
    * presse-papier est asynchrone et peut echouer, donc elle n'a pas sa place
-   * dans un reducteur pur. Il est remis a faux au premier geste suivant, ce
+   * dans un reducteur pur. Il est remis a "aucun" au premier geste suivant, ce
    * qui evite un `[ COPIE ]` qui survivrait a ce qu'il confirmait.
    */
-  const [copie, setCopie] = useState(false);
+  const [retourCopie, setRetourCopie] = useState<RetourCopie>("aucun");
 
   /*
    * LE SEUL POINT OU L'HORLOGE ET L'ALEATOIRE SONT LUS. Les deux sont lus au
@@ -93,9 +161,67 @@ export function App() {
    * debusquer justement ce genre de lecture.
    */
   const jouer = useCallback((geste: Geste) => {
-    setCopie(false);
+    setRetourCopie("aucun");
     commander({ geste, maintenant: Date.now(), tirage: Math.random() });
   }, []);
+
+  const tour = partie.tour;
+
+  /*
+   * LES QUATRE ECRITURES, UNE PAR CLEF, ET CHACUNE SUR SA SEULE DEPENDANCE.
+   *
+   * Ecrire depuis un effet plutot que depuis `jouer` n'est pas un detail de
+   * style : `diez:v1:tour` doit etre ecrit A CHAQUE TRANSITION (architecture.md
+   * section 7), et un appel pose dans le gestionnaire de geste serait a
+   * maintenir a chaque nouveau chemin qui touche l'etat. Ici la seule facon de
+   * ne pas persister une transition serait de ne pas la produire.
+   *
+   * `avancer` conserve l'identite des champs qu'il ne modifie pas, et rend
+   * l'etat lui-meme quand le geste est rejete : signaler une question n'ecrit
+   * donc pas le tour, et un tap absorbe par le verrou n'ecrit rien du tout.
+   *
+   * Ecrire le tour au REPOS EFFACE la clef, ce dont `storage/` se charge : la
+   * clef porte un tour en cours, or REPOS n'en est pas un. C'est ce qui remplit
+   * l'exigence "la clef est effacee sur terminer()" sans qu'aucun appelant
+   * n'ait a s'en souvenir.
+   */
+  useEffect(() => {
+    ecrireTour(tour, Date.now());
+  }, [tour]);
+
+  useEffect(() => {
+    ecrireHistorique(partie.historique);
+  }, [partie.historique]);
+
+  useEffect(() => {
+    ecrireSignalements(partie.signalements);
+  }, [partie.signalements]);
+
+  useEffect(() => {
+    ecrirePaquetsActifs(partie.paquets);
+  }, [partie.paquets]);
+
+  /*
+   * L'ECRAN RESTE ALLUME DANS TOUTE PHASE AUTRE QUE REPOS. Entre la lecture de
+   * la question et le verdict du groupe il s'ecoule facilement une minute
+   * pendant laquelle personne ne touche l'ecran, et c'est le telephone du
+   * narrateur, donc celui dont depend toute la table (architecture.md section
+   * 10). Sur l'accueil, l'application n'a aucune raison d'empecher un telephone
+   * de s'eteindre.
+   */
+  useEcranAllume(tour.phase !== "REPOS");
+
+  /*
+   * LA MISE A JOUR N'EST PROPOSEE QU'EN PHASE REPOS. Appliquer une mise a jour
+   * RECHARGE LA PAGE : en pleine question, la carte disparaitrait au milieu
+   * d'une phrase. Une version qui arrive pendant la partie n'est pas perdue,
+   * elle attend le retour au repos.
+   *
+   * Limite connue et assumee : l'ecran d'epuisement partage la phase REPOS et
+   * ne rend pas la proposition. Elle apparait au retour sur l'accueil, ou la
+   * reinitialisation mene toujours.
+   */
+  const miseAJour = useMiseAJour(tour.phase === "REPOS", INSCRIRE);
 
   /*
    * `auto` est l'ABSENCE d'attribut : la bascule manuelle gagne dans les deux
@@ -116,35 +242,37 @@ export function App() {
   }, []);
 
   const copierSignalements = useCallback(() => {
+    setRetourCopie("aucun");
     /*
      * Le typage declare le presse-papier toujours present, le navigateur non :
      * hors contexte securise, `navigator.clipboard` est absent. Sans cette
      * garde, le geste leverait une TypeError au lieu de ne rien faire.
+     *
+     * L'ABSENCE EST UN ECHEC ANNONCE, plus un silence. C'est le trou que la
+     * phase 4 laissait ouvert faute d'un troisieme etat dans le contrat : le
+     * narrateur tapait, rien ne bougeait, et il retapait, ce qui est le geste
+     * meme que le verrou d'entree existe pour empecher.
      */
-    if (!navigator.clipboard) return;
-    setCopie(false);
-    navigator.clipboard.writeText(signalementsEnJson(partie.signalements)).then(
-      () => setCopie(true),
-      /*
-       * L'echec est SILENCIEUX aujourd'hui, et c'est une dette assumee : le
-       * retour n'a que deux etats, donc rien ne distingue "pas encore copie"
-       * de "copie impossible". Le narrateur retape, ce qui ne casse rien.
-       */
-      () => setCopie(false),
+    const pressePapier = navigator.clipboard;
+    if (!pressePapier) {
+      setRetourCopie("echouee");
+      return;
+    }
+    pressePapier.writeText(signalementsEnJson(partie.signalements)).then(
+      () => setRetourCopie("reussie"),
+      () => setRetourCopie("echouee"),
     );
   }, [partie.signalements]);
 
   const paquets: readonly PaquetActif[] = useMemo(
     () =>
-      PAQUETS_DU_CORPUS.map((identifiant) => ({
+      paquetsDuCorpus(corpus).map((identifiant) => ({
         id: identifiant,
         libelle: LIBELLE_PAQUET[identifiant],
         actif: partie.paquets.includes(identifiant),
       })),
-    [partie.paquets],
+    [corpus, partie.paquets],
   );
-
-  const tour = partie.tour;
 
   /*
    * LE GESTE DE RETOUR DU TELEPHONE, phase par phase. La table des transitions
@@ -173,11 +301,13 @@ export function App() {
           return <Epuisement onReinitialiser={() => jouer({ type: "reinitialiser" })} />;
         return (
           <Accueil
-            cartesRestantes={nombreDeCartesRestantes(CORPUS, partie)}
+            cartesRestantes={nombreDeCartesRestantes(corpus, partie)}
             paquets={paquets}
             signalements={partie.signalements.length}
             mode={mode}
-            copie={copie}
+            retourCopie={retourCopie}
+            miseAJourPrete={miseAJour.attend}
+            onMettreAJour={miseAJour.appliquer}
             onChoisirMode={choisirMode}
             onPiocher={() => jouer({ type: "piocher" })}
             onBasculerPaquet={(identifiant) =>
@@ -198,7 +328,7 @@ export function App() {
            */
           <Theme
             carte={tour.carte}
-            rang={rangDansLeCorpus(CORPUS, tour.carte.id)}
+            rang={rangDansLeCorpus(corpus, tour.carte.id)}
             onAnnoncer={() => jouer({ type: "annoncer" })}
           />
         );

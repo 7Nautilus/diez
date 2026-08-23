@@ -1,76 +1,81 @@
 /*
- * Diez : les reglages persistes, version MINIMALE de la phase 4.
+ * Diez : `diez:v1:reglages`, les paquets actifs et le mode d'affichage.
  *
- * PERIMETRE ASSUME, ecrit ici pour qu'il ne se decouvre pas a l'usage. La
- * persistance est le chantier de la phase 5 (roadmap.md) : `diez:v1:historique`,
- * `diez:v1:signalements` et `diez:v1:tour` n'existent pas encore, donc un
- * rechargement perd l'anti-repetition, les signalements et le tour en cours.
- * Une seule clef est ecrite aujourd'hui, et une seule valeur dedans, le mode
- * d'affichage : un selecteur de preference qui ne survit pas au rechargement
- * n'est pas une preference, c'est un bouton. Les paquets actifs rejoindront la
- * meme clef en phase 5, avec la lecture versionnee et la migration `v1` vers
- * `v2` que decrit architecture.md section 7.
+ * UNE SEULE CLEF POUR DEUX REGLAGES, comme l'ecrit architecture.md section 7.
+ * D'ou la fusion a l'ecriture : une ecriture qui remplacerait la clef entiere
+ * effacerait les paquets a chaque bascule de mode, et le defaut la remettrait
+ * tous actifs sans que rien ne le signale.
  *
- * `storage/` n'importe RIEN, pas meme un type du domaine (architecture.md
- * section 3, et le lint le refuse). D'ou la forme des fonctions ci-dessous :
- * ce module possede la clef, la forme JSON et la tolerance a la corruption ;
- * l'appelant possede le vocabulaire et le prouve par un predicat. Le type
- * `ModeAffichage` reste ainsi ecrit une seule fois, dans screens/types.ts, au
- * lieu d'etre recopie ici ou il aurait derive en silence.
+ * LE VOCABULAIRE ARRIVE PAR PREDICAT, il n'est pas redeclare ici. C'est
+ * l'appelant qui sait quelles chaines sont des modes, et le corpus qui dit
+ * quels paquets existent (`paquetsDuCorpus`, app/partie.ts) : `ModeAffichage`
+ * et `PaquetId` restent ainsi ecrits une seule fois, la ou ils vivent, au lieu
+ * d'etre recopies dans une couche qui n'a pas le droit de les importer. C'est
+ * la seule des quatre clefs dont le contenu est un vocabulaire plutot qu'une
+ * forme, et c'est ce qui la distingue.
  */
 
-const CLE = "diez:v1:reglages";
-
-/*
- * Chaque acces est enveloppe. `localStorage` LEVE, et pas seulement quand il
- * est plein : un navigateur en navigation privee, un stockage bloque par une
- * politique de site, ou un contexte non securise suffisent. Une exception
- * remontee d'ici planterait l'application au demarrage, sur une preference de
- * couleur, ce qui serait hors de proportion.
- */
-function lireBrut(): unknown {
-  try {
-    const texte = localStorage.getItem(CLE);
-    if (texte === null) return null;
-    return JSON.parse(texte);
-  } catch {
-    return null;
-  }
-}
+import { ecrireBrut, lireBrut } from "./stockage";
+import { estListeDe, estObjet, estTexte } from "./validation";
 
 /**
- * Le mode enregistre, ou `defaut` si la clef est absente, illisible ou
- * porteuse d'une valeur que l'appelant ne reconnait pas.
- *
- * `accepte` est un predicat de type fourni par l'appelant : c'est lui qui sait
- * quelles chaines sont des modes, et c'est ce qui evite de redeclarer ici
- * l'union des trois. Jamais de `JSON.parse` non valide : une clef corrompue
- * retombe sur le defaut, elle ne fait pas planter le demarrage
- * (architecture.md section 7).
+ * Le mode enregistre, ou `defaut` si la clef est absente, illisible ou porteuse
+ * d'une valeur que l'appelant ne reconnait pas.
  */
 export function lireMode<M extends string>(accepte: (valeur: string) => valeur is M, defaut: M): M {
-  const brut = lireBrut();
-  if (typeof brut !== "object" || brut === null) return defaut;
-  const mode = (brut as { mode?: unknown }).mode;
-  if (typeof mode !== "string" || !accepte(mode)) return defaut;
+  const brut = lireBrut("reglages");
+  if (!estObjet(brut)) return defaut;
+  const { mode } = brut;
+  if (!estTexte(mode) || !accepte(mode)) return defaut;
   return mode;
 }
 
 /**
- * Enregistre le mode, en preservant ce que la clef contient deja.
+ * Les paquets actifs, ou `defaut` si la clef est absente ou de mauvaise FORME.
  *
- * La fusion n'est pas une precaution de style : la phase 5 ajoutera les
- * paquets actifs dans la meme clef, et une ecriture qui la remplacerait
- * entierement les effacerait a chaque bascule de mode. Un echec d'ecriture est
- * ignore, pour la raison qui vaut a la lecture : le quota ou une politique de
- * site ne doivent pas interrompre une soiree.
+ * DEUX TRAITEMENTS DIFFERENTS, ET LA DISTINCTION EST LE SUJET DE CETTE
+ * FONCTION. Une valeur qui n'est pas une liste de chaines est une corruption :
+ * on retombe sur le defaut, comme partout ailleurs. Un identifiant que
+ * l'appelant ne reconnait pas est autre chose : le corpus change entre deux
+ * versions de l'application, un lot peut disparaitre, et l'identifiant devenu
+ * inconnu n'est pas la trace d'une clef abimee mais d'un paquet retire. Il est
+ * donc ECARTE, et la selection du narrateur survit pour les autres. Tout ou
+ * rien lui rendrait ici tous les paquets actifs, y compris ceux qu'il venait de
+ * decocher.
+ *
+ * Une liste vide apres filtrage n'est pas une erreur : c'est l'etat "aucun
+ * paquet coche", que l'accueil sait afficher, `PIOCHER` desactive et raison
+ * donnee (recette.md section 1).
  */
+export function lirePaquetsActifs<P extends string>(
+  accepte: (valeur: string) => valeur is P,
+  defaut: readonly P[],
+): readonly P[] {
+  const brut = lireBrut("reglages");
+  if (!estObjet(brut)) return defaut;
+  const { paquets } = brut;
+  if (paquets === undefined) return defaut;
+  if (!estListeDe(paquets, estTexte)) return defaut;
+  return paquets.filter(accepte);
+}
+
+/**
+ * Fusionne un champ dans la clef, en preservant ce qu'elle contient deja.
+ *
+ * Un contenu illisible est REMPLACE et non conserve : il n'y a rien a preserver
+ * dans une valeur dont on vient d'etablir qu'aucune lecture ne l'accepte, et
+ * s'obstiner a la garder empecherait la clef de redevenir saine.
+ */
+function fusionner(champ: string, valeur: unknown): void {
+  const brut = lireBrut("reglages");
+  const existant = estObjet(brut) ? brut : {};
+  ecrireBrut("reglages", { ...existant, [champ]: valeur });
+}
+
 export function ecrireMode(mode: string): void {
-  const brut = lireBrut();
-  const existant = typeof brut === "object" && brut !== null ? brut : {};
-  try {
-    localStorage.setItem(CLE, JSON.stringify({ ...existant, mode }));
-  } catch {
-    /* Une preference perdue ne vaut pas une soiree interrompue. */
-  }
+  fusionner("mode", mode);
+}
+
+export function ecrirePaquetsActifs(paquets: readonly string[]): void {
+  fusionner("paquets", paquets);
 }

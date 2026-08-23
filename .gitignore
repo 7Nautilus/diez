@@ -9,6 +9,7 @@ dist-ssr/
 
 # Genere par le pipeline de contenu, jamais commite
 src/data/cartes.gen.json
+src/data/fixtures.gen.json
 
 # Tests
 coverage/

@@ -1,0 +1,111 @@
+/*
+ * Diez : le banc de recette.
+ *
+ * Aucune valeur litterale de couleur, aucune regle conditionnelle au mode, comme
+ * partout : le banc s'affiche dans les deux modes que la recette demande de
+ * comparer, et un banc qui ne suivrait pas le mode ferait douter de ce qu'il
+ * montre.
+ *
+ * IL NE REDECRIT AUCUNE PRIMITIVE. Le Bouton, l'Etiquette, le Segment, le Statut
+ * et la Feuille portent leur forme, leurs cibles tactiles et leurs contours de
+ * focus ; ce module ne fait que les poser les uns par rapport aux autres. C'est
+ * volontaire jusque dans un outil interne : un banc qui inventerait ses propres
+ * controles n'eprouverait plus l'application avec les memes gestes qu'elle.
+ */
+
+/*
+ * LE DECLENCHEUR FLOTTE, ET C'EST LE SEUL COMPROMIS DU BANC. Pose dans le flux,
+ * il repousserait l'application vers le bas : les cinq ecrans sont hauts de
+ * 100dvh, donc la page se mettrait a defiler et le dernier rang de chaque pile
+ * passerait sous le bord, ce qui est exactement le defaut que la recette
+ * cherche. Flottant, il recouvre au contraire une bande de l'ecran, d'ou
+ * l'action "Masquer le banc" : les controles de mise en page se font sans lui.
+ *
+ * Centre en haut, parce que c'est le seul emplacement libre sur les cinq
+ * ecrans : l'accueil pose son menu a droite, QUESTION et REPONSE posent leur
+ * metadonnee de niveau a gauche.
+ */
+.declencheur {
+  position: fixed;
+  /* L'encoche, comme partout ailleurs (design-system.md section 3, Zones
+     sures) : sans cet inset le declencheur passerait dessous. */
+  top: calc(var(--esp-sm) + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  /* Le seul `z-index` du depot, et il est inevitable ici : le declencheur n'est
+     pas un panneau porte par un portail en fin de `<body>`, c'est un element du
+     flux de l'application qui doit peindre par-dessus des ecrans poses apres
+     lui. La Feuille, elle, n'en a toujours pas besoin. */
+  z-index: 1;
+  /* Le fond est opaque : le declencheur se lit par-dessus l'enonce d'une
+     question longue, qui defile dessous. */
+  background: var(--surface);
+  border-radius: var(--rayon-pilule);
+}
+
+.panneau {
+  display: flex;
+  flex-direction: column;
+  /* Un cran de separation de section, comme le menu de l'accueil : c'est
+     l'ecart qui dit "nouveau groupe". */
+  gap: var(--esp-xl);
+}
+
+.rubrique {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-sm);
+}
+
+.titre {
+  /* Un `h3` arrive en gras et a sa propre taille, dont l'Etiquette qu'il porte
+     n'herite que la graisse. Meme remise a zero que sur l'accueil, sans quoi
+     Space Mono rendrait sa graisse forte. */
+  font-weight: var(--graisse-normale);
+}
+
+.phrase {
+  color: var(--text-secondary);
+  font-size: var(--txt-body-sm);
+  /* Une phrase qu'on lit en silence, pas un prompteur (tokens.css). */
+  line-height: var(--interligne-lecture);
+}
+
+.segment {
+  /* Le groupe est en `inline-flex` : sans cette regle il s'etirerait a la
+     largeur du panneau, et ses options grandiraient avec lui alors qu'un
+     reglage n'est pas une action. Meme raison que `.modes` sur l'accueil. */
+  align-self: flex-start;
+}
+
+.actions {
+  display: flex;
+  /* Le banc est le seul endroit du projet ou plusieurs actions de meme rang
+     coexistent, ce que les ecrans s'interdisent : ils n'en portent qu'une par
+     emplacement. Elles se plient donc plutot que de deborder. */
+  flex-wrap: wrap;
+  gap: var(--esp-sm);
+  margin-top: var(--esp-xs);
+}
+
+/*
+ * Le contenu des quatre clefs. Space Mono, parce que c'est de la donnee
+ * (design-system.md section 3), et le seul bloc du depot qui defile dans les
+ * deux directions : un JSON ne se replie pas sans cesser d'etre relisible ligne
+ * a ligne, et c'est ligne a ligne qu'on y cherche un champ.
+ */
+.diagnostic {
+  max-height: var(--niveau-fenetre-h);
+  overflow: auto;
+  /* Un mouvement du pouce dans le bloc ne doit pas se propager au panneau. */
+  overscroll-behavior: contain;
+  padding: var(--esp-sm);
+  border: 1px solid var(--border-visible);
+  border-radius: var(--rayon-technique);
+  background: var(--surface-haute);
+  color: var(--text-primary);
+  font-family: var(--police-mono);
+  font-size: var(--txt-label);
+  line-height: var(--interligne-lecture);
+  white-space: pre;
+}
