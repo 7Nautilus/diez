@@ -52,21 +52,34 @@ export type ProprietesNiveau = {
 };
 
 /*
- * LE CRAN OU LA MOLETTE S'OUVRE : le premier de l'echelle, quel que soit son
+ * LE CRAN OU LA MOLETTE S'OUVRE : le median de l'echelle, quel que soit son
  * etat.
  *
- * Ouvrir sur le premier cran LIBRE ferait gagner un geste, et c'est
- * exactement ce que la molette refuse ailleurs : pas de saut automatique, une
- * molette qui esquive des crans toute seule est incomprehensible
- * (design-system.md section 4, La molette). Un depart qui dependrait des
- * questions deja jouees placerait l'echelle ailleurs a chaque carte, sans
- * que rien ne l'explique. Elle s'ouvre donc toujours au meme endroit, et si
- * ce cran est brule l'ecran le DIT au lieu de l'esquiver.
+ * Le median plutot que le premier parce que c'est de la qu'on atteint
+ * n'importe quel cran par le plus court chemin : quatre crans au plus vers le
+ * bas, cinq vers le haut, contre neuf depuis le premier. Le narrateur tourne
+ * donc moins, et dans les deux sens, ce qui est le geste que la molette
+ * existe pour rendre facile.
  *
- * Lu dans NIVEAUX plutot qu'ecrit : l'echelle du jeu a une source unique
- * (domain/types.ts), et un 1 ecrit ici en serait une seconde.
+ * Ce qui ne change pas, et qui est l'arbitrage d'origine : elle s'ouvre
+ * TOUJOURS AU MEME ENDROIT, quel que soit l'etat des crans. Ouvrir sur le
+ * premier cran LIBRE ferait gagner un geste, et c'est exactement ce que la
+ * molette refuse ailleurs : pas de saut automatique, une molette qui esquive
+ * des crans toute seule est incomprehensible (design-system.md section 4, La
+ * molette). Un depart qui dependrait des questions deja jouees placerait
+ * l'echelle ailleurs a chaque carte sans que rien ne l'explique. Si le cran
+ * de depart est brule, l'ecran le DIT au lieu de l'esquiver.
+ *
+ * L'indice est lu dans NIVEAUX et non calcule : l'echelle est un tuple, donc
+ * un indice litteral en rend le type exact, la ou un indice calcule rendrait
+ * `Niveau | undefined` sous noUncheckedIndexedAccess. La garde ci-dessous
+ * refuse a la compilation le jour ou l'echelle cesserait d'avoir dix crans,
+ * sans quoi cet indice cesserait d'etre le median en silence.
  */
-const PREMIER_CRAN = NIVEAUX[0];
+const CRAN_DE_DEPART = NIVEAUX[4];
+
+type EchelleDeDixCrans = (typeof NIVEAUX)["length"] extends 10 ? true : never;
+export const CRAN_DE_DEPART_EST_MEDIAN: EchelleDeDixCrans = true;
 
 /*
  * LA RAISON DU REFUS. C'est l'exigence que la phase 3 a explicitement laissee
@@ -105,9 +118,9 @@ export function Niveau({
    *
    * Il vit le temps d'un montage, ce qui suffit : on n'entre en NIVEAU que
    * depuis THEME, donc l'ecran est remonte a chaque tour et la molette rouvre
-   * au premier cran sans qu'aucun effet n'ait a la reinitialiser.
+   * au cran de depart sans qu'aucun effet n'ait a la reinitialiser.
    */
-  const [designe, setDesigne] = useState<Cran>(PREMIER_CRAN);
+  const [designe, setDesigne] = useState<Cran>(CRAN_DE_DEPART);
   const idRaison = useId();
   const raison = raisonDuRefus(designe, consommes, forme);
 
