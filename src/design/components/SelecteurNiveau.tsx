@@ -328,10 +328,7 @@ function Molette<N extends number>({
         {/* La bande de lecture n'apprend rien qu'une aide technique n'ait deja
             par `aria-activedescendant` : elle designe a l'oeil, et seulement
             a l'oeil. */}
-        <div className={styles.bande} aria-hidden="true">
-          <span className={styles.repere} />
-          <span className={styles.repere} />
-        </div>
+        <div className={styles.bande} aria-hidden="true" />
         {/*
          * Une molette est une liste dont on choisit un element, et aucun
          * element natif ne la rend : `select` ouvrirait le selecteur du

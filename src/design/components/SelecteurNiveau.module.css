@@ -205,6 +205,12 @@
 .selecteur[data-forme="molette"] .cran {
   height: var(--niveau-cran-h);
   scroll-snap-align: center;
+  /* La liste est un bloc et le cran un bouton : sans largeur il se reduit a son
+     contenu et se colle a gauche. Le `justify-content: center` de la base
+     s'appliquait alors a une boite de 23px, donc il ne centrait rien dans la
+     molette. Mesure avant correctif : centre du cran a 36px, centre de la
+     molette a 188px. */
+  width: 100%;
 }
 
 /*
@@ -221,12 +227,14 @@
   opacity: var(--op);
 }
 
-/* Bande de lecture : fixe, centree, filets --border-visible et deux reperes
-   --border-controle (design-system.md section 4, La molette). Elle ne bouge
-   pas, c'est l'echelle qui defile derriere elle.
-   Les filets restent en --border-visible : ils dessinent la bande, ils ne
-   designent aucun controle, et un systeme qui remonterait toutes ses bordures
-   a 3:1 perdrait la discretion qui est un acquis. */
+/* Bande de lecture : fixe, centree, deux filets. Elle ne bouge pas, c'est
+   l'echelle qui defile derriere elle.
+   LES DEUX CROCHETS ONT ETE RETIRES a la demande de Victor. Ils portaient la
+   designation du cran choisi ; les filets, qui se contentaient de dessiner la
+   bande, en heritent. Ils passent donc de --border-visible a --border-controle,
+   qui tient les 3:1 de WCAG 1.4.11 la ou l'autre reste sous 1,7:1 : sans ce
+   report, la bande deviendrait a peu pres invisible et la molette perdrait ce
+   qui dit quel cran est designe. */
 .bande {
   position: absolute;
   inset: var(--marge-fenetre) 0;
@@ -234,36 +242,9 @@
   align-items: center;
   justify-content: space-between;
   padding-inline: var(--esp-sm);
-  border-top: 1px solid var(--border-visible);
-  border-bottom: 1px solid var(--border-visible);
+  border-top: 1px solid var(--border-controle);
+  border-bottom: 1px solid var(--border-controle);
   /* Posee par-dessus la liste, sinon elle intercepterait le doigt au milieu
      meme de la zone ou l'on fait tourner la molette. */
   pointer-events: none;
-}
-
-/*
- * Deux crochets, la meme figure que celle du Statut. Les filets suffisent a
- * dessiner la bande mais pas a la designer : --border-visible reste sous 1,7:1
- * dans les deux modes, 1,47 en clair et 1,66 en sombre, ce qui convient a un
- * filet et non a un repere. Les
- * reperes sont ce qui dit ou se trouve le cran designe, donc ils relevent du
- * seuil de 3:1 des elements non textuels et prennent --border-controle. La
- * bande porte deux tokens de bordure, et c'est exactement la raison pour
- * laquelle il en existe deux.
- *
- * LA VALEUR NE CHANGE PAS : elle etait empruntee a --text-secondary, faute
- * d'un nom pour ce role. Le choix etait juste, le nom manquait.
- */
-.repere {
-  width: var(--esp-xs);
-  height: var(--esp-md);
-  border: 1px solid var(--border-controle);
-}
-
-.repere:first-child {
-  border-right: 0;
-}
-
-.repere:last-child {
-  border-left: 0;
 }
