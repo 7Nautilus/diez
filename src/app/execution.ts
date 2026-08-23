@@ -175,6 +175,33 @@ export function creerMaintien(demander: DemandeDeMaintien | null): Maintien {
 }
 
 /**
+ * Abonne `signaler` aux changements de visibilite, et rend de quoi se desabonner.
+ *
+ * EXTRAITE DU HOOK POUR ETRE TESTABLE, et pas par gout de l'abstraction : le
+ * hook lit `document`, donc son cablage etait hors de portee d'un test sans DOM.
+ * Mesure qui a motive l'extraction : remplacer l'inscription de l'ecouteur par
+ * son retrait laissait les 241 tests verts, alors que le maintien de l'ecran
+ * aurait cesse de se reprendre apres le premier passage en arriere-plan. Il
+ * aurait donc marche a la premiere question et plus jamais ensuite, sur le
+ * telephone dont depend toute la table.
+ *
+ * L'etat de depart est LU et non suppose : une application restauree depuis un
+ * onglet d'arriere-plan se monte alors que le document est cache, et une demande
+ * faite dans cet etat est refusee. Elle serait rattrapee par le premier
+ * changement de visibilite, mais au prix d'un refus qu'on peut ne pas provoquer.
+ */
+export function abonnerALaVisibilite(
+  cible: Pick<Document, "addEventListener" | "removeEventListener">,
+  lireVisibilite: () => boolean,
+  signaler: (visible: boolean) => void,
+): () => void {
+  const surVisibilite = () => signaler(lireVisibilite());
+  surVisibilite();
+  cible.addEventListener("visibilitychange", surVisibilite);
+  return () => cible.removeEventListener("visibilitychange", surVisibilite);
+}
+
+/**
  * Maintient l'ecran allume tant que `actif` est vrai.
  *
  * Appel attendu : `useEcranAllume(tour.phase !== "REPOS")`.
@@ -186,22 +213,16 @@ export function useEcranAllume(actif: boolean): void {
     const maintien = creerMaintien(demandeDeMaintienDuNavigateur());
     maintienCourant.current = maintien;
 
-    const surVisibilite = () => {
-      void maintien.signalerVisibilite(document.visibilityState === "visible");
-    };
-
-    /*
-     * L'etat de depart est LU et non suppose : une application restauree depuis
-     * un onglet d'arriere-plan se monte alors que le document est cache, et une
-     * demande faite dans cet etat est refusee. Elle serait rattrapee par le
-     * premier changement de visibilite, mais au prix d'un refus qu'on peut
-     * simplement ne pas provoquer.
-     */
-    surVisibilite();
-    document.addEventListener("visibilitychange", surVisibilite);
+    const desabonner = abonnerALaVisibilite(
+      document,
+      () => document.visibilityState === "visible",
+      (visible) => {
+        void maintien.signalerVisibilite(visible);
+      },
+    );
 
     return () => {
-      document.removeEventListener("visibilitychange", surVisibilite);
+      desabonner();
       maintienCourant.current = null;
       void maintien.viser(false);
     };

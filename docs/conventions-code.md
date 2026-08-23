@@ -124,7 +124,11 @@ const VERROU_MS = 400
 
 `piocher()` rend `null` quand le vivier est vide : c'est un état prévu, avec son écran dédié. Le réducteur **lève** si l'énoncé transmis ne correspond pas au niveau demandé : personne ne peut provoquer ça en jouant, donc c'est un défaut de câblage et il doit être bruyant.
 
-Pas de `catch` silencieux. La seule exception est la lecture du stockage, où une valeur corrompue retombe sur un défaut plutôt que de faire planter le démarrage sur le téléphone d'un ami.
+Pas de `catch` silencieux. **Deux exceptions, nommées et pas davantage.**
+
+La lecture du stockage, où une valeur corrompue retombe sur un défaut plutôt que de faire planter le démarrage sur le téléphone d'un ami. Éprouvée : trois clés abîmées de trois façons différentes n'ont produit aucun écran blanc.
+
+Le repli du maintien de l'écran (`architecture.md` §10), où `navigator.wakeLock` peut manquer ou être refusé. C'est un confort, jamais une dépendance : ni exception, ni message, ni dégradation visible. Un narrateur dont le téléphone n'a pas l'API doit jouer exactement la même soirée, à la veille près.
 
 ## 8. CSS
 

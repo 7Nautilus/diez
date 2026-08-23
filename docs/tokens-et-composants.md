@@ -139,8 +139,9 @@ Les décisions locales, nommées. Chacune renvoie à la section qui la justifie.
 |---|---|---|
 | `--niveau-bloc-h` | 64px | design-system §4, cible tactile bien au-delà du minimum |
 | `--niveau-bloc-ecart` | `--esp-sm` | WCAG 2.2, seul garde-fou restant contre le mistap |
-| `--niveau-cran-h` | 56px | hauteur d'un cran de molette |
-| `--niveau-fenetre-h` | 280px | 5 crans visibles |
+| `--niveau-cran-h` | **plancher** de 56px | hauteur d'un cran de molette ; la valeur est le plus grand de la cible tactile et de la ligne du chiffre, sans quoi une taille de texte systeme augmentee ferait deborder le chiffre de son cran |
+| `--niveau-crans-visibles` | 5 | ce que la fenetre montre a la fois |
+| `--niveau-fenetre-h` | `--niveau-crans-visibles` x `--niveau-cran-h` | derive, et non 280px ecrits : les deux se desynchronisaient au premier reglage |
 | `--rampe-min` | 0.45 | seuil de contraste, le mode clair étant le plus contraignant |
 | `--rampe-max` | 1 | pleine intensité au niveau 10 |
 | `--revelation-vide` | `--esp-4xl` | dispositif de sécurité contre le tap parasite |

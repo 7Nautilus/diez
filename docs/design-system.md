@@ -378,6 +378,7 @@ Le statut `[ SIGNALÉE ]` est du texte normal et échoue donc en mode sombre. Co
 ## 7. Mouvement
 
 - Transitions entre phases : **fondu d'opacité, 200 ms**, `cubic-bezier(0.25, 0.1, 0.25, 1)`. Aucun glissement.
+- Sous `prefers-reduced-motion`, le zéro est posé **une seule fois**, dans `base.css`, sur `*` et avec `!important`. Ce n'est pas de la brutalité : l'ordre d'injection des feuilles de module est décidé par Vite et suit le graphe d'imports, donc un filet sans `!important` dépendrait de cet ordre. Aucun module n'a donc à redéclarer son propre zéro, et un module qui le fait est du code mort.
 - Aucun ressort, aucun rebond. Rythme « percussif, pas fluide » : un clic, pas un swoosh.
 - Le sélecteur de niveau ne s'anime pas à la pression, la bordure passe à `--text-display`, point.
 - La bascule de mode ne s'anime pas. C'est un interrupteur, pas une transition.

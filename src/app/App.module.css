@@ -36,16 +36,9 @@
 }
 
 /*
- * Correctif d'audit : sous `prefers-reduced-motion`, toutes les transitions
- * passent a 0 ms. Le changement d'ecran reste instantane et parfaitement
- * lisible, ce qui s'accorde d'ailleurs avec le rythme du systeme.
- *
- * La duree est mise a zero plutot que l'animation supprimee : `both` conserve
- * ainsi son etat final, la ou un `animation: none` laisserait un ecran a
- * l'opacite d'origine si la regle venait a changer.
+ * Sous `prefers-reduced-motion`, ce module ne declare RIEN : le zero est pose
+ * une seule fois, dans base.css, sur `*` et avec `!important`. Un bloc local
+ * vivait ici et ne pouvait jamais prendre effet, le filet le devancant
+ * toujours. Un morceau de CSS mort qui a l'air d'agir est pire que pas de CSS
+ * du tout, parce qu'on le lit comme une garantie.
  */
-@media (prefers-reduced-motion: reduce) {
-  .transition {
-    animation-duration: 0ms;
-  }
-}
