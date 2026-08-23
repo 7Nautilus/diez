@@ -13,7 +13,11 @@
 .titre {
   font-family: var(--police-mono);
   font-size: var(--txt-body);
-  font-weight: 400;
+  /* Un `h2` arrive en gras du navigateur : la graisse est ramenee a la normale
+     explicitement, le titre se distinguant par sa casse et sa couleur. Nommee
+     et non ecrite en chiffres, sans quoi le budget de deux graisses par ecran
+     ne se compte plus a la lecture (design-system.md section 3). */
+  font-weight: var(--graisse-normale);
   /* Interlettrage positif, sans quoi des capitales monospace se referment.
      Valeur du palier `label` de la skill nothing-design (Tokens section 1). */
   letter-spacing: 0.08em;

@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Bouton } from "../design/components/Bouton";
+import { Confirmation } from "../design/components/Confirmation";
 import { EtatVide } from "../design/components/EtatVide";
+import { CONFIRMATION_REINITIALISATION } from "../screens/types";
 import styles from "./Epuisement.module.css";
 
 /*
@@ -28,7 +31,13 @@ import styles from "./Epuisement.module.css";
  * place tombe donc sur l'un des deux. Or l'action d'ici est destructrice et
  * irreversible, et le verrou d'entree ne la couvre pas : la phase est REPOS,
  * qui ne porte pas de `depuis` et n'est jamais verrouillee (domain/tour.ts).
- * La distance est le seul garde-fou qui reste.
+ *
+ * LA DISTANCE N'EST PLUS LE SEUL GARDE-FOU, et elle reste. C'est ici que le
+ * risque etait le plus grand de toute l'application : un seul tap effacait la
+ * memoire des soirees precedentes, la ou l'accueil en demandait deja deux pour
+ * traverser son menu. Le bouton ouvre desormais la meme Confirmation que
+ * l'accueil, avec les memes mots. La distance, elle, protege toujours du geste
+ * qui n'a jamais eu l'intention d'ouvrir quoi que ce soit.
  */
 
 export type ProprietesEpuisement = {
@@ -36,15 +45,43 @@ export type ProprietesEpuisement = {
 };
 
 export function Epuisement({ onReinitialiser }: ProprietesEpuisement) {
+  /*
+   * Le seul etat local de l'ecran, et il n'appartient a personne d'autre :
+   * l'ouverture d'une demande de confirmation n'est ni du jeu, ni un reglage
+   * persiste. C'est le meme arrangement que sur l'accueil, sans le menu qui
+   * n'existe que la-bas.
+   */
+  const [confirmationOuverte, setConfirmationOuverte] = useState(false);
+
   return (
     <main className={styles.ecran}>
       <EtatVide
         titre="Plus de questions"
         phrase="Toutes les questions des paquets sélectionnés ont déjà été posées."
       />
-      <Bouton variante="secondaire" onClick={onReinitialiser}>
+      <Bouton variante="secondaire" onClick={() => setConfirmationOuverte(true)}>
         Réinitialiser l'historique
       </Bouton>
+
+      {/*
+       * LE FOCUS NE REVIENT PAS AU DECLENCHEUR ICI, ET C'EST INEVITABLE. La
+       * Feuille le rend au bouton qui l'a ouverte, mais l'effacement fait
+       * repartir la partie : `epuise` retombe, l'accueil prend la place de cet
+       * ecran, et le bouton n'existe plus au moment ou le focus lui serait
+       * rendu. C'est ce qui separe ce cas de l'accueil, ou le menu reste
+       * volontairement ouvert derriere pour garder son declencheur monte. Le
+       * changement d'ecran est annonce par la zone de phase (App.tsx), qui est
+       * la reponse du systeme a un ecran qui disparait.
+       *
+       * Rien n'est annule au clavier pour autant : la sortie non destructrice
+       * est la premiere action du panneau, et Echap ferme.
+       */}
+      <Confirmation
+        {...CONFIRMATION_REINITIALISATION}
+        ouverte={confirmationOuverte}
+        surAction={onReinitialiser}
+        surFermeture={() => setConfirmationOuverte(false)}
+      />
     </main>
   );
 }

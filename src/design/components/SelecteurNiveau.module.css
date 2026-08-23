@@ -32,7 +32,10 @@
      section 3). Meme pile que le Bouton. */
   font-family: var(--police-mono);
   font-size: var(--txt-display-md);
-  line-height: 1;
+  /* Un cran porte un chiffre, donc une ligne et rien apres : au-dela de 1, le
+     surplus entre dans la boite du cran et decale le chiffre par rapport a la
+     bande de lecture (tokens-et-composants.md, collection 1, Interlignage). */
+  line-height: var(--interligne-serre);
   color: var(--text-display);
   cursor: pointer;
   /* Un appui long sur un chiffre ouvrirait la selection de texte du systeme
@@ -143,12 +146,23 @@
 /*
  * La bordure qui reste. --border-visible aurait ete le choix reflexe, mais il
  * donne 1,32:1 sur --noir : a bout de bras dans un salon a lumiere basse, le
- * cran n'a plus de forme du tout. --text-secondary tient au-dela de 5:1 dans
- * les deux modes, et c'est aussi la couleur du point median, donc le cran
- * consomme se lit comme une seule figure.
+ * cran n'a plus de forme du tout. Il faut une bordure qui SOIT PERCUE, et
+ * c'est --border-controle, qui tient 5,27 en clair et 7,37 en sombre.
+ *
+ * LA VALEUR NE CHANGE PAS, seul le token qui la porte : ce cran est l'endroit
+ * ou le probleme avait ete rencontre et resolu localement en empruntant
+ * --text-secondary, et le token generalise ce choix sous un nom qui dit son
+ * role (tokens-et-composants.md, Deux bordures, deux roles). L'emprunt liait
+ * la bordure a un reglage de texte qui ne la concerne pas.
+ *
+ * Consequence a connaitre : la bordure et le point median partagent leur
+ * valeur aujourd'hui, donc le cran consomme se lit comme une seule figure,
+ * mais ils ne dependent plus du meme token. Le jour ou l'un des deux bougera,
+ * la figure se separera, et ce sera correct : le point est du texte, la
+ * bordure est un contour de controle, les deux n'ont pas le meme seuil.
  */
 .selecteur[data-forme="grille"] .cran[data-etat="consomme"] {
-  border-color: var(--text-secondary);
+  border-color: var(--border-controle);
 }
 
 /*
@@ -207,8 +221,11 @@
 }
 
 /* Bande de lecture : fixe, centree, filets --border-visible et deux reperes
-   --text-secondary (design-system.md section 4, La molette). Elle ne bouge
-   pas, c'est l'echelle qui defile derriere elle. */
+   --border-controle (design-system.md section 4, La molette). Elle ne bouge
+   pas, c'est l'echelle qui defile derriere elle.
+   Les filets restent en --border-visible : ils dessinent la bande, ils ne
+   designent aucun controle, et un systeme qui remonterait toutes ses bordures
+   a 3:1 perdrait la discretion qui est un acquis. */
 .bande {
   position: absolute;
   inset: var(--marge-fenetre) 0;
@@ -226,14 +243,19 @@
 /*
  * Deux crochets, la meme figure que celle du Statut. Les filets suffisent a
  * dessiner la bande mais pas a la designer : --border-visible reste sous 1,5:1
- * dans les deux modes, ce qui convient a un filet et non a un repere.
- * --text-secondary tient le seuil de 3:1 des elements non textuels. La bande
- * porte donc deux couleurs, et c'est la raison.
+ * dans les deux modes, ce qui convient a un filet et non a un repere. Les
+ * reperes sont ce qui dit ou se trouve le cran designe, donc ils relevent du
+ * seuil de 3:1 des elements non textuels et prennent --border-controle. La
+ * bande porte deux tokens de bordure, et c'est exactement la raison pour
+ * laquelle il en existe deux.
+ *
+ * LA VALEUR NE CHANGE PAS : elle etait empruntee a --text-secondary, faute
+ * d'un nom pour ce role. Le choix etait juste, le nom manquait.
  */
 .repere {
   width: var(--esp-xs);
   height: var(--esp-md);
-  border: 1px solid var(--text-secondary);
+  border: 1px solid var(--border-controle);
 }
 
 .repere:first-child {

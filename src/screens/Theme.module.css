@@ -56,10 +56,10 @@
      la typographie que le narrateur doit retrouver d'un coup d'oeil. */
   margin-block-start: var(--esp-2xl);
   font-family: var(--police-sans);
-  /* Space Grotesk 300, valeur de design-system.md section 4. La graisse legere
-     est ce qui rend la taille display supportable sur un ecran aux deux tiers
-     vide ; en 400 elle devient une masse. */
-  font-weight: 300;
+  /* La graisse legere, prescrite par design-system.md section 4. C'est elle
+     qui rend la taille display supportable sur un ecran aux deux tiers vide ;
+     en graisse normale, l'intitule devient une masse. */
+  font-weight: var(--graisse-legere);
   /* La couche primaire, et la seule de l'ecran a prendre --text-display. */
   color: var(--text-display);
   /*

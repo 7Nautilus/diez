@@ -24,7 +24,7 @@
 
 .echantillon {
   color: var(--text-display);
-  line-height: 1;
+  line-height: var(--interligne-serre);
 }
 
 .palier[data-palier="display-xl"] .echantillon {

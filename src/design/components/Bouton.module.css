@@ -53,8 +53,16 @@
   color: var(--ground);
 }
 
+/*
+ * --border-controle ET NON --border-visible : cette bordure est tout ce qui
+ * fait ressembler la variante a un bouton, elle releve donc du seuil de 3:1 de
+ * WCAG 1.4.11, que --border-visible ne tient dans aucun des deux modes, 1,47
+ * en clair et 1,66 en sombre (tokens-et-composants.md, Deux bordures, deux
+ * roles). Un filet, lui, garde --border-visible : il dessine, il ne designe
+ * rien.
+ */
 .bouton[data-variante="secondaire"] {
-  border-color: var(--border-visible);
+  border-color: var(--border-controle);
   color: var(--text-primary);
 }
 

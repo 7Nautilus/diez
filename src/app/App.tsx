@@ -24,6 +24,7 @@ import {
   type Geste,
   nombreDeCartesRestantes,
   paquetsDuCorpus,
+  rangDansLeCorpus,
   signalementsEnJson,
 } from "./partie";
 
@@ -188,7 +189,19 @@ export function App() {
         );
 
       case "THEME":
-        return <Theme carte={tour.carte} onAnnoncer={() => jouer({ type: "annoncer" })} />;
+        return (
+          /*
+           * Le rang est calcule ICI et descend en propriete, comme tout ce
+           * qu'un ecran ne peut pas etablir lui-meme. `Theme` ne recoit qu'un
+           * `ResumeCarte`, or ce numero n'existe qu'au niveau du corpus entier
+           * (partie.ts, qui porte la raison et la condition de stabilite).
+           */
+          <Theme
+            carte={tour.carte}
+            rang={rangDansLeCorpus(CORPUS, tour.carte.id)}
+            onAnnoncer={() => jouer({ type: "annoncer" })}
+          />
+        );
 
       case "NIVEAU":
         return (

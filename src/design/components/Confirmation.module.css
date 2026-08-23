@@ -1,0 +1,55 @@
+/*
+ * Diez : la Confirmation.
+ *
+ * Le panneau, sa bordure, son voile et son rayon appartiennent a la Feuille et
+ * ne sont pas redecrits ici : ce module ne pose que ce qui distingue une
+ * demande de confirmation d'un menu, c'est-a-dire une phrase qu'il faut lire
+ * et deux actions de rang inegal.
+ *
+ * Aucune regle conditionnelle au mode, aucune couleur litterale : chaque
+ * couleur passe par un token semantique que `light-dark()` resout dans
+ * tokens.css (design-system.md section 2).
+ */
+
+.consequence {
+  /*
+   * Un texte qui se lit vraiment, et non un libelle qui tient sur une ligne :
+   * --interligne-lecture, ni --interligne-serre qui vaut 1, ni
+   * --prompteur-interligne qui vaut le meme nombre mais protege la lecture a
+   * voix haute de l'ecran QUESTION.
+   */
+
+  /* --text-primary et non --text-secondary : la phrase du menu explique un
+     reglage, celle-ci dit ce qui va etre detruit. Elle n'est pas une note en
+     marge, c'est la question posee. */
+  color: var(--text-primary);
+  font-size: var(--txt-body);
+  line-height: var(--interligne-lecture);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  /*
+   * Les deux actions ont la MEME LARGEUR, et c'est leur variante qui porte le
+   * rang. Un bouton destructeur retreci serait une facon de le cacher plutot
+   * que de le classer, et cacher une action irreversible est pire que de la
+   * proposer clairement.
+   */
+  align-items: stretch;
+  /*
+   * Le double de l'ecart minimal entre cibles adjacentes que le selecteur de
+   * niveau retient (design-system.md section 9, Cibles tactiles). Le minimum
+   * de WCAG 2.2 est un plancher, pas un objectif : ici l'une des deux cibles
+   * ne se rattrape pas.
+   */
+  gap: var(--esp-md);
+  /*
+   * Une rupture de groupe, pas de la respiration. Le doigt vient de taper le
+   * declencheur, le panneau apparait sous lui, et sans cette distance le
+   * bouton destructeur se retrouve la ou la frappe suivante tomberait. C'est
+   * le meme dispositif que --revelation-vide en phase QUESTION, a l'echelle
+   * d'un panneau et non d'un ecran.
+   */
+  margin-block-start: var(--esp-xl);
+}

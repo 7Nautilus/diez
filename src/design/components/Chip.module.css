@@ -25,7 +25,14 @@
      remplissage suit l'echelle, la hauteur est garantie par le plancher. */
   min-height: var(--cible-min);
   padding: var(--esp-xs) var(--esp-md);
-  border: 1px solid var(--border-visible);
+  /*
+   * --border-controle ET NON --border-visible : un chip inactif n'a pas de
+   * fond, sa bordure est son SEUL indice d'existence, et elle releve donc du
+   * seuil de 3:1 de WCAG 1.4.11 que --border-visible ne tient dans aucun des
+   * deux modes, 1,47 en clair et 1,66 en sombre (tokens-et-composants.md,
+   * Deux bordures, deux roles).
+   */
+  border: 1px solid var(--border-controle);
   /* Pilule, comme le Bouton. Le rayon depasse largement la moitie de la
      hauteur pour qu'il le reste quelle que soit la longueur du libelle. */
   border-radius: var(--rayon-pilule);
@@ -40,7 +47,10 @@
      rend. Les libelles qui se lisent sans se toucher, ceux de l'Etiquette,
      portent une valeur plus large. */
   letter-spacing: 0.06em;
-  line-height: 1;
+  /* Un libelle de chip tient sur une ligne : au-dela de 1, le surplus entre
+     dans la boite du controle et fausse son centrage vertical
+     (tokens-et-composants.md, collection 1, Interlignage). */
+  line-height: var(--interligne-serre);
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -61,9 +71,14 @@
 @media (hover: hover) {
   /* Le survol eclaircit la bordure, d'un cran et d'un seul : un chip inactif
      survole qui prendrait --text-display deviendrait indiscernable d'un chip
-     actif. */
+     actif.
+     Le pas visait --text-secondary, qui est desormais la valeur meme de
+     --border-controle : il ne faisait donc plus rien du tout. Il se reporte
+     sur --text-primary, c'est-a-dire toujours un cran et un seul, et c'est
+     exactement ce que fait deja le Bouton secondaire au survol
+     (tokens-et-composants.md, Chip et Segment). */
   .chip[data-actif="false"]:hover {
-    border-color: var(--text-secondary);
+    border-color: var(--text-primary);
   }
 }
 

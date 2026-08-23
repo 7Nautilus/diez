@@ -60,3 +60,33 @@ export const LIBELLE_PAQUET: Record<PaquetId, string> = {
   maison: "maison",
   _fixtures: "fixtures",
 };
+
+/**
+ * Les mots de la demande de confirmation avant reinitialisation.
+ *
+ * DEUX ECRANS POSENT LA MEME QUESTION, et c'est la raison de cette table.
+ * L'accueil l'ouvre depuis son menu, l'ecran d'epuisement depuis son unique
+ * action ; c'est le meme effacement, donc ce doit etre la meme phrase. Les
+ * deux appelants vivent dans des couches differentes, `screens/` et `app/`, et
+ * ce fichier est le seul point que les deux atteignent sans prendre la regle
+ * de dependance a rebours (architecture.md section 3).
+ *
+ * LA PHRASE DIT L'EFFET, ELLE NE LE JUGE PAS, et c'est ce qui permet de
+ * l'ecrire une seule fois. Depuis le menu, "elles peuvent de nouveau sortir"
+ * est le prix a payer ; depuis l'epuisement, c'est exactement ce que le
+ * narrateur vient chercher. L'effet, lui, est identique dans les deux cas.
+ *
+ * `as const` N'EST PAS COSMETIQUE : la Confirmation refuse un libelle
+ * generique par son TYPE, ce qui ne mord que sur un litteral. Sans `as const`,
+ * `libelleAction` s'elargirait en `string` et le controle passerait sans rien
+ * verifier. Mesure faite : la valeur remplacee par "Oui" arrete `tsc` sur les
+ * deux appelants, et cesse de l'arreter des que `as const` est retire.
+ */
+export const CONFIRMATION_REINITIALISATION = {
+  /** Le titre nomme l'intention du narrateur, le libelle d'action nomme
+   * l'effet : l'ecart est voulu, et c'est le libelle d'action qui engage. */
+  titre: "Réinitialiser l'historique",
+  consequence:
+    "Le téléphone oublie toutes les questions déjà posées. Elles peuvent de nouveau sortir, et ce qu'il a retenu des soirées précédentes ne revient pas.",
+  libelleAction: "Effacer l'historique",
+} as const;

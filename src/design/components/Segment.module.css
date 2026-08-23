@@ -29,6 +29,16 @@
      focus d'une option, --esp-2xs d'ecart plus 2px d'epaisseur. Sans lui, le
      contour de l'option cochee deborderait sur la bordure du groupe. */
   padding: var(--esp-xs);
+  /*
+   * --border-visible ET NON --border-controle, seul cas du systeme ou la
+   * question se posait et que tokens-et-composants.md laissait ouvert. Un
+   * groupe segmente a TOUJOURS une option cochee, donc un pave plein
+   * --text-display est toujours present a l'interieur : il dit deja qu'un
+   * controle est la et dans quel etat il se trouve. Cette bordure ne designe
+   * donc rien, elle dessine la piste sur laquelle le pave se deplace, et
+   * aucun seuil de WCAG 1.4.11 ne pese sur elle. Un chip inactif, lui, n'a
+   * rien d'autre que sa bordure, et c'est toute la difference.
+   */
   border: 1px solid var(--border-visible);
   border-radius: var(--rayon-pilule);
 }
@@ -60,7 +70,10 @@
   /* Interlettrage des libelles de controle, aligne sur celui du Bouton
      (tokens-et-composants.md, Bouton). */
   letter-spacing: 0.06em;
-  line-height: 1;
+  /* Un libelle de mode tient sur une ligne, et la ligne suivante n'existe pas :
+     au-dela de 1, le surplus entre dans la boite de l'option et fausse son
+     centrage vertical (tokens-et-composants.md, collection 1, Interlignage). */
+  line-height: var(--interligne-serre);
   text-transform: uppercase;
   /* Un libelle de mode tient en un mot ; le laisser passer a la ligne ferait
      grandir le groupe entier d'une ligne pour une option. */

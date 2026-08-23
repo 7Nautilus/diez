@@ -79,6 +79,36 @@
   --txt-caption: 0.75rem;
   --txt-label: 0.6875rem;
 
+  /* Interligne d'un libelle qui tient sur une ligne, et de lui seul. La valeur
+     etait ecrite litteralement dans six modules avant d'avoir un nom, toujours
+     pour cette meme raison, qui n'y etait donc dite nulle part. Il vaut 1 et non
+     l'interlignage du corps de texte parce qu'il n'y a aucune ligne suivante a
+     espacer : au-dela de 1, le surplus se repartit en blanc au-dessus et en
+     dessous du libelle, entre dans la boite du controle et fausse son centrage
+     vertical (tokens-et-composants.md, collection 1, Interlignage). Un texte
+     qui se lit vraiment a le sien, --prompteur-interligne. */
+  --interligne-serre: 1;
+
+  /* L'interligne d'un texte qu'on LIT, en silence : la phrase du menu, celle
+     d'une Confirmation. Il vaut le meme nombre que --prompteur-interligne sans
+     etre lui : ce dernier est un reglage de PROMPTEUR, pour un texte dit a voix
+     haute en relevant la tete, et le regler ne doit pas deplacer le menu. Deux
+     agents ont bute sur ce manque separement et l'ont nomme chacun de leur
+     cote, ce qui donnait trois noms a une meme valeur. */
+  --interligne-lecture: 1.5;
+
+  /* Les trois graisses que le systeme emploie, chacune servie par une face
+     reelle de fonts.css : Space Grotesk 300, la normale des deux familles, et
+     700 pour Doto comme pour Space Mono. Ecrites en chiffres dans huit
+     modules, elles rendaient invisible le budget de deux graisses par ecran
+     que pose design-system.md section 3 ; nommees, ce budget se compte a la
+     lecture. Space Grotesk 500 est declaree mais n'est employee nulle part :
+     elle n'aura de token que le jour ou elle aura un emploi, un token sans
+     usage etant une invitation a lui en trouver un. */
+  --graisse-legere: 300;
+  --graisse-normale: 400;
+  --graisse-forte: 700;
+
   --duree-courte: 200ms;
 
   /* La courbe des transitions du systeme, prescrite avec la duree par
@@ -93,6 +123,28 @@
   --surface-haute: light-dark(var(--gris-050), var(--gris-900));
   --border: light-dark(var(--gris-100), var(--gris-850));
   --border-visible: light-dark(var(--gris-200), var(--gris-800));
+  /*
+   * LA BORDURE QUI DOIT ETRE PERCUE, distincte de celle qui se contente de
+   * DESSINER. WCAG 1.4.11 demande 3:1 pour la bordure d'un controle, et
+   * --border-visible ne le tient dans aucun mode : mesure au navigateur, il
+   * donne 1,47 en clair et 1,66 en sombre contre --ground. Or un Chip inactif
+   * n'a que sa bordure pour exister, et un Bouton secondaire n'a qu'elle pour
+   * ressembler a un bouton. Ce token tient le seuil largement, 5,27 en clair
+   * et 7,37 en sombre.
+   *
+   * Ce sont les valeurs de --text-secondary, deja eprouvees a un seul endroit
+   * par le SelecteurNiveau, dont la bordure de cran consomme avait bute sur
+   * exactement ce probleme. Elles portent ici un nom qui dit leur ROLE et non
+   * leur teinte : une bordure n'est pas du texte, et la faire dependre d'un
+   * token de texte la rendrait solidaire d'un reglage qui ne la concerne pas.
+   *
+   * --border-visible RESTE LE BON CHOIX pour un separateur ou un filet, et ce
+   * token ne le remplace pas. Un filet ne designe rien, il dessine, et n'a
+   * donc aucun seuil a tenir. Un systeme qui remonterait toutes ses bordures a
+   * 3:1 perdrait la discretion que Nothing revendique. Deux roles, deux
+   * tokens (tokens-et-composants.md, collection 2).
+   */
+  --border-controle: light-dark(var(--gris-500), var(--gris-400));
   --text-disabled: light-dark(var(--gris-400), var(--gris-500));
   --text-secondary: light-dark(var(--gris-500), var(--gris-400));
   --text-primary: light-dark(var(--gris-900), var(--gris-100));

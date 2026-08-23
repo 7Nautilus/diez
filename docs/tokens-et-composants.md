@@ -60,6 +60,16 @@ Des valeurs brutes, sans sens attaché. On ne les utilise jamais directement dan
 
 `--txt-display-xl` 4.5 · `--txt-display-lg` 3 · `--txt-display-md` 2.25 · `--txt-heading` 1.5 · `--txt-body` 1 · `--txt-body-sm` .875 · **`--txt-body-xs` .8125** · `--txt-caption` .75 · `--txt-label` .6875
 
+**Graisses.** `--graisse-legere` 300 · `--graisse-normale` 400 · `--graisse-forte` 700
+
+Les trois graisses que le système emploie, chacune servie par une face réelle de `fonts.css` : Space Grotesk 300, la normale des deux familles, et 700 pour Doto comme pour Space Mono. Écrites en chiffres dans huit modules, elles rendaient invisible le budget de **deux graisses par écran** que pose `design-system.md` §3 ; nommées, ce budget se compte à la lecture.
+
+Space Grotesk 500 est déclarée dans `fonts.css` mais n'est employée nulle part. Elle n'aura de token que le jour où elle aura un emploi : un token sans usage est une invitation à lui en trouver un, ce qui est exactement la façon dont un budget de deux graisses en devient trois.
+
+**Interlignage.** `--interligne-serre` 1
+
+Pour un libellé qui tient sur une ligne, et pour lui seul : `Chip`, `Segment`, cran du `SelecteurNiveau`, wordmark de l'accueil, planche de contrôle. Il vaut 1 et non l'interlignage du corps de texte parce qu'il n'y a **aucune ligne suivante à espacer** : au-delà de 1, le surplus se répartit en blanc au-dessus et en dessous du libellé, entre dans la boîte du contrôle et fausse son centrage vertical. Un texte qui se lit vraiment a le sien, `--prompteur-interligne`.
+
 **Mouvement.** `--duree-courte` 200ms · `--courbe-transition` `cubic-bezier(0.25, 0.1, 0.25, 1)`
 
 La courbe est un token et non une valeur de module : `design-system.md` §7 la prescrit pour tout le système, la Feuille s'en sert déjà et les transitions entre phases s'en serviront. Recopiée dans deux modules, elle diverge au premier réglage.
@@ -75,6 +85,7 @@ Une variable, deux valeurs, comme un mode Figma. **Résolu par `light-dark()`**,
 | `--surface-haute` | `--gris-050` | `--gris-900` |
 | `--border` | `--gris-100` | `--gris-850` |
 | `--border-visible` | `--gris-200` | `--gris-800` |
+| `--border-controle` | `--gris-500` | `--gris-400` |
 | `--text-disabled` | `--gris-400` | `--gris-500` |
 | `--text-secondary` | `--gris-500` | `--gris-400` |
 | `--text-primary` | `--gris-900` | `--gris-100` |
@@ -82,6 +93,25 @@ Une variable, deux valeurs, comme un mode Figma. **Résolu par `light-dark()`**,
 | `--accent` | `--rouge` | `--rouge` |
 
 **Ces noms sont ceux de la skill et ne sont pas traduits.** Ils constituent un vocabulaire importé ; les renommer romprait la correspondance avec le document qui fait autorité. Les variables que nous inventons, en revanche, suivent le lexique du projet.
+
+### Deux bordures, deux rôles
+
+`--border-controle` n'est pas un `--border-visible` plus foncé : c'est **une autre fonction**, et les deux coexistent.
+
+WCAG 1.4.11 demande 3:1 pour la bordure d'un contrôle. Mesuré au navigateur contre `--ground`, `--border-visible` donne **1,47 en clair et 1,66 en sombre** : il ne le tient dans aucun des deux modes. Or un `Chip` inactif n'a que sa bordure pour exister, et un `Bouton` secondaire n'a qu'elle pour ressembler à un bouton. `--border-controle` tient le seuil largement, **5,27 en clair et 7,37 en sombre**.
+
+| Le token | Ce qu'il fait | Où |
+|---|---|---|
+| `--border-visible` | **dessiner** un filet, un séparateur | trait haut de la `Feuille`, poignée, filets de la bande de lecture |
+| `--border-controle` | rendre un contrôle **perceptible** quand la bordure est son seul indice | `Chip` inactif, `Bouton` secondaire |
+
+Ce sont les valeurs de `--text-secondary`, déjà éprouvées à un seul endroit par le `SelecteurNiveau`, dont la bordure de cran consommé avait buté sur exactement ce problème et l'avait résolu localement. Le token généralise ce choix sous un nom qui dit son **rôle** et non sa teinte : une bordure n'est pas du texte, et la faire dépendre d'un token de texte la rendrait solidaire d'un réglage qui ne la concerne pas.
+
+**`--border-visible` reste le bon choix pour un filet, et n'est pas remplacé.** Un filet ne désigne rien, il dessine ; il n'est pas un contrôle et n'a aucun seuil à tenir. Un système qui remonterait toutes ses bordures à 3:1 perdrait la discrétion que Nothing revendique, et le premier à en souffrir serait le trait haut de la `Feuille`, qui doit séparer sans se faire remarquer.
+
+Le préfixe reste `--border-` malgré le lexique français : c'est le nom de famille importé de la skill, et le suffixe seul dit ce que ce membre a de particulier.
+
+Un cas reste à trancher au moment d'appliquer le token, et il n'est pas tranché ici : le groupe du `Segment` porte une bordure, mais son option cochée est un pavé plein qui dit déjà où est le contrôle et dans quel état il se trouve. Sa bordure n'est peut-être qu'un filet.
 
 ### Les trois états du mode, en trois lignes
 
@@ -151,7 +181,7 @@ Base : `Space Mono`, `--txt-label` majuscules, interlettrage 0.06em, hauteur min
 | `data-variante` | Fond | Bordure | Texte |
 |---|---|---|---|
 | `primaire` | `--text-display` | aucune | `--ground` |
-| `secondaire` | aucun | `--border-visible` | `--text-primary` |
+| `secondaire` | aucun | `--border-controle` | `--text-primary` |
 | `ghost` | aucun | aucune | `--text-secondary` |
 
 États en pseudo-classes : `:hover` éclaircit la bordure, `:focus-visible` pose un contour de 2px, `:disabled` passe l'opacité à 0.4.
@@ -172,10 +202,12 @@ La casse normale de `instruction` n'est pas un oubli : les capitales suppriment 
 
 | Composant | Axe | Valeurs |
 |---|---|---|
-| `Chip` | `data-actif` | `true` bordure et texte en `--text-display`, sinon `--border-visible` et `--text-secondary` |
+| `Chip` | `data-actif` | `true` bordure et texte en `--text-display`, sinon `--border-controle` et `--text-secondary` |
 | `Segment` | `data-actif` sur chaque option | `true` inverse le fond et le texte |
 
 `Chip` est en sommeil tant qu'un seul paquet existe : un sélecteur à une option est un contrôle qui ne peut rien faire.
+
+**Conséquence du passage à `--border-controle`, à traiter en même temps :** le survol d'un chip inactif visait `--text-secondary`, qui est désormais la valeur même de sa bordure au repos ; le pas de survol ne ferait plus rien. Il se reporte sur `--text-primary`, c'est-à-dire un cran et un seul, `--text-display` restant réservé à l'état actif. C'est exactement ce que fait déjà le `Bouton` secondaire, ce qui aligne les deux au lieu de les séparer.
 
 ## SelecteurNiveau
 

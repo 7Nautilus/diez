@@ -19,7 +19,7 @@
 
 import { carteDeTest } from "../../domain/__tests__/fixtures";
 import { type Niveau, type PaquetId, VERROU_MS } from "../../domain/types";
-import { avancer, type EtatPartie, etatInitial, type Geste } from "../partie";
+import { avancer, type EtatPartie, etatInitial, type Geste, rangDansLeCorpus } from "../partie";
 
 /*
  * Deux cartes : `suivante` ne se prouve qu'en changeant de carte, et avec une
@@ -186,5 +186,45 @@ describe("L'epuisement", () => {
     ]);
     expect(etat.tour.phase).toBe("THEME");
     expect(etat.epuise).toBe(false);
+  });
+});
+
+/*
+ * Le rang affiche par la phase THEME. Ce qu'il faut prouver n'est pas qu'il se
+ * calcule, mais qu'il ne bouge pas : un numero qui change d'une soiree a
+ * l'autre ne designe plus rien.
+ */
+describe("Le rang de carte", () => {
+  it("numerote a partir de 1, dans l'ordre du corpus", () => {
+    expect(rangDansLeCorpus(CORPUS, PREMIERE)).toBe(1);
+    expect(rangDansLeCorpus(CORPUS, SECONDE)).toBe(2);
+  });
+
+  it("suit la position dans le corpus, jamais l'identifiant", () => {
+    /*
+     * LE DEFAUT QUE CETTE SUITE EXISTE POUR RETENIR. Le rang se derivait du
+     * suffixe de l'identifiant, et affichait `CARTE 001` sur toutes les cartes,
+     * les identifiants du corpus etant suffixes PAR SUJET. Un corpus range a
+     * l'envers de l'ordre alphabetique rend la difference visible : une lecture
+     * de l'identifiant, sous n'importe quelle forme, rendrait ici l'inverse.
+     */
+    const aRebours = [carteDeTest("zeta-001"), carteDeTest("alpha-001")];
+    expect(rangDansLeCorpus(aRebours, "zeta-001")).toBe(1);
+    expect(rangDansLeCorpus(aRebours, "alpha-001")).toBe(2);
+  });
+
+  it("ne bouge pas quand la partie avance", () => {
+    const avant = rangDansLeCorpus(CORPUS, PREMIERE);
+    const etat = rejouer([PIOCHER, ANNONCER, CHOISIR, REVELER, SUIVANTE]);
+    // La sequence a consomme un niveau et change de carte : si le rang
+    // dependait de l'etat de la partie plutot que du corpus, il aurait bouge.
+    expect(etat.historique[PREMIERE]).toHaveLength(1);
+    expect(rangDansLeCorpus(CORPUS, PREMIERE)).toBe(avant);
+  });
+
+  it("leve sur une carte etrangere au corpus, plutot que de rendre un numero faux", () => {
+    // Un numero de repli designerait une AUTRE carte du corpus, ce qui est pire
+    // qu'un ecran qui s'arrete : c'est le meme arbitrage que `carteDuCorpus`.
+    expect(() => rangDansLeCorpus(CORPUS, "carte-absente")).toThrow(/introuvable/);
   });
 });

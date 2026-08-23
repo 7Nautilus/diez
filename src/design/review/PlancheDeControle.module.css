@@ -28,8 +28,8 @@
   /* La graisse forte du navigateur pour un `h1` epaissirait Space Grotesk sans
      que rien ne l'ait demande : la hierarchie se fait par la taille et par le
      vide, pas par la graisse (docs/design-system.md section 3). */
-  font-weight: 400;
-  line-height: 1;
+  font-weight: var(--graisse-normale);
+  line-height: var(--interligne-serre);
   color: var(--text-display);
 }
 
@@ -122,6 +122,6 @@
 .enseigne {
   /* Meme raison que sur le titre de la Rubrique : la voix du libelle vient de
      l'Etiquette, pas de la graisse par defaut du `h2`. */
-  font-weight: 400;
+  font-weight: var(--graisse-normale);
   margin-block-end: var(--esp-md);
 }

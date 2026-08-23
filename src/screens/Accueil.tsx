@@ -1,21 +1,27 @@
 import { useId, useState } from "react";
 import { Bouton } from "../design/components/Bouton";
-import { Chip } from "../design/components/Chip";
+import { Confirmation } from "../design/components/Confirmation";
 import { Etiquette } from "../design/components/Etiquette";
 import { Feuille } from "../design/components/Feuille";
 import { type OptionSegment, Segment } from "../design/components/Segment";
 import { Statut } from "../design/components/Statut";
 import type { PaquetId } from "../domain/types";
 import styles from "./Accueil.module.css";
-import type { ModeAffichage, PaquetActif } from "./types";
+import { CONFIRMATION_REINITIALISATION, type ModeAffichage, type PaquetActif } from "./types";
 
 /*
  * Diez : l'ecran d'accueil, phase REPOS.
  *
- * Le plus charge du parcours, et celui qui porte le plus de correctifs
- * d'audit. Trois couches et une seule rupture, comme partout
- * (docs/design-system.md section 4, ACCUEIL) : le wordmark en Doto, la
- * selection des paquets, puis la pile tertiaire en bord bas.
+ * Trois couches et une seule rupture, comme partout (docs/design-system.md
+ * section 4, ACCUEIL) : le wordmark en Doto pour la rupture et pour la couche
+ * primaire, PIOCHER pour la secondaire, et la pile tertiaire en bord bas,
+ * compteur et copie des signalements.
+ *
+ * LA COUCHE SECONDAIRE N'EST PLUS LA SELECTION DES PAQUETS, a rebours du
+ * tableau de design-system.md section 4 : ce tableau decrit un ecran qui
+ * portait un selecteur de paquets et un selecteur de mode, et les deux sont
+ * partis (plus bas, et dans le menu). Le document reste a mettre a jour, ce
+ * fichier ne pouvant pas le faire.
  *
  * L'ecran est une fonction de ses proprietes. Il ne lit aucune horloge, ne
  * tire aucun hasard, n'ecrit dans aucun stockage : `screens/` ne descend que
@@ -25,7 +31,8 @@ import type { ModeAffichage, PaquetActif } from "./types";
  * AUCUNE CONSIGNE PERMANENTE ici, contre une recommandation d'audit et
  * volontairement : la ligne d'instruction a ete retiree pour epurer l'ecran,
  * et l'apprentissage repose entierement sur le menu, dont la premiere section
- * s'appelle "Les regles" (design-system.md section 4).
+ * s'appelle "Les regles" (design-system.md section 4). Le selecteur de mode a
+ * suivi le meme chemin, pour la meme raison et vers le meme endroit.
  */
 
 /*
@@ -72,13 +79,12 @@ export type ProprietesAccueil = {
   signalements: number;
   /*
    * DEUX CHAMPS AJOUTES AU CONTRAT, et deux seulement. Le selecteur de mode
-   * vit sur cet ecran (design-system.md section 4, couche tertiaire), mais la
-   * lecture et l'ecriture de la preference relevent de `storage/`, que
-   * `screens/` ne peut pas atteindre. L'ecran recoit donc le mode courant et
-   * rend le choix ; la pose de `data-mode` sur la racine appartient a `app/`,
-   * pour une raison qui n'est pas de principe : le mode s'applique aussi aux
-   * quatre autres ecrans, et un tour repris au demarrage en phase QUESTION
-   * n'affiche jamais cet ecran-ci.
+   * vit dans le menu de cet ecran, mais la lecture et l'ecriture de la
+   * preference relevent de `storage/`, que `screens/` ne peut pas atteindre.
+   * L'ecran recoit donc le mode courant et rend le choix ; la pose de
+   * `data-mode` sur la racine appartient a `app/`, pour une raison qui n'est
+   * pas de principe : le mode s'applique aussi aux quatre autres ecrans, et un
+   * tour repris au demarrage en phase QUESTION n'affiche jamais cet ecran-ci.
    */
   mode: ModeAffichage;
   onChoisirMode: (mode: ModeAffichage) => void;
@@ -95,6 +101,13 @@ export type ProprietesAccueil = {
    */
   copie: boolean;
   onPiocher: () => void;
+  /*
+   * PLUS AUCUN CONTROLE DE L'ECRAN NE LE DECLENCHE, et il reste au contrat.
+   * Il n'est pas non plus destructure dans le corps, ce qui est la seule
+   * facon de le garder sans qu'un rappel jamais appele traine dans une
+   * portee. La raison du maintien est ecrite au point ou la section PAQUETS
+   * etait rendue, dans le corps du composant.
+   */
   onBasculerPaquet: (id: PaquetId) => void;
   onReinitialiser: () => void;
   onCopierSignalements: () => void;
@@ -109,7 +122,6 @@ export function Accueil(proprietes: ProprietesAccueil) {
     onChoisirMode,
     copie,
     onPiocher,
-    onBasculerPaquet,
     onReinitialiser,
     onCopierSignalements,
   } = proprietes;
@@ -122,11 +134,27 @@ export function Accueil(proprietes: ProprietesAccueil) {
    */
   const [menuOuvert, setMenuOuvert] = useState(false);
 
+  /*
+   * Meme raison, et un etat distinct plutot qu'un seul a trois valeurs : les
+   * deux panneaux sont ouverts EN MEME TEMPS, la Confirmation par-dessus le
+   * menu qu'elle endort. Un etat unique forcerait a refermer le menu pour
+   * ouvrir la demande, et le focus n'aurait plus de declencheur ou revenir.
+   */
+  const [confirmationOuverte, setConfirmationOuverte] = useState(false);
+
   const idRaison = useId();
 
   /*
    * Vrai aussi sur une liste vide, ce qui est le comportement voulu : sans
    * paquet, il n'y a rien a piocher.
+   *
+   * INATTEIGNABLE AUJOURD'HUI, et la branche reste. Depuis le retrait de la
+   * section PAQUETS, plus aucun geste ne permet de tout decocher, donc le
+   * correctif d'audit "PIOCHER est desactive si aucun paquet n'est coche,
+   * avec la raison" (design-system.md section 4) ne peut plus se declencher.
+   * Il redevient atteignable le jour ou le paquet maison rend le selecteur.
+   * L'effacer maintenant reviendrait a le reecrire ce jour-la, c'est-a-dire a
+   * le perdre : un correctif d'audit supprime est un correctif a redecouvrir.
    */
   const aucunPaquet = paquets.every((paquet) => !paquet.actif);
 
@@ -152,45 +180,37 @@ export function Accueil(proprietes: ProprietesAccueil) {
       <h1 className={styles.wordmark}>Diez</h1>
 
       {/*
-       * UN `fieldset` NATIF, et non un `div role="group"` : trois pilules nues
-       * ne disent pas de quoi elles sont les options, et l'element natif
-       * rattache son `legend` au groupe sans qu'aucun identifiant n'ait a
-       * etre fabrique ni maintenu. C'est la meme raison que le `button` du
-       * Chip et le `radio` du Segment, l'element natif d'abord.
+       * ICI SE RENDAIT LA SECTION PAQUETS, ET SON ABSENCE N'EST PAS UN OUBLI.
+       * Un seul paquet existe, `general`, et docs/tokens-et-composants.md le
+       * dit deja : "Chip est en sommeil tant qu'un seul paquet existe, un
+       * selecteur a une option etant un controle qui ne peut rien faire." Un
+       * groupe d'une seule pilule occupait la couche secondaire de l'ecran
+       * pour n'offrir aucun choix.
+       *
+       * CE QUI DISPARAIT EST LE RENDU D'UN CONTROLE, PAS LA NOTION DE PAQUET
+       * ACTIF. Le contrat garde `paquets` et `onBasculerPaquet`, et l'etat de
+       * selection sert encore ici meme, a `aucunPaquet` plus bas. Le jour ou
+       * le paquet maison arrive, la section revient autour d'un `fieldset`
+       * natif dont le `legend` porte une Etiquette de metadonnee, et rien
+       * d'autre ne bouge. Retirer les deux champs du contrat obligerait au
+       * contraire a rouvrir app/ et screens/types.ts pour rendre a l'ecran une
+       * capacite qu'il n'avait jamais perdue.
        */}
-      <fieldset className={styles.paquets}>
-        <legend>
-          <Etiquette fonction="metadonnee">Paquets</Etiquette>
-        </legend>
-        <div className={styles.chips}>
-          {paquets.map((paquet) => (
-            <Chip key={paquet.id} actif={paquet.actif} onClick={() => onBasculerPaquet(paquet.id)}>
-              {paquet.libelle}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
 
       {/*
        * La pile tertiaire, ancree en bord bas. La regle des deux emplacements
        * veut PIOCHER a l'emplacement AU-DESSUS, le compteur occupant le
        * dernier rang (design-system.md, La regle des deux emplacements) : sur
        * l'ecran suivant, ANNONCER LES CHIFFRES prend le dernier rang, et les
-       * deux ne se superposent donc pas.
+       * deux ne se superposent donc pas. Le depart du selecteur de mode ne
+       * touche a rien de cet arrangement : il etait en TETE de pile, au-dessus
+       * de tout ce que la regle contraint.
        *
        * Tout ce qui s'affiche par intermittence, la raison du blocage et
        * l'action de copie, est place AU-DESSUS de PIOCHER : pose en dessous,
        * il deplacerait le bouton d'avancement d'une soiree a l'autre.
        */}
       <div className={styles.pile}>
-        <Segment
-          etiquette="Mode d'affichage"
-          options={MODES}
-          valeur={mode}
-          onChoisir={onChoisirMode}
-          className={styles.modes}
-        />
-
         {/* Visible uniquement s'il existe des signalements (correctif
             d'audit, architecture.md section 7) : sans signalement, l'action
             n'a rien a copier et n'est qu'une ligne de plus a lire. */}
@@ -282,15 +302,45 @@ export function Accueil(proprietes: ProprietesAccueil) {
 
           <section className={styles.rubrique}>
             {/*
+             * LE SELECTEUR DE MODE EST ICI ET NON PLUS EN TERTIAIRE DE
+             * L'ECRAN. C'est la decision deja prise pour la consigne
+             * permanente, appliquee au seul autre element de l'accueil qui ne
+             * servait pas a jouer : l'ecran ne garde que PIOCHER, et tout ce
+             * qui s'apprend ou se regle tient dans le menu (design-system.md
+             * section 4).
+             *
+             * Le menu n'existe QUE sur l'accueil, et c'est voulu : pendant un
+             * tour, rien ne doit concurrencer l'ecran. Le mode se regle donc
+             * au seul endroit ou l'on ne joue pas, qui est aussi le seul
+             * moment ou l'on regle un mode d'affichage.
+             */}
+            <h3 className={styles.titreRubrique}>
+              <Etiquette fonction="metadonnee">L'affichage</Etiquette>
+            </h3>
+            <p className={styles.precision}>
+              Auto suit le réglage du téléphone ; sombre et clair le forcent, pour cette application
+              seulement.
+            </p>
+            <Segment
+              etiquette="Mode d'affichage"
+              options={MODES}
+              valeur={mode}
+              onChoisir={onChoisirMode}
+              className={styles.modes}
+            />
+          </section>
+
+          <section className={styles.rubrique}>
+            {/*
              * REINITIALISER EST ICI ET NON DANS LA PILE TERTIAIRE. Le
              * correctif d'audit exige que l'action soit accessible depuis
              * l'accueil et pas seulement depuis l'ecran d'epuisement, ce que
-             * le menu satisfait ; et le systeme n'a pas de composant
-             * `Confirmation`, alors que design-system.md section 6 en prevoit
-             * un pour ce seul usage. Placee en bord bas, une action
-             * destructrice irreversible tomberait dans l'arc du pouce, a un
-             * rang de PIOCHER, sans rien pour rattraper le geste. Les deux
-             * taps du menu sont la seule garde qui existe aujourd'hui.
+             * le menu satisfait. Placee en bord bas, une action destructrice
+             * irreversible tomberait dans l'arc du pouce, a un rang de
+             * PIOCHER, sans rien pour rattraper le geste.
+             *
+             * Les deux taps du menu ne sont plus la seule garde : le bouton
+             * ouvre desormais une Confirmation, plus bas.
              */}
             <h3 className={styles.titreRubrique}>
               <Etiquette fonction="metadonnee">L'historique</Etiquette>
@@ -300,12 +350,49 @@ export function Accueil(proprietes: ProprietesAccueil) {
               avec un autre groupe, réinitialise : sinon l'application continue d'écarter des
               questions que personne autour de la table n'a entendues.
             </p>
-            <Bouton variante="secondaire" className={styles.action} onClick={onReinitialiser}>
+            <Bouton
+              variante="secondaire"
+              className={styles.action}
+              onClick={() => setConfirmationOuverte(true)}
+            >
               Réinitialiser l'historique
             </Bouton>
           </section>
         </div>
       </Feuille>
+
+      {/*
+       * LA CONFIRMATION EST VOISINE DU MENU, PAS SON ENFANT. Les deux se
+       * portent par un portail en fin de `<body>` : la Confirmation ouverte
+       * arrive donc APRES le menu dans le document, l'endort avec `inert`
+       * comme le reste, peint au-dessus sans qu'aucun `z-index` n'existe, et
+       * rend le focus a l'endroit du menu d'ou il etait parti, le bouton
+       * ci-dessus. L'imbriquer dans la Feuille du menu ferait l'inverse :
+       * `inert` est herite, et le menu endormi endormirait la demande qu'il
+       * vient d'ouvrir.
+       *
+       * Le libelle d'action dit ce qui arrive et non a quoi l'on consent, ce
+       * que le type de la Confirmation impose. Il dit "Effacer" la ou le
+       * declencheur dit "Reinitialiser", et l'ecart est voulu : le declencheur
+       * nomme l'intention du narrateur, la confirmation nomme l'effet.
+       *
+       * LES MOTS NE SONT PLUS ECRITS ICI. L'ecran d'epuisement pose desormais
+       * la meme question, et deux redactions d'un meme effacement divergeraient
+       * sans que rien ne le signale : elles vivent dans ./types.ts, qui porte
+       * la raison.
+       *
+       * LE MENU RESTE OUVERT DERRIERE. Le refermer d'un meme geste
+       * demonterait le bouton auquel la Confirmation rend le focus, et le
+       * ferait retomber sur `<body>`. Le narrateur ferme lui-meme et retrouve
+       * le compteur remis a plein, qui est le seul accuse de reception dont
+       * l'action ait besoin.
+       */}
+      <Confirmation
+        {...CONFIRMATION_REINITIALISATION}
+        ouverte={confirmationOuverte}
+        surAction={onReinitialiser}
+        surFermeture={() => setConfirmationOuverte(false)}
+      />
     </main>
   );
 }

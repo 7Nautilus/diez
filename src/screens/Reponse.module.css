@@ -95,7 +95,7 @@
 .reponse[data-forme="numerique"] {
   font-family: var(--police-mono);
   /* Space Mono n'a que deux graisses, 400 et 700 : la legere n'existe pas. */
-  font-weight: 400;
+  font-weight: var(--graisse-normale);
 }
 
 .reponse[data-forme="texte"] {
@@ -104,7 +104,7 @@
      `h1` epaissirait la display sans que rien ne l'ait demande : la hierarchie
      se fait par la taille et par le vide, jamais par la graisse
      (design-system.md sections 3 et 4). */
-  font-weight: 300;
+  font-weight: var(--graisse-legere);
 }
 
 /*

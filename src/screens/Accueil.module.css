@@ -7,10 +7,11 @@
  * tourne signalerait un token manquant, pas un bloc a ajouter
  * (docs/design-system.md section 2).
  *
- * Cet ecran ne redecrit AUCUNE primitive : le Bouton, le Chip, l'Etiquette et
- * le Segment portent leur propre forme, leurs propres cibles tactiles et
- * leurs propres contours de focus. Ce module ne fait que les poser les uns
- * par rapport aux autres, ce qui est le seul travail qui reste a un ecran.
+ * Cet ecran ne redecrit AUCUNE primitive : le Bouton, l'Etiquette, le Segment,
+ * la Feuille et la Confirmation portent leur propre forme, leurs propres
+ * cibles tactiles et leurs propres contours de focus. Ce module ne fait que
+ * les poser les uns par rapport aux autres, ce qui est le seul travail qui
+ * reste a un ecran.
  */
 
 .ecran {
@@ -47,10 +48,15 @@
   flex: none;
   font-family: var(--police-display);
   font-size: var(--txt-display-xl);
-  /* La seule graisse de Doto embarquee (design-system.md section 1) : une
-     autre valeur ferait synthetiser la graisse par le navigateur. */
-  font-weight: 700;
-  line-height: 1;
+  /* Doto n'a qu'une seule face embarquee (design-system.md section 1) : toute
+     autre valeur ferait synthetiser la graisse par le navigateur. Le chiffre
+     est celui de --graisse-forte, et il n'est plus ecrit ici : le budget de
+     deux graisses par ecran ne se compte que si les graisses ont des noms. */
+  font-weight: var(--graisse-forte);
+  /* Un mot sur une ligne, et rien a espacer en dessous : c'est exactement ce
+     que --interligne-serre protege, le wordmark etant l'un des cas que
+     tokens-et-composants.md nomme (collection 1, Interlignage). */
+  line-height: var(--interligne-serre);
   /* Interlettrage POSITIF, a rebours du -0.03em que la skill nothing-design
      donne au palier display : Doto est matriciel, et un interlettrage negatif
      fait fusionner la derniere colonne de points d'une lettre avec la
@@ -66,38 +72,21 @@
 }
 
 /*
- * Le `fieldset` du groupe de paquets. Il arrive avec deux comportements
- * propres a l'element, qu'aucun reset global ne couvre : une bordure gravee
- * dessinee par le navigateur, et une largeur minimale calee sur son contenu
- * qui l'empeche de retrecir dans une colonne flex.
+ * AUCUNE REGLE DE SECTION PAQUETS ICI, ET C'EST DELIBERE. Le `fieldset` et sa
+ * rangee de pilules ont ete retires du rendu tant qu'un seul paquet existe
+ * (la raison complete est dans Accueil.tsx, au point ou la section se rendait).
+ * Leurs regles partent avec eux : une regle sans element est plus couteuse
+ * qu'une regle a reecrire, parce qu'elle se copie, se generalise et finit par
+ * s'appliquer a autre chose.
  *
- * AUCUN `display: flex` ici, volontairement : la disposition en boite flexible
- * d'un `fieldset` a longtemps ete traitee a part par les moteurs, et c'est le
- * seul element du document ou le risque existe. La rangee de pilules est donc
- * un enfant ordinaire, ce qui ne coute rien.
+ * Le vide qu'elles laissent entre le wordmark et la pile n'est pas un trou de
+ * mise en page : la pile est poussee en bord bas par sa marge automatique, et
+ * ce vide est ce qui isole le wordmark. L'espace sert toujours a isoler dans ce
+ * systeme, jamais a combler.
  */
-.paquets {
-  flex: none;
-  border: none;
-  min-inline-size: 0;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  /* Ecart entre cibles adjacentes, exige par WCAG 2.2 et deja la valeur de
-     --niveau-bloc-ecart sur le selecteur (design-system.md section 9). */
-  gap: var(--esp-sm);
-  /* Serre : le libelle du groupe et ses options sont un seul objet (8px,
-     "ces elements vont ensemble"). */
-  margin-top: var(--esp-sm);
-}
 
 /*
- * La pile tertiaire, poussee en bord bas par la marge automatique. Le vide
- * qui s'ouvre au-dessus n'est pas du remplissage : c'est lui qui isole le
- * wordmark, et l'espace sert toujours a isoler dans ce systeme, jamais a
- * combler.
+ * La pile tertiaire, poussee en bord bas par la marge automatique.
  */
 .pile {
   margin-top: auto;
@@ -106,13 +95,6 @@
   flex-direction: column;
   align-items: stretch;
   gap: var(--esp-md);
-}
-
-/* Le groupe est en `inline-flex` : sans cette regle il s'etirerait a la
-   largeur de la pile, et ses trois options grandiraient avec lui alors qu'un
-   selecteur de mode n'est pas une action. */
-.modes {
-  align-self: center;
 }
 
 /*
@@ -165,17 +147,13 @@
 
 .menu {
   /*
-   * L'interlignage du palier `body-sm`, celui que la skill nothing-design
-   * donne avec la taille dans son echelle typographique. tokens.css n'a
-   * retenu que les TAILLES de cette echelle, donc la valeur est nommee ici,
-   * une fois, au lieu d'etre recopiee sur chacune des regles qui en a besoin.
-   *
-   * Ce n'est deliberement PAS --prompteur-interligne, qui vaut le meme nombre
-   * aujourd'hui : ce token protege la lecture a voix haute de l'ecran
-   * QUESTION, et un reglage de prompteur ne doit pas deplacer le texte d'un
-   * menu qu'on lit en silence.
+   * Le menu se lit en silence, d'ou --interligne-lecture et non
+   * --prompteur-interligne, qui vaut le meme nombre : ce dernier protege la
+   * lecture a voix haute de l'ecran QUESTION, et regler un prompteur ne doit
+   * pas deplacer le texte d'un menu. Ce n'est pas davantage
+   * --interligne-serre, qui vaut 1 et protege l'inverse, un libelle sans ligne
+   * suivante.
    */
-  --menu-interligne: 1.5;
 
   display: flex;
   flex-direction: column;
@@ -192,10 +170,25 @@
 
 .titreRubrique {
   /* Un `h3` arrive en gras et a sa propre taille, dont l'Etiquette qu'il
-     porte n'herite que la graisse. Sans cette remise a 400, Space Mono rendrait
-     sa graisse 700 et le titre de rubrique cesserait de ressembler aux autres
-     metadonnees du systeme. */
-  font-weight: 400;
+     porte n'herite que la graisse. Sans cette remise a la graisse normale,
+     Space Mono rendrait sa graisse forte et le titre de rubrique cesserait de
+     ressembler aux autres metadonnees du systeme. */
+  font-weight: var(--graisse-normale);
+}
+
+/*
+ * Le selecteur de mode, descendu de la pile tertiaire de l'ecran vers le menu.
+ * Le groupe est en `inline-flex` (Segment.module.css) : sans cette regle il
+ * s'etirerait a la largeur du panneau, et ses trois options grandiraient avec
+ * lui alors qu'un reglage n'est pas une action.
+ *
+ * `flex-start` et non le `center` qu'il avait dans la pile, pour la raison qui
+ * cale `.action` de la meme facon : dans le menu, la pleine largeur et le
+ * centrage sont reserves a l'ecran, et tout ce qui est ici se lit depuis le
+ * meme bord d'attaque que les phrases au-dessus.
+ */
+.modes {
+  align-self: flex-start;
 }
 
 /*
@@ -210,7 +203,7 @@
   padding-inline-start: var(--esp-lg);
   color: var(--text-primary);
   font-size: var(--txt-body-sm);
-  line-height: var(--menu-interligne);
+  line-height: var(--interligne-lecture);
 }
 
 .regles li + li {
@@ -228,7 +221,7 @@
 .precision {
   color: var(--text-secondary);
   font-size: var(--txt-body-sm);
-  line-height: var(--menu-interligne);
+  line-height: var(--interligne-lecture);
 }
 
 .action {

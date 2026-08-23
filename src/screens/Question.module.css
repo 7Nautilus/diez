@@ -64,7 +64,7 @@
      le contenu primaire (design-system.md section 9), et non pour son
      apparence : sa taille et sa graisse par defaut sont donc reecrites, la
      couche primaire de QUESTION etant Space Grotesk 400 en `--txt-heading`. */
-  font-weight: 400;
+  font-weight: var(--graisse-normale);
   color: var(--text-display);
   /* Un dernier mot seul sur sa ligne est un decrochage a la lecture a voix
      haute, la ou il n'est qu'inelegant dans un texte qu'on lit des yeux. */

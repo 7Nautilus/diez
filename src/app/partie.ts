@@ -142,6 +142,46 @@ export function nombreDeCartesRestantes(corpus: readonly Carte[], etat: EtatPart
   return cartesRestantes(corpus, etat.historique, etat.paquets).length;
 }
 
+/**
+ * Le rang d'une carte dans le corpus, entier a partir de 1. C'est le nombre
+ * que la phase THEME affiche en `CARTE 042`.
+ *
+ * IL SE CALCULE ICI ET NULLE PART AILLEURS, parce qu'il n'existe qu'au niveau
+ * du corpus ENTIER. Un ecran ne recoit qu'un `ResumeCarte` et ne peut donc pas
+ * l'etablir ; le domaine n'en a aucun usage, aucune regle du jeu ne depend du
+ * rang d'une carte. C'est une metadonnee de presentation, produite par la
+ * seule couche qui possede le corpus (architecture.md section 4).
+ *
+ * IL EST STABLE PARCE QUE L'ORDRE DU CORPUS L'EST, ET SEULEMENT POUR CELA.
+ * `lireLots` trie les fichiers de contenu par chemin et `compilerCorpus`
+ * conserve l'ordre des cartes dans chaque lot (tools/compiler.ts) : deux
+ * compilations du meme contenu, sur deux machines, rendent le meme ordre, donc
+ * la meme carte porte le meme numero d'une soiree a l'autre. La contrepartie
+ * est ecrite pour qui touchera au contenu : une carte INSEREE au milieu d'un
+ * lot decale toutes les suivantes, et renumerote donc des cartes que des
+ * joueurs ont deja vues. Une carte s'ajoute a la fin d'un lot.
+ *
+ * Un compteur remis a zero a chaque partie serait la reponse facile et la
+ * mauvaise : il numeroterait le tour et non la carte.
+ *
+ * LEVE si la carte est inconnue du corpus, comme `carteDuCorpus` plus bas et
+ * pour la meme raison : le tour ne reference que des cartes que `piocher` a
+ * tirees de ce meme corpus, donc l'absence est un defaut de cablage et non un
+ * etat de jeu (conventions-code.md section 7). Un rang de repli afficherait un
+ * numero qui designe une autre carte, ce que la phase THEME refuse deja pour
+ * la troncature. Meme reserve de phase 5 que les deux acces ci-dessous : une
+ * carte retiree du corpus entre deux soirees deviendra un etat normal le jour
+ * ou le tour sera relu depuis le stockage, et les trois levees devront tomber
+ * ensemble.
+ */
+export function rangDansLeCorpus(corpus: readonly Carte[], id: CarteId): number {
+  const index = corpus.findIndex((carte) => carte.id === id);
+  if (index < 0) throw new Error(`Carte introuvable dans le corpus : ${id}`);
+  // Le rang se lit a voix haute et se compare a une carte posee sur la table :
+  // il commence a 1, la position dans un tableau ne se montre pas.
+  return index + 1;
+}
+
 /** Cette question a-t-elle deja ete signalee ? L'ecran REPONSE l'affiche. */
 export function estSignalee(
   signalements: readonly Signalement[],

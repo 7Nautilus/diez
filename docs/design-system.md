@@ -124,10 +124,12 @@ Chaque écran a exactement trois couches, et **une seule** rupture de motif.
 | Couche | Contenu | Traitement |
 |---|---|---|
 | Primaire | `DIEZ` | Doto, `--display-xl` |
-| Secondaire | Sélection des paquets | Chips, Space Grotesk 400 |
+| Secondaire | Sélection des paquets | Chips, Space Mono |
 | Tertiaire | compteur, sélecteur de mode, ligne d'apprentissage, actions | Space Mono, bord bas |
 
 Action : `PIOCHER`, bouton pill primaire, pleine largeur.
+
+*Correctif de phase 4 :* cette ligne portait « Chips, Space Grotesk 400 », en contradiction avec §3, qui pose que **les libellés se traitent par fonction et sont toujours Space Mono**. C'est §3 qui prime, pour la raison qui fait la force de la règle : un chip porte un libellé de contrôle, et une règle générale l'emporte sur une mention particulière qui ne la contredit qu'en passant, sans donner de motif de la contredire. Le composant, lui, composait déjà en Space Mono : c'est le document qui avait tort, pas le code.
 
 **La rupture :** le wordmark en Doto. Seul moment dot-matrix de toute l'app ; sa rareté fait sa force.
 
@@ -412,5 +414,9 @@ Les correctifs de contraste et de typographie sont intégrés dans les sections 
 **Structure sémantique.** Un `h1` par écran, portant le contenu primaire : le thème, puis l'énoncé, puis la réponse. Gratuit, et ça donne une structure navigable.
 
 **Cibles tactiles.** `--niveau-bloc-h` sur le sélecteur, `--cible-min` partout ailleurs, `--niveau-bloc-ecart` entre cibles adjacentes. Le bouton ghost `SIGNALER` n'ayant pas de bordure, sa zone tactile doit être garantie par le remplissage.
+
+**Bordures de contrôle.** *Correctif de phase 4.* Une bordure qui est le **seul indice** qu'un contrôle existe relève de WCAG 1.4.11 et de son seuil de 3:1 : un chip inactif n'a rien d'autre pour exister, un bouton secondaire n'a rien d'autre pour ressembler à un bouton. Ces bordures prennent `--border-controle`, qui tient le seuil dans les deux modes, et non `--border-visible`, qui ne le tient dans aucun.
+
+Un filet ou un séparateur, qui ne désigne rien et ne se laisse confondre avec rien, **garde `--border-visible`.** Le trait haut de la `Feuille` doit séparer sans se faire remarquer : remonter toutes les bordures du système à 3:1 par précaution ferait perdre la discrétion qui est un acquis, pas un défaut. Les deux valeurs et les quatre ratios mesurés sont dans `tokens-et-composants.md`.
 
 Rappel de ce qui est déjà acquis et qu'il ne faut pas casser : aucune information portée par la couleur seule, aucun clignotement, aucune lecture automatique, aucune limite de temps. Et le modèle du narrateur rend le jeu **plus oral que la boîte du commerce**, donc jouable par une personne aveugle en tant que participante.

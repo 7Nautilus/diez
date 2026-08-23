@@ -1,6 +1,6 @@
 import { Bouton } from "../design/components/Bouton";
 import { Etiquette } from "../design/components/Etiquette";
-import type { CarteId, ResumeCarte } from "../domain/types";
+import type { ResumeCarte } from "../domain/types";
 import styles from "./Theme.module.css";
 import { LIBELLE_PAQUET } from "./types";
 
@@ -54,42 +54,50 @@ function palierDeLIntitule(intitule: string): PalierIntitule {
  */
 
 /*
- * Le numero affiche se DERIVE de l'identifiant, il ne se compte pas. Un
- * compteur d'affichage serait une seconde numerotation, et deux numerotations
- * divergent des qu'une carte entre ou sort du corpus, alors que l'identifiant
- * est stable et jamais recycle (architecture.md section 4).
+ * Le rang ARRIVE EN PROPRIETE, il ne se derive plus de l'identifiant.
  *
- * LIMITE CONNUE, signalee au rapport plutot que contournee ici. Les
- * identifiants du corpus sont des slugs suffixes d'un rang PAR SUJET
- * (`capitales-monde-001`) et non d'un rang global : les dix cartes pilotes se
- * terminent toutes par 001, donc cette metadonnee affiche aujourd'hui le meme
- * numero sur toutes. La derivation est juste, c'est la source qui ne porte
- * aucun numero de carte. Trancher demande soit un rang global emis par
- * tools/compiler.ts, soit le retrait de cette ligne : ni l'un ni l'autre
- * n'appartient a cet ecran.
+ * La derivation precedente etait correcte et affichait pourtant `CARTE 001`
+ * sur toutes les cartes, constate en jouant : les identifiants du corpus sont
+ * des slugs suffixes d'un rang PAR SUJET (`capitales-monde-001`,
+ * `corps-humain-001`) et non d'un rang global. Le nombre lu en fin
+ * d'identifiant ne numerote donc rien, et aucune lecture plus fine de la
+ * chaine ne le rendra vrai : ce numero n'est pas dans l'identifiant.
  *
- * Le schema du corpus n'impose aucun suffixe chiffre (`^_?[a-z0-9]+(-[a-z0-9]+)*$`),
- * donc l'absence est un cas normal : la metadonnee disparait, elle n'affiche
- * pas un numero invente.
+ * Le rang n'entre pas non plus dans `ResumeCarte`, qui porte ce que la phase
+ * THEME a le droit de montrer du MODELE. Le rang ne change aucune regle, le
+ * domaine n'en a pas l'usage, et seule la couche de composition peut l'etablir
+ * puisqu'elle seule possede le corpus entier (architecture.md section 4).
+ * C'est une metadonnee de presentation, elle voyage donc comme une propriete
+ * d'ecran, a cote de la carte et non dedans.
+ *
+ * Un compteur local serait la reponse facile et la mauvaise : il repartirait
+ * de 1 a chaque partie, et deux numerotations d'une meme carte divergent des
+ * que l'une des deux bouge.
  */
-const CHIFFRES_FINAUX = /\d+$/;
 
 /** Trois chiffres, la forme `CARTE 042` de design-system.md section 4. */
 const LARGEUR_NUMERO = 3;
 
-function numeroDeCarte(id: CarteId): string | null {
-  const trouve = CHIFFRES_FINAUX.exec(id);
-  if (trouve === null) return null;
-  return trouve[0].padStart(LARGEUR_NUMERO, "0");
-}
-
 export type ProprietesTheme = {
   carte: ResumeCarte;
+  /**
+   * Le rang de la carte dans le corpus, ce que `CARTE 042` affiche.
+   *
+   * Entier a partir de 1, etabli par app/ : la propriete est REQUISE, donc une
+   * composition qui oublierait de le calculer ne compile pas, au lieu de
+   * rendre `CARTE NaN` un soir de partie.
+   *
+   * Au-dela de 999, le libelle s'allonge d'un chiffre plutot que de se
+   * tronquer : `LARGEUR_NUMERO` est un remplissage minimal, pas un gabarit. Un
+   * numero tronque designerait une autre carte, ce qui est pire qu'un libelle
+   * plus long.
+   */
+  rang: number;
   onAnnoncer: () => void;
 };
 
-export function Theme({ carte, onAnnoncer }: ProprietesTheme) {
-  const numero = numeroDeCarte(carte.id);
+export function Theme({ carte, rang, onAnnoncer }: ProprietesTheme) {
+  const numero = String(rang).padStart(LARGEUR_NUMERO, "0");
 
   return (
     <section className={styles.ecran}>
@@ -102,7 +110,7 @@ export function Theme({ carte, onAnnoncer }: ProprietesTheme) {
       </h1>
 
       <div className={styles.pileBasse}>
-        {numero === null ? null : <Etiquette fonction="metadonnee">Carte {numero}</Etiquette>}
+        <Etiquette fonction="metadonnee">Carte {numero}</Etiquette>
 
         {/*
          * Le libelle porte le geste du modele, ou TOUT LE MONDE annonce son
