@@ -251,6 +251,25 @@ Voile associé : **`--voile`**, dérivé de `--noir` à 80 %. Il ne prend pas `l
 
 Le texte ne passe jamais en rouge : `--accent` sur fond sombre donne 4,05:1, sous le seuil de 4,5:1 exigé pour du texte courant. Le rouge reste sur les crochets, qui relèvent de 3:1 en tant qu'élément non textuel.
 
+## Confirmation
+
+Garde de la seule action destructrice de l'application. **Aucune variante :** un panneau qui se decline finit par exister en version discrete, et une confirmation discrete ne confirme rien.
+
+Batie **sur** `Feuille`, jamais a cote : les quatre pieces du confinement du focus (`inert` sur l'arriere-plan, focus deplace a l'ouverture, rendu au declencheur a la fermeture, Echap) restent ecrites une seule fois.
+
+| Propriete | Role |
+|---|---|
+| `titre` | en tete du panneau, et nom accessible de la Feuille |
+| `consequence` | ce que l'action detruit, une phrase, au present et sans detour |
+| `libelleAction` | enonce la consequence, jamais un accord generique |
+| `ouverte`, `surAction`, `surFermeture` | |
+
+**Le refus du OUI generique est tenu par le type, pas par la relecture.** Un litteral parmi `Oui`, `OUI`, `Non`, `OK`, `Confirmer`, `Valider`, `Continuer`, `Effacer`, `Supprimer` s'effondre en `never` a la compilation. Meme dispositif que le nommage du `Bouton`.
+
+**La sortie non destructrice vient en premier** dans l'ordre du DOM, donc de lecture, de tabulation et d'annonce, et elle porte la variante `primaire`. C'est la seule inversion de rang que le systeme se permette : devant une action qui ne se rattrape pas, le chemin recommande est celui qui ne detruit rien. Le rouge n'entre pas dans cet arbitrage, il reste au signalement.
+
+**Limite connue, irreductible :** sur l'ecran d'epuisement, le focus ne peut pas revenir a son declencheur, l'effacement demontant le bouton qui a ouvert le panneau. Mesure : le focus retombe sur le corps du document. L'accueil n'a pas ce probleme, son menu restant ouvert derriere.
+
 ## EtatVide
 
 Titre en `--text-secondary`, une phrase en `--text-disabled`, marge de `--esp-4xl`, aucun dessin. Aucune variante.

@@ -371,7 +371,7 @@ Le statut `[ SIGNALÉE ]` est du texte normal et échoue donc en mode sombre. Co
 | `SelecteurNiveau` | spécifique | grille de 1 à 10, rampe d'opacité, niveaux consommés en bordure seule |
 | `EtatVide` | Composants §15 | pioche épuisée : titre `--text-secondary`, une phrase, marge de `--esp-4xl`, aucun dessin |
 | `Statut` | Composants §14 | `[ SIGNALÉE ]` en ligne. **Jamais de toast.** |
-| `Confirmation` | Composants §14 | seul usage : réinitialiser l'historique |
+| `Confirmation` | Composants §14 | seul usage, réinitialiser l'historique, mais **deux points d'entrée** : le menu de l'accueil et l'écran d'épuisement |
 
 ---
 
