@@ -21,17 +21,28 @@ Deux raisons, aucune ne concerne le hors-ligne :
 
 Graisses à embarquer, au strict nécessaire : Doto 700, Space Grotesk 300/400/500, Space Mono 400/700. Sous-ensemble `latin` uniquement, il couvre les accents français.
 
-**Quatre fichiers, pas six**, et le budget mesuré à la phase 1 est de **58,1 Ko** (59 460 octets), non les 200 Ko estimés au départ :
+**Quatre fichiers, pas six**, pour un budget mesuré de **57,8 Ko** (59 152 octets), non les 200 Ko estimés au départ :
 
 | Famille | Fichiers | Poids | Nature |
 |---|---|---|---|
-| Doto 700 | 1 | 3 928 o | statique (aucune table `fvar`) |
+| Doto 700 | 1 | 3 620 o | statique (aucune table `fvar`), points ronds figés dans le fichier |
 | Space Grotesk 300/400/500 | **1** | 22 288 o | **variable**, un axe de graisse |
 | Space Mono 400/700 | 2 | 33 244 o | statiques |
 
 Les trois graisses de Space Grotesk sont servies par un seul fichier : les trois téléchargés chez Google étaient identiques octet pour octet, parce que c'est une police variable dont le descripteur `font-weight` de chaque `@font-face` fixe la valeur de l'axe. Vérifié par mesure et non par lecture : la table `fvar` est présente dans le `.woff2`, et à 120 px, la graisse 500 couvre 52,4 % d'encre de plus que la 300. Space Mono, à chasse fixe, ne peut pas se vérifier à la largeur, qui est identique par construction : sa graisse 700 couvre 43,9 % d'encre de plus que la 400.
 
 Doto pèse moins que la limite d'incorporation de Vite (4 096 octets), il est donc inséré en base64 dans la feuille de style plutôt que servi à part. C'est la police du wordmark, celle dont le chargement est le plus pressé : une requête de moins.
+
+**Les points de Doto sont ronds, et c'est le fichier qui le porte.** Doto a deux axes : `wght`, qui règle la taille des points, et `ROND`, de 0 (carré) à 100 (rond). Une instance statique n'en a plus aucun : demandée en graisse 700 seule, Google Fonts fige `ROND` à sa valeur par défaut, 0, et c'est ce fichier aux points carrés qui avait été versionné. Aucun CSS ne pouvait plus l'arrondir : `font-variation-settings` n'a rien à faire varier sans table `fvar`, et Safari ignore de toute façon ce descripteur dans un `@font-face`. Le wordmark rejoint ainsi l'icône, dont les points sont des cercles (`spec-fondations.md`).
+
+Le fichier est donc **généré** et non téléchargé, depuis la source variable que sert Google Fonts : [`fonts/variable/Doto[ROND,wght].ttf`](https://github.com/oliverlalan/Doto/blob/1c587f2eed62cb257055540ac2a15f356070414f/fonts/variable/Doto%5BROND,wght%5D.ttf) du dépôt `oliverlalan/Doto`, commit `1c587f2`, SHA-256 `6f4fe7d37853b91df3698daa84cde2dbe1c9695d88c986e6510134910337d426`. Avec fontTools 4.67 et brotli :
+
+```bash
+fonttools varLib.instancer "Doto[ROND,wght].ttf" wght=700 ROND=100 --static -o doto-700-rond.ttf
+pyftsubset doto-700-rond.ttf --notdef-outline --flavor=woff2 --output-file=doto-700-rond.woff2 --unicodes="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+```
+
+Vérifié par mesure : la même chaîne à `ROND` 0 redonne les contours de l'ancien fichier glyphe pour glyphe, preuve qu'il s'agit de la même source et de la même instanciation. À `ROND` 100, seules les formes changent : les avances sont identiques sur les 202 points de code, et la `--wordmark-avance` d'`Accueil.module.css` reste juste sans remesure. Le sous-ensemble est exactement l'`unicode-range` de `fonts.css` ; l'ancien fichier portait en plus trois accents combinants (U+0300, U+0301, U+0303), que cet `unicode-range` rendait de toute façon inatteignables.
 
 ---
 
