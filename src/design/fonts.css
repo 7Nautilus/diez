@@ -19,6 +19,7 @@
 @font-face {
   font-family: "Doto";
   font-style: normal;
+  font-variation-settings: "RND " 100;
   font-weight: 700;
   font-display: swap;
   src: url("./fonts/doto-700.woff2") format("woff2");
